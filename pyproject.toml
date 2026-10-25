@@ -5,15 +5,24 @@ description = "A G HUB replacement for the Logitech G502 HERO on Linux"
 requires-python = ">=3.11"
 dependencies = []
 
+[project.optional-dependencies]
+gui = ["PySide6>=6.5"]
+
 [project.scripts]
 g502hub = "g502hub.cli:main"
+
+[project.gui-scripts]
+g502hub-gui = "g502hub.gui.app:main"
 
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-packages = ["g502hub"]
+[tool.setuptools.packages.find]
+include = ["g502hub*"]
+
+[tool.setuptools.package-data]
+"g502hub.gui" = ["assets/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

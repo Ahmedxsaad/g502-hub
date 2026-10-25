@@ -10,9 +10,9 @@ libratbag and no root.
 | Phase | Status |
 |---|---|
 | 1. Core engine: onboard profiles (incl. G-Shift layer, lighting, names), backup/restore, CLI | done |
-| 2. App window (G HUB-style) for onboard mode | planned |
-| 3. Software mode service: macros, G-Shift with any action, per-game profiles, OSD, tray | planned |
-| 4. Animated lighting, Lua scripts, profile import/export | planned |
+| 2. App window (G HUB-style) for onboard mode: lighting, sensitivity, assignments, profiles | done |
+| 3. Software mode service: animated lighting, per-game profiles, DPI OSD, tray, G-Shift with any action | next |
+| 4. Macros, Lua scripts, profile import/export | planned |
 
 ## Setup
 
@@ -24,6 +24,30 @@ sudo udevadm control --reload && sudo udevadm trigger --action=change --subsyste
 ```
 
 Stop Piper/ratbagd while using this. ratbagd forces onboard mode, and every save it makes wipes the G-Shift layer.
+
+## App
+
+Needs PySide6 (`sudo pacman -S pyside6`).
+
+```sh
+python -m g502hub.gui             # run from this folder
+./tools/install-desktop.sh        # add "G502 Hub" to the application menu
+```
+
+- **Lightsync**: Fixed, Breathing, Color cycle or Off for the DPI lights and
+  the logo, together or separately. Changes show on the mouse right away.
+  Saved colors are kept in `~/.config/g502-hub/settings.json`.
+- **Assignments**: any button on the primary or G-Shift layer, set to a mouse,
+  scroll, DPI, profile or G-Shift command, a key combo, or a media key. Key
+  names follow your keyboard layout.
+- **Sensitivity**: up to 5 DPI levels on a draggable track (click it to add
+  a level), default and sniper level, report rate. While you drag the level
+  you're on, the mouse's DPI changes so you can feel it.
+- **Profiles**: the 5 onboard slots. Rename, activate, include in or skip
+  from the G9 cycle, reset to factory, copy, plus backup and restore.
+
+Changes are saved to the mouse automatically about a second after you make
+them, so they keep working without the app, and on other computers.
 
 ## CLI
 
@@ -65,6 +89,7 @@ g502hub/onboard.py  profile/directory/binding/LED codecs (format 2)
 g502hub/macro.py    onboard macro codec (format 1)
 g502hub/backup.py   dump/restore
 g502hub/cli.py      command line
+g502hub/gui/        the app (PySide6)
 docs/protocol.md    wire protocol reference with sources
 docs/ghub-features.md  what G HUB offers for this mouse
 docs/hardware-notes.md behaviour verified on this unit
