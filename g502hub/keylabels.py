@@ -58,6 +58,8 @@ class KeyLabels:
         self.layout, self.variant = layout or current_layout()
         self._state = None
         self._lib = None
+        self._keymap = None
+        self._typing = None
         try:
             self._open_xkb()
         except (OSError, AttributeError):
@@ -76,7 +78,7 @@ class KeyLabels:
         keymap = lib.xkb_keymap_new_from_names(ctx, ctypes.byref(names), 0)
         if not keymap:
             raise OSError("xkb keymap not available")
-        self._lib, self._state = lib, lib.xkb_state_new(keymap)
+        self._lib, self._state, self._keymap = lib, lib.xkb_state_new(keymap), keymap
 
     def key(self, usage):
         name = keys.key_name(usage)
@@ -102,6 +104,47 @@ class KeyLabels:
             if self.key(usage) == char:
                 return usage
         return keys.KEYS.get(char.lower())
+
+    def typing(self, char):
+        """(HID modifiers, usage) that type `char` on this layout, or None.
+
+        E.g. on AZERTY '1' -> (Shift, 0x1E), '@' -> (AltGr, 0x27). Used to play
+        macros that type text.
+        """
+        if self._typing is None:
+            self._typing = self._typing_table()
+        return self._typing.get(char)
+
+    def _typing_table(self):
+        table = {"\n": (0, keys.KEYS["enter"]), "\t": (0, keys.KEYS["tab"]), " ": (0, keys.KEYS["space"])}
+        shift, altgr = 0x02, 0x40
+        if not self._state:  # US layout from the key names
+            for name, usage in keys.KEYS.items():
+                if len(name) == 1:
+                    table.setdefault(name, (0, usage))
+                    if name.isalpha():
+                        table.setdefault(name.upper(), (shift, usage))
+            return table
+        lib = self._lib
+        lib.xkb_keymap_mod_get_index.restype = ctypes.c_uint32
+        lib.xkb_keymap_mod_get_index.argtypes = [ctypes.c_void_p, ctypes.c_char_p]
+        lib.xkb_state_update_mask.argtypes = [ctypes.c_void_p] + [ctypes.c_uint32] * 6
+        lib.xkb_state_unref.argtypes = [ctypes.c_void_p]
+        index = {name: lib.xkb_keymap_mod_get_index(self._keymap, name.encode()) for name in ("Shift", "Mod5")}
+        levels = [(0, 0), (shift, 1 << index["Shift"])]
+        if index["Mod5"] < 32:  # AltGr (ISO Level 3) lives on Mod5 in xkb layouts
+            levels += [(altgr, 1 << index["Mod5"]), (shift | altgr, (1 << index["Shift"]) | (1 << index["Mod5"]))]
+        buf = ctypes.create_string_buffer(16)
+        for hid_mods, xkb_mods in levels:
+            state = lib.xkb_state_new(self._keymap)
+            lib.xkb_state_update_mask(state, xkb_mods, 0, 0, 0, 0, 0)
+            for usage, code in keys.HID_TO_EVDEV.items():
+                lib.xkb_state_key_get_utf8(state, code + 8, buf, 16)
+                char = buf.value.decode(errors="ignore")
+                if len(char) == 1 and char.isprintable():
+                    table.setdefault(char, (hid_mods, usage))
+            lib.xkb_state_unref(state)
+        return table
 
     def combo(self, modifiers, usage):
         parts = [label for bit, label in MODIFIER_LABELS.items() if modifiers & bit]
