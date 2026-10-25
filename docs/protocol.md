@@ -328,23 +328,21 @@ Function numbers come from libratbag [`hidpp20.c` L1783-1814](https://github.com
 **[?]** No source says whether host mode survives a power cycle or USB replug. A Solaar c08b dump shows "Device Mode: Host" after Solaar had set it, but that does not settle the question. Re-assert the mode on every (re)connect.
 
 ### 3.2 getDescription reply
-libratbag `struct hidpp20_onboard_profiles_info` ([`hidpp20.h` L894-907](https://github.com/libratbag/libratbag/blob/8235b5bb6032dea15901ab58a8218956f4494d08/src/hidpp20.h#L894-L907)):
+Reply bytes, as read by libratbag (`hidpp20_onboard_profiles_info`, [`hidpp20.h` L894-907](https://github.com/libratbag/libratbag/blob/8235b5bb6032dea15901ab58a8218956f4494d08/src/hidpp20.h#L894-L907)):
 
-```c
-struct hidpp20_onboard_profiles_info {
-	uint8_t memory_model_id;     // [0]  only 1 known
-	uint8_t profile_format_id;   // [1]  1..5 supported by libratbag
-	uint8_t macro_format_id;     // [2]  only 1 known
-	uint8_t profile_count;       // [3]
-	uint8_t profile_count_oob;   // [4]  number of ROM ("out of box") profiles
-	uint8_t button_count;        // [5]
-	uint8_t sector_count;        // [6]
-	uint16_t sector_size;        // [7..8] BIG endian
-	uint8_t mechanical_layout;   // [9]
-	uint8_t various_info;        // [10]
-	uint8_t reserved[5];         // [11..15]
-} __attribute__((packed));
-```
+| Byte | Field | Notes |
+|---|---|---|
+| 0 | memory model | only 1 is known |
+| 1 | profile format | 1-5 handled by libratbag |
+| 2 | macro format | only 1 is known |
+| 3 | profile count | |
+| 4 | ROM ("out of box") profile count | |
+| 5 | button count | |
+| 6 | sector count | |
+| 7-8 | sector size | big-endian |
+| 9 | mechanical layout | |
+| 10 | various info | |
+| 11-15 | reserved | |
 
 **Profile format IDs** (libratbag [L1802-1808](https://github.com/libratbag/libratbag/blob/8235b5bb6032dea15901ab58a8218956f4494d08/src/hidpp20.c#L1802-L1808), cvuchener and omalogi comments):
 
@@ -413,22 +411,7 @@ Sequence, from libratbag `hidpp20_onboard_profiles_write_sector` [L2003-2044](ht
 - Solaar only writes sectors that differ from what the device holds (`write_sector` compares first). It refuses `sector >= sector_count` ("not a writable sector", [L1736-1743](https://github.com/pwr-Solaar/Solaar/blob/e7304c4c451cc9bb4f206a914844525e67856a28/lib/logitech_receiver/hidpp20.py#L1736-L1743)). omalogi refuses any sector `>= 0x0100`.
 - libratbag minor bug: for a 255-byte sector it sends 16 slices of 16 bytes from a 255-byte buffer, a one-byte over-read. This is harmless because the device ignores bytes past `len`.
 
-**CRC algorithm: CRC-16/CCITT-FALSE.** Polynomial 0x1021, init 0xFFFF, no reflection, no final XOR. The check value for `"123456789"` is `0x29B1`. It covers `sector[0 .. size-2)` and is stored big-endian in the last 2 bytes. Logitech's own reference implementation, as copied by libratbag [`hidpp-generic.c` L379-404](https://github.com/libratbag/libratbag/blob/8235b5bb6032dea15901ab58a8218956f4494d08/src/hidpp-generic.c#L379-L404):
-```c
-#define CRC_CCITT_SEED	0xFFFF
-uint16_t hidpp_crc_ccitt(uint8_t *data, unsigned int length) {
-	uint16_t crc = CRC_CCITT_SEED, temp, quick;
-	for (unsigned i = 0; i < length; i++) {
-		temp = (crc >> 8) ^ (*data++);
-		crc <<= 8;
-		quick = temp ^ (temp >> 4);
-		crc ^= quick;  quick <<= 5;
-		crc ^= quick;  quick <<= 7;
-		crc ^= quick;
-	}
-	return crc;
-}
-```
+**CRC algorithm: CRC-16/CCITT-FALSE.** Polynomial 0x1021, init 0xFFFF, no reflection, no final XOR. The check value for `"123456789"` is `0x29B1`. It covers `sector[0 .. size-2)` and is stored big-endian in the last 2 bytes. libratbag implements it in [`hidpp-generic.c` L379-404](https://github.com/libratbag/libratbag/blob/8235b5bb6032dea15901ab58a8218956f4494d08/src/hidpp-generic.c#L379-L404); ours is `g502hub/onboard.py: crc16`.
 The same algorithm appears in cvuchener [`misc/CRC.cpp`](https://github.com/cvuchener/hidpp/blob/474ac10db5673da8f2f1c8911414d394c0eb6d12/src/libhidpp/misc/CRC.cpp), Solaar `common.crc16` (table-driven, [`common.py` L40](https://github.com/pwr-Solaar/Solaar/blob/e7304c4c451cc9bb4f206a914844525e67856a28/lib/logitech_receiver/common.py#L40)) and omalogi [`format.rs` L127-137](https://github.com/elberacasa/omalogi/blob/382dea7c1c81531fe286f03b32bd1c33acb904ae/src/onboard/format.rs#L127-L137).
 
 **[FAM]** For this document, the CRC was recomputed over the real 255-byte sector dumps in [OpenLogi PR #1002 tests.rs](https://github.com/Trukitro/OpenLogi/blob/8fb63e4b7e9fec8af6f51caa3d892b31dff06ca6/crates/openlogi-hidpp/src/feature/onboard_profiles/tests.rs):
@@ -488,32 +471,7 @@ The firmware does the same: with no valid user directory "the mouse runs its fac
 ### 3.6 Profile sector layout
 The layout is shared by profile formats 1 to 5. Field offsets are identical across formats and only the LED area differs.
 
-libratbag `union hidpp20_internal_profile` ([`hidpp20.c` L1816-1842](https://github.com/libratbag/libratbag/blob/8235b5bb6032dea15901ab58a8218956f4494d08/src/hidpp20.c#L1816-L1842)):
-```c
-union hidpp20_internal_profile {
-	uint8_t data[HIDPP20_PROFILE_SIZE];          /* 256 */
-	struct {
-		uint8_t report_rate;                     /* 0   */
-		uint8_t default_dpi;                     /* 1   */
-		uint8_t switched_dpi;                    /* 2   */
-		uint16_t dpi[5];                         /* 3   LITTLE endian */
-		struct hidpp20_color profile_color;      /* 13  */
-		uint8_t power_mode;                      /* 16  */
-		uint8_t angle_snapping;                  /* 17  */
-		uint8_t reserved[10];                    /* 18  */
-		uint16_t powersave_timeout;              /* 28  */
-		uint16_t poweroff_timeout;               /* 30  */
-		union hidpp20_button_binding buttons[16];           /* 32  */
-		union hidpp20_button_binding alternate_buttons[16]; /* 96  G-Shift layer */
-		union { char txt[16 * 3]; uint8_t raw[16 * 3]; } name; /* 160 */
-		struct hidpp20_internal_led leds[2];     /* 208 */
-		struct hidpp20_internal_led alt_leds[2]; /* 230 */
-		uint8_t custom_animation_index;          /* 252 G502X Plus, G705 */
-		uint8_t free;                            /* 253 */
-		uint16_t crc;                            /* 254 -- but see note */
-	} __attribute__((packed)) profile;
-};
-```
+Field layout as read by libratbag (`hidpp20_internal_profile`, [`hidpp20.c` L1816-1842](https://github.com/libratbag/libratbag/blob/8235b5bb6032dea15901ab58a8218956f4494d08/src/hidpp20.c#L1816-L1842)); beyond the table below it names bytes 28-31 power-save and power-off timeouts (u16 each) and byte 252 a custom animation index (G502 X Plus, G705).
 Solaar `OnboardProfile.from_bytes/to_bytes` ([`hidpp20.py` L1549-1598](https://github.com/pwr-Solaar/Solaar/blob/e7304c4c451cc9bb4f206a914844525e67856a28/lib/logitech_receiver/hidpp20.py#L1549-L1598)) and cvuchener `Fields` ([`ProfileFormat.cpp` L33-74](https://github.com/cvuchener/hidpp/blob/474ac10db5673da8f2f1c8911414d394c0eb6d12/src/libhidpp/hidpp20/ProfileFormat.cpp#L33-L74)) agree on every field.
 
 | Offset | Size | Field | Encoding / notes |
