@@ -62,3 +62,11 @@ HID++ 4.2, profile format 2. Tested 2026-10-25.
 - The effect indexes are 0 off, 1 fixed, 2 breathing, 3 cycle.
 - Profile LED block *i* is assumed to drive zone *i* (libratbag's mapping). Not yet
   verified with two different colors.
+
+Streaming colors: `setZoneEffect` with a fixed effect and persistence 0
+(RAM only) takes about 2 ms per zone over USB (median 1.99 ms, p95 2.08 ms,
+measured 2026-10-25), so both zones can be updated well over 100 times a
+second. Live effects use 30 fps. Not verified yet: whether a profile load (G9)
+puts the saved lighting back over a streamed color. The app resends at
+least once a second either way.
+

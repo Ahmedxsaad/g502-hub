@@ -105,6 +105,7 @@ class MouseState(QObject):
 
         self._save_timer = QTimer(self, singleShot=True, interval=SAVE_DELAY_MS)
         self._save_timer.timeout.connect(self.flush)
+        self.poll_ms = POLL_MS
         self._poll_timer = QTimer(self, interval=POLL_MS)
         self._poll_timer.timeout.connect(self._poll)
         self._led_timer = QTimer(self, singleShot=True, interval=40)
@@ -161,8 +162,14 @@ class MouseState(QObject):
     def _set_connected(self, connected):
         if connected != self.connected:
             self.connected = connected
-            self._poll_timer.setInterval(POLL_MS if connected else RECONNECT_MS)
+            self._poll_timer.setInterval(self.poll_ms if connected else RECONNECT_MS)
             self.connectedChanged.emit(connected)
+
+    def set_poll_ms(self, ms):
+        """How often to read the active profile and DPI level (faster for DPI-linked effects)."""
+        self.poll_ms = ms
+        if self.connected:
+            self._poll_timer.setInterval(ms)
 
     def slot_of(self, sector):
         for n, entry in enumerate(self.directory.entries, 1):
