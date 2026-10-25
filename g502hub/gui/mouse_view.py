@@ -2,20 +2,18 @@
 
 Buttons are hit-testable regions keyed by onboard slot (0-10); the two LED
 zones are "zone0" (DPI lights) and "zone1" (logo) and show live effects.
-The view draws through a skin: Logitech's photo when it has been downloaded
-(see photo.py), otherwise a built-in drawing.
+The mouse is Logitech's product photo (see photo.py), downloaded on first start.
 """
 
 import time
 from math import cos, hypot, pi
 
 from PySide6.QtCore import QPointF, QRectF, Qt, QTimer, Signal
-from PySide6.QtGui import QColor, QFont, QLinearGradient, QPainter, QPen, QRadialGradient, QTransform
+from PySide6.QtGui import QColor, QFont, QPainter, QPen, QRadialGradient, QTransform
 from PySide6.QtWidgets import QToolTip, QWidget
 
 from . import theme
-from .photo import PhotoSkin
-from .shapes import Element, ellipse, pill, rounded, smooth_path
+from .photo import PhotoFetcher, PhotoSkin, load_image
 
 BADGES = {0: "G1", 1: "G2", 2: "G3", 3: "G4", 4: "G5", 5: "G6", 6: "G7", 7: "G8",
           8: "G9", 9: "›", 10: "‹"}
@@ -38,135 +36,20 @@ def effect_color(effect, t):
     return None
 
 
-class DrawnSkin:
-    """A vector drawing of the mouse, used when the photo isn't available."""
-
-    canvas = QRectF(0, 0, 340, 480)
-    halo = (QPointF(190, 240), 230)
-    badge_radius = 10.5
-    badge_font = (8, 12)
-    pen_scale = 1.0
-    callouts = [("DPI LIGHTS", QPointF(118, 162), QPointF(20, 162), "zone0"),
-                ("LOGO", QPointF(220, 330), QPointF(320, 330), "zone1")]
-
-    BODY = [(190, 22), (235, 26), (262, 70), (270, 140), (273, 220), (266, 280), (270, 340),
-            (252, 410), (220, 440), (180, 446), (148, 436), (125, 420), (90, 395), (68, 360),
-            (74, 330), (100, 318), (108, 290), (102, 250), (104, 200), (108, 150), (118, 80),
-            (142, 28)]
-    LEFT_BUTTON = [(146, 32), (186, 25), (187, 176), (142, 182), (134, 130), (135, 70)]
-    RIGHT_BUTTON = [(194, 25), (234, 30), (258, 72), (265, 140), (256, 180), (194, 178)]
-
-    def __init__(self):
-        self.body = smooth_path(self.BODY)
-        dpi = rounded(121, 146, 6, 9, 3)
-        for y in (158, 170):
-            dpi.addPath(rounded(121, y, 6, 9, 3))
-        self.elements = [
-            # Smaller elements first: hit-testing takes the first match
-            Element(9, rounded(201, 66, 9, 52, 3), (213, 54)),
-            Element(10, rounded(170, 66, 9, 52, 3), (167, 54)),
-            Element(2, rounded(181, 64, 18, 56, 8), (190, 92)),
-            Element(8, pill(190, 141, 14, 22), (190, 141)),
-            Element(7, pill(127, 76, 11, 32, -14), (127, 76)),
-            Element(6, pill(122, 115, 11, 32, -6), (122, 115)),
-            Element(4, pill(108, 206, 10, 32, -3), (108, 206)),
-            Element(3, pill(106, 247, 10, 32, 2), (106, 247)),
-            Element(5, pill(98, 297, 12, 24, 35), (98, 297)),
-            Element("zone0", dpi, (124, 162), "led"),
-            Element("zone1", ellipse(196, 330, 22), (196, 330), "led"),
-            Element(0, smooth_path(self.LEFT_BUTTON, tension=0.35), (162, 125)),
-            Element(1, smooth_path(self.RIGHT_BUTTON, tension=0.35), (226, 125)),
-        ]
-
-    def paint(self, p, colors, view):
-        body = QLinearGradient(QPointF(70, 0), QPointF(275, 0))
-        body.setColorAt(0, QColor("#24272d"))
-        body.setColorAt(0.55, QColor("#17191d"))
-        body.setColorAt(1, QColor("#202329"))
-        p.setPen(QPen(QColor("#3b4049"), 1.4))
-        p.setBrush(body)
-        p.drawPath(self.body)
-        # Decorative seams of the palm shell
-        p.setPen(QPen(QColor("#2c3037"), 1.2))
-        p.drawPath(smooth_path([(142, 184), (150, 260), (160, 380)], closed=False))
-        p.drawPath(smooth_path([(256, 182), (252, 260), (240, 380)], closed=False))
-        for el in reversed(self.elements):
-            fill, pen = view._state_colors(el)
-            if el.kind == "led":
-                self._paint_led(p, el, colors.get(0 if el.key == "zone0" else 1), pen)
-            else:
-                self._paint_button(p, el, fill, pen)
-
-    def _paint_button(self, p, el, fill, pen):
-        if el.key in (0, 1):
-            base = QColor("#1d2025")
-        elif el.key == 2:
-            base = QColor("#2b2f36")
-        elif el.key == 5:
-            base = QColor("#8f2a26")
-        else:
-            base = QColor("#2a2e35")
-        p.setBrush(fill or base)
-        p.setPen(pen or QPen(QColor("#3a3f48"), 1.1))
-        p.drawPath(el.path)
-        if el.key == 2:  # wheel ridges
-            p.setPen(QPen(QColor("#3f444d"), 1))
-            for y in range(70, 116, 5):
-                p.drawLine(QPointF(184, y), QPointF(196, y))
-        if el.key in (9, 10):  # tilt chevrons
-            x = 205.5 if el.key == 9 else 174.5
-            d = 2 if el.key == 9 else -2
-            p.setPen(QPen(QColor(theme.MUTED), 1.2))
-            p.drawLine(QPointF(x - d, 88), QPointF(x + d, 92))
-            p.drawLine(QPointF(x + d, 92), QPointF(x - d, 96))
-
-    def _paint_led(self, p, el, color, pen):
-        radius = 46 if el.key == "zone1" else 30
-        if color is not None and color.value() > 8:
-            center = el.path.boundingRect().center()
-            glow = QRadialGradient(center, radius)
-            c = QColor(color)
-            c.setAlpha(150)
-            glow.setColorAt(0, c)
-            c.setAlpha(0)
-            glow.setColorAt(1, c)
-            p.setPen(Qt.PenStyle.NoPen)
-            p.setBrush(glow)
-            p.drawEllipse(center, radius, radius)
-        lit = color if color is not None else QColor("#2a2e35")
-        if pen is not None:  # selection / hover ring around the whole zone
-            p.setPen(pen)
-            p.setBrush(Qt.BrushStyle.NoBrush)
-            r = el.path.boundingRect().adjusted(-5, -5, 5, 5)
-            if el.key == "zone1":
-                p.drawEllipse(r)
-            else:
-                p.drawRoundedRect(r, 6, 6)
-        if el.key == "zone1":
-            p.setBrush(QColor("#1b1e23"))
-            p.setPen(QPen(QColor("#3a3f48"), 1.2))
-            p.drawPath(el.path)
-            f = QFont(theme.FONT_FAMILY)
-            f.setPixelSize(26)
-            f.setWeight(QFont.Weight.Black)
-            p.setFont(f)
-            p.setPen(lit)
-            p.drawText(el.path.boundingRect(), Qt.AlignmentFlag.AlignCenter, "G")
-        else:
-            p.setBrush(lit)
-            p.setPen(QPen(QColor("#3a3f48"), 0.8))
-            p.drawPath(el.path)
-
-
 class MouseView(QWidget):
     clicked = Signal(object)
+    photoChanged = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setMouseTracking(True)
         self.setMinimumSize(300, 400)
-        self.skin = PhotoSkin.load() or DrawnSkin()
+        self.skin = PhotoSkin(load_image())
         self.elements = self.skin.elements
+        self.fetcher = PhotoFetcher(self)
+        self.fetcher.done.connect(self._fetched)
+        if not self.skin.ready:
+            self.fetch_photo()
         self.mode = "plain"  # "assign", "light" or "plain"
         self.selected = set()
         self.hovered = None
@@ -198,6 +81,22 @@ class MouseView(QWidget):
         elif not animated:
             self._timer.stop()
         self.update()
+
+    def fetch_photo(self):
+        """Download Logitech's photo (first start, or to replace a damaged copy)."""
+        self.skin.message = "Getting the picture of your G502 HERO from logitechg.com…"
+        self.update()
+        self.fetcher.start()
+
+    def _fetched(self, error):
+        image = None if error else load_image()
+        if image is None:
+            self.skin.message = (f"Couldn't download the picture of the mouse ({error or 'damaged file'}). "
+                                 "Click here to try again.")
+        else:
+            self.skin.set_image(image)
+        self.update()
+        self.photoChanged.emit()
 
     def set_live(self, colors):
         """colors: {zone: QColor} from a live effect; {} to show the saved effects again."""
@@ -247,6 +146,8 @@ class MouseView(QWidget):
         self.update()
 
     def mousePressEvent(self, e):
+        if not self.skin.ready and not self.fetcher.busy:
+            self.fetch_photo()
         key = self._hit(e.position())
         if key is not None:
             self.clicked.emit(key)
