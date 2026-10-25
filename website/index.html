@@ -5,13 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>G502 Hub</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="The G HUB experience for the Logitech G502 HERO on Linux: DPI, onboard profiles, button remapping, and lighting that follows your screen, music and games.">
-<meta property="og:title" content="G502 Hub: the G HUB experience, on Linux">
-<meta property="og:description" content="DPI levels and sniper, onboard profiles, G-Shift, and lighting that follows your screen, your music and your games. Free and open source.">
-<meta property="og:image" content="screenshots/profiles.webp">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<meta name="description" content="G502 Hub is an unofficial G HUB alternative for the Logitech G502 HERO on Linux: DPI levels, onboard profiles, button remapping, macros, and lighting that follows your screen, music and games.">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<link rel="canonical" href="https://g502hub.ahmedxsaad.me/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://g502hub.ahmedxsaad.me/">
+<meta property="og:title" content="G502 Hub: an unofficial G HUB alternative for the G502 HERO on Linux">
+<meta property="og:description" content="DPI levels and sniper, onboard profiles, G-Shift, macros, and lighting that follows your screen, your music and your games. Free and open source.">
+<meta property="og:image" content="https://g502hub.ahmedxsaad.me/screenshots/profiles.webp">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2307080b'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%2314b4ff'/%3E%3C/svg%3E">
+<style>
+/* Fonts are served from this site (SIL Open Font License, see fonts/), never from a third party */
+@font-face { font-family: "Big Shoulders Display"; src: url("fonts/big-shoulders-display.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+@font-face { font-family: "Instrument Sans"; src: url("fonts/instrument-sans.woff2") format("woff2"); font-weight: 400 700; font-display: swap; }
+@font-face { font-family: "JetBrains Mono"; src: url("fonts/jetbrains-mono.woff2") format("woff2"); font-weight: 100 800; font-display: swap; }
+</style>
 <style>
 /* Layout: a lab bench lit by the mouse. The hero rig drives --z0/--z1 (the DPI lights and the logo);
    the whole page picks up that light. One dark world on purpose: an RGB mouse glows in the dark. */
@@ -243,6 +252,7 @@ footer .wrap { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2
 footer .made { font: 900 30px/1 var(--display); text-transform: uppercase; letter-spacing: .03em; }
 footer .made span { color: var(--z1); }
 footer .links { display: flex; gap: 18px; flex-wrap: wrap; }
+footer .links.project { grid-column: 1 / -1; font-size: 14px; color: var(--dust); }
 footer .fine { grid-column: 1 / -1; font-size: 13px; color: var(--dust); max-width: 90ch; }
 @media (max-width: 720px) { footer .wrap { grid-template-columns: minmax(0, 1fr); } }
 
@@ -272,14 +282,13 @@ footer .fine { grid-column: 1 / -1; font-size: 13px; color: var(--dust); max-wid
   <div class="wrap">
     <div>
       <div class="eyebrow">Unofficial · for the Logitech G502 HERO · Linux</div>
-      <h1>The <span class="lit">G HUB</span> experience, <em>on Linux</em></h1>
-      <p class="lede">DPI levels and sniper, five onboard profiles, button remapping with G-Shift, and lighting that follows your screen, your music and your games. Free, open source, and no Windows anywhere.</p>
+      <h1>All of your <span class="lit">G502</span> <em>on Linux</em></h1>
+      <p class="lede">An unofficial G HUB alternative: DPI levels and sniper, five onboard profiles, button remapping with G-Shift, macros, and lighting that follows your screen, your music and your games. Free, open source, and no Windows anywhere.</p>
       <div class="install-chip">
-        <code id="oneliner">curl -fsSL https://Ahmedxsaad.github.io/g502-hub/<b>install.sh</b> | sh</code>
+        <code id="oneliner">curl -fsSL https://g502hub.ahmedxsaad.me/<b>install.sh</b> | sh</code>
         <button class="copy" type="button" data-copy="oneliner">Copy</button>
       </div>
       <div class="alt muted">
-        <span>Arch / EndeavourOS: <code>yay -S g502-hub</code></span>
         <a href="#install">Other ways to install</a>
       </div>
     </div>
@@ -496,16 +505,16 @@ footer .fine { grid-column: 1 / -1; font-size: 13px; color: var(--dust); max-wid
     <div class="box">
       <div class="tabs" role="tablist" aria-label="Ways to install">
         <button type="button" role="tab" id="tab-line" aria-selected="true" aria-controls="panel-line">One line</button>
-        <button type="button" role="tab" id="tab-aur" aria-selected="false" aria-controls="panel-aur">AUR</button>
+        <button type="button" role="tab" id="tab-aur" aria-selected="false" aria-controls="panel-aur">AUR (soon)</button>
         <button type="button" role="tab" id="tab-src" aria-selected="false" aria-controls="panel-src">From source</button>
       </div>
       <div class="tabpanel" role="tabpanel" id="panel-line" aria-labelledby="tab-line">
-        <div class="term"><pre id="cmd-line"><span class="p">$ </span>curl -fsSL https://Ahmedxsaad.github.io/g502-hub/install.sh | sh</pre><button class="copy" type="button" data-copy="cmd-line">Copy</button></div>
+        <div class="term"><pre id="cmd-line"><span class="p">$ </span>curl -fsSL https://g502hub.ahmedxsaad.me/install.sh | sh</pre><button class="copy" type="button" data-copy="cmd-line">Copy</button></div>
         <p class="muted">Installs what it needs with your package manager (it asks for your password), adds the permission rule that lets your user talk to the mouse, and puts G502 Hub in your applications menu. Remove it with the same line plus <code>-s -- --uninstall</code>.</p>
       </div>
       <div class="tabpanel" role="tabpanel" id="panel-aur" aria-labelledby="tab-aur" hidden>
         <div class="term"><pre id="cmd-aur"><span class="p">$ </span>yay -S g502-hub</pre><button class="copy" type="button" data-copy="cmd-aur">Copy</button></div>
-        <p class="muted">For Arch, EndeavourOS, Manjaro and CachyOS. Builds the Proton bridge too.</p>
+        <p class="muted">Coming soon for Arch, EndeavourOS, Manjaro and CachyOS (it builds the Proton bridge too). Until it's published, use the one-line install.</p>
       </div>
       <div class="tabpanel" role="tabpanel" id="panel-src" aria-labelledby="tab-src" hidden>
         <div class="term"><pre id="cmd-src"><span class="p">$ </span>git clone https://github.com/Ahmedxsaad/g502-hub && cd g502-hub
@@ -537,13 +546,19 @@ footer .fine { grid-column: 1 / -1; font-size: 13px; color: var(--dust); max-wid
 
 <footer>
   <div class="wrap">
-    <div class="made">Made by <span>Ahmed Saad</span></div>
+    <div class="made">Made by <a href="https://ahmedxsaad.me" style="text-decoration:none"><span>Ahmed Saad</span></a></div>
     <div class="links">
-      <a href="https://github.com/Ahmedxsaad/g502-hub">GitHub</a>
-      <a href="https://github.com/Ahmedxsaad/g502-hub/issues">Report a bug</a>
-      <a href="https://github.com/Ahmedxsaad/g502-hub/blob/main/LICENSE">GPL-3.0</a>
+      <a href="https://ahmedxsaad.me">ahmedxsaad.me</a>
+      <a href="https://github.com/Ahmedxsaad">GitHub</a>
+      <a href="https://www.linkedin.com/in/ahmedsaad0/">LinkedIn</a>
     </div>
-    <p class="fine">An unofficial, independent project. Not affiliated with, endorsed or supported by Logitech. Logitech, Logitech G, G HUB, LIGHTSYNC, HERO and G502 are trademarks of Logitech Europe S.A.; Counter-Strike 2, Dota 2 and Steam are trademarks of Valve Corporation. The mouse photo on this page is Logitech's, loaded straight from logitechg.com; it isn't hosted here, and the app downloads its own copy from Logitech the first time it starts.</p>
+    <div class="links project">
+      <a href="https://github.com/Ahmedxsaad/g502-hub">Source code</a>
+      <a href="https://github.com/Ahmedxsaad/g502-hub/issues">Report a bug</a>
+      <a href="https://github.com/Ahmedxsaad/g502-hub/blob/main/LICENSE">License (GPL-3.0)</a>
+      <a href="legal.html">Legal &amp; privacy</a>
+    </div>
+    <p class="fine">An unofficial, independent project. Not affiliated with, endorsed or supported by Logitech. Logitech, Logitech G, G HUB, LIGHTSYNC, HERO and G502 are trademarks of Logitech Europe S.A.; Counter-Strike 2, Dota 2 and Steam are trademarks of Valve Corporation. The mouse photo on this page is Logitech's, loaded straight from logitechg.com; it isn't hosted here, and the app downloads its own copy from Logitech the first time it starts. No cookies, no tracking.</p>
   </div>
 </footer>
 
