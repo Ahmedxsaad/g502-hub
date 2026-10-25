@@ -1,7 +1,10 @@
 [project]
 name = "g502-hub"
-version = "0.1.0"
+version = "0.2.0"
 description = "A G HUB replacement for the Logitech G502 HERO on Linux"
+license = "GPL-3.0-or-later"
+authors = [{ name = "Ahmed Saad" }]
+readme = "README.md"
 requires-python = ">=3.11"
 dependencies = []
 
@@ -22,6 +25,7 @@ build-backend = "setuptools.build_meta"
 include = ["g502hub*"]
 
 [tool.setuptools.package-data]
+"g502hub" = ["kwin/*.js", "bridge_bin/*/*.dll"]
 "g502hub.gui" = ["assets/*"]
 
 [tool.pytest.ini_options]

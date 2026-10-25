@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=G502 Hub
+GenericName=Mouse Settings
+Comment=DPI, lighting, buttons and profiles for the Logitech G502 HERO
+Exec=g502hub-gui
+Icon=input-mouse
+Terminal=false
+Categories=Settings;HardwareSettings;
+Keywords=logitech;g502;mouse;dpi;rgb;ghub;lightsync;
+StartupWMClass=g502-hub
