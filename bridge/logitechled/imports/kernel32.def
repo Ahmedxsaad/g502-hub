@@ -1,0 +1,10 @@
+; Only what logitechled.c calls. Names carry the i386 stdcall argument size;
+; build.sh strips it for x86_64.
+LIBRARY kernel32.dll
+EXPORTS
+    GetCurrentProcessId@0
+    Sleep@4
+    CreateThread@24
+    CloseHandle@4
+    GetModuleHandleExW@12
+    FreeLibraryAndExitThread@8

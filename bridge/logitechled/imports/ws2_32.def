@@ -1,0 +1,7 @@
+; Only what logitechled.c calls. Names carry the i386 stdcall argument size;
+; build.sh strips it for x86_64.
+LIBRARY ws2_32.dll
+EXPORTS
+    WSAStartup@8
+    socket@12
+    sendto@24
