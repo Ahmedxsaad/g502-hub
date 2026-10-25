@@ -48,6 +48,12 @@ class AboutPage(Page):
         col.addSpacing(18)
         col.addWidget(_label("MADE BY", "Heading"))
         col.addWidget(_label(about.AUTHOR, size=22, weight=700, color=theme.ACCENT))
+        author = "   ·   ".join(f"<a style='color:{theme.MUTED}; text-decoration:none' href='{url}'>{label}</a>"
+                                for label, url in about.author_links())
+        author_label = _label(author)
+        author_label.setTextFormat(Qt.TextFormat.RichText)
+        author_label.setOpenExternalLinks(True)
+        col.addWidget(author_label)
         col.addSpacing(14)
 
         links = QHBoxLayout()

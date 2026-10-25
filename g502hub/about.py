@@ -3,7 +3,7 @@
 from . import __version__
 
 APP_NAME = "G502 Hub"
-TAGLINE = "The G HUB experience for the Logitech G502 HERO, on Linux"
+TAGLINE = "An unofficial G HUB alternative for the Logitech G502 HERO, on Linux"
 VERSION = __version__
 AUTHOR = "Ahmed Saad"
 LICENSE = "GPL-3.0-or-later"
@@ -12,6 +12,9 @@ LICENSE = "GPL-3.0-or-later"
 GITHUB = "Ahmedxsaad"   # GitHub username that hosts the g502-hub repository
 REDDIT = ""   # Reddit username, without u/
 DONATE = ""   # a Ko-fi, PayPal or GitHub Sponsors link
+SITE = "https://g502hub.ahmedxsaad.me"      # the project website
+AUTHOR_SITE = "https://ahmedxsaad.me"
+LINKEDIN = "https://www.linkedin.com/in/ahmedsaad0/"
 
 DISCLAIMER = ("An unofficial, independent project. Not affiliated with, endorsed or supported by "
               "Logitech. Logitech, Logitech G, G HUB, LIGHTSYNC, HERO and G502 are trademarks of "
@@ -35,11 +38,17 @@ def repo_url():
 
 def links():
     """(label, url) for the About page, only the ones that are set."""
-    out = []
+    out = [("Website", SITE)] if SITE else []
     if GITHUB:
-        out += [("GitHub", repo_url()), ("Report a bug", repo_url() + "/issues")]
+        out += [("Source code", repo_url()), ("Report a bug", repo_url() + "/issues")]
     if REDDIT:
         out.append(("Reddit", f"https://www.reddit.com/user/{REDDIT}"))
     if DONATE:
         out.append(("Support the project", DONATE))
     return out
+
+
+def author_links():
+    """(label, url) for the person who made it."""
+    return [(label, url) for label, url in (("ahmedxsaad.me", AUTHOR_SITE), ("GitHub", f"https://github.com/{GITHUB}"
+                                             if GITHUB else ""), ("LinkedIn", LINKEDIN)) if url]

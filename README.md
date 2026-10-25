@@ -1,6 +1,7 @@
 # G502 Hub
 
-**The G HUB experience for the Logitech G502 HERO, on Linux.**
+**An unofficial G HUB alternative for the Logitech G502 HERO, on Linux.**
+[g502hub.ahmedxsaad.me](https://g502hub.ahmedxsaad.me)
 
 DPI levels and sniper, lighting with live screen, audio and game effects,
 button remapping with G-Shift, five onboard profiles, and rules that change
@@ -12,19 +13,16 @@ no root.
 ## Install
 
 ```sh
-curl -fsSL https://Ahmedxsaad.github.io/g502-hub/install.sh | sh
+curl -fsSL https://g502hub.ahmedxsaad.me/install.sh | sh
 ```
 
 It installs the dependencies with your package manager, puts the app in
 `~/.local/share/g502-hub`, adds the permission rule that lets your user talk
 to the mouse, and adds **G502 Hub** to your applications menu. Uninstall with
-`curl -fsSL https://Ahmedxsaad.github.io/g502-hub/install.sh | sh -s -- --uninstall`.
+`curl -fsSL https://g502hub.ahmedxsaad.me/install.sh | sh -s -- --uninstall`.
 
-On Arch, EndeavourOS, Manjaro or CachyOS you can also use the AUR:
-
-```sh
-yay -S g502-hub
-```
+An AUR package for Arch, EndeavourOS, Manjaro and CachyOS is ready in
+[`packaging/aur`](packaging/aur) and will be published soon (`yay -S g502-hub`).
 
 Built and tested on EndeavourOS with KDE Plasma 6 (Wayland). Fedora and
 Debian/Ubuntu package names in the installer are best effort; reports welcome.
@@ -160,6 +158,7 @@ python3 -m g502hub.gui                     # the app
 QT_QPA_PLATFORM=offscreen python3 -m pytest
 sh bridge/logitechled/build.sh             # LogitechLed.dll (needs clang, llvm, lld)
 QT_QPA_PLATFORM=offscreen tools/screenshots.py   # README / website screenshots
+tools/deploy-site.sh                       # publish the website (Cloudflare)
 ```
 
 ```
@@ -182,7 +181,8 @@ docs/hardware-notes.md behaviour verified on the real mouse
 
 ## Credits
 
-Made by **Ahmed Saad**.
+Made by **Ahmed Saad**: [ahmedxsaad.me](https://ahmedxsaad.me) ·
+[GitHub](https://github.com/Ahmedxsaad) · [LinkedIn](https://www.linkedin.com/in/ahmedsaad0/)
 
 Built on the public work of [libratbag](https://github.com/libratbag/libratbag),
 [Solaar](https://github.com/pwr-Solaar/Solaar),
