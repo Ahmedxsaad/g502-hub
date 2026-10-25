@@ -46,6 +46,37 @@ CONSUMER = {
 _KEY_NAMES = {v: k for k, v in KEYS.items()}
 _CONSUMER_NAMES = {v: k for k, v in CONSUMER.items()}
 
+# Linux evdev key codes (input-event-codes.h) for the HID usages above
+_EVDEV_BY_NAME = {
+    "esc": 1, "minus": 12, "equal": 13, "backspace": 14, "tab": 15,
+    "leftbrace": 26, "rightbrace": 27, "enter": 28, "semicolon": 39,
+    "apostrophe": 40, "grave": 41, "backslash": 43, "comma": 51, "dot": 52,
+    "slash": 53, "kpasterisk": 55, "space": 57, "capslock": 58, "numlock": 69,
+    "scrolllock": 70, "kpminus": 74, "kpplus": 78, "kpdot": 83, "102nd": 86,
+    "kpenter": 96, "kpslash": 98, "printscreen": 99, "home": 102, "up": 103,
+    "pageup": 104, "left": 105, "right": 106, "end": 107, "down": 108,
+    "pagedown": 109, "insert": 110, "delete": 111, "pause": 119, "menu": 127,
+}
+_EVDEV_BY_NAME.update({str(n): 1 + n for n in range(1, 10)})
+_EVDEV_BY_NAME["0"] = 11
+_EVDEV_BY_NAME.update(zip("qwertyuiop", range(16, 26)))
+_EVDEV_BY_NAME.update(zip("asdfghjkl", range(30, 39)))
+_EVDEV_BY_NAME.update(zip("zxcvbnm", range(44, 51)))
+_EVDEV_BY_NAME.update({f"f{n}": 58 + n for n in range(1, 11)})
+_EVDEV_BY_NAME.update({"f11": 87, "f12": 88})
+_EVDEV_BY_NAME.update({f"f{n}": 170 + n for n in range(13, 25)})
+_EVDEV_BY_NAME.update(zip(["kp7", "kp8", "kp9"], range(71, 74)))
+_EVDEV_BY_NAME.update(zip(["kp4", "kp5", "kp6"], range(75, 78)))
+_EVDEV_BY_NAME.update(zip(["kp1", "kp2", "kp3", "kp0"], range(79, 83)))
+
+HID_TO_EVDEV = {KEYS[name]: code for name, code in _EVDEV_BY_NAME.items()}
+EVDEV_TO_HID = {code: usage for usage, code in HID_TO_EVDEV.items()}
+
+# Modifier bit -> evdev code
+MODIFIER_EVDEV = {0x01: 29, 0x02: 42, 0x04: 56, 0x08: 125,
+                  0x10: 97, 0x20: 54, 0x40: 100, 0x80: 126}
+EVDEV_TO_MODIFIER = {code: bit for bit, code in MODIFIER_EVDEV.items()}
+
 
 def key_name(usage):
     return _KEY_NAMES.get(usage, f"key-0x{usage:02X}")
