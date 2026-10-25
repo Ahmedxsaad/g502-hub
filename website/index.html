@@ -1,0 +1,794 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>G502 Hub</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="The G HUB experience for the Logitech G502 HERO on Linux: DPI, onboard profiles, button remapping, and lighting that follows your screen, music and games.">
+<meta property="og:title" content="G502 Hub: the G HUB experience, on Linux">
+<meta property="og:description" content="DPI levels and sniper, onboard profiles, G-Shift, and lighting that follows your screen, your music and your games. Free and open source.">
+<meta property="og:image" content="screenshots/profiles.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=Instrument+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: a lab bench lit by the mouse. The hero rig drives --z0/--z1 (the DPI lights and the logo);
+   the whole page picks up that light. One dark world on purpose: an RGB mouse glows in the dark. */
+:root {
+  --void: #07080b;        /* page */
+  --carbon: #0e1016;      /* bands */
+  --graphite: #171a22;    /* raised panels */
+  --seam: #262a35;        /* hairlines */
+  --ink: #e9ebf1;         /* text */
+  --dust: #8d93a3;        /* secondary text */
+  --heat: #ff4d3d;        /* sniper red */
+  --z0: #ff2d95;          /* DPI lights, set live by the rig */
+  --z1: #14b4ff;          /* logo, set live by the rig */
+  --display: "Big Shoulders Display", "Arial Narrow", Impact, sans-serif;
+  --body: "Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --wrap: 1160px;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--void); color: var(--ink);
+  font: 400 17px/1.6 var(--body); -webkit-font-smoothing: antialiased; overflow-x: hidden;
+}
+body::before {
+  content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30;
+  background: var(--void);
+}
+a { color: inherit; }
+img { max-width: 100%; height: auto; display: block; }
+[hidden] { display: none !important; }
+:focus-visible { outline: 2px solid var(--z1); outline-offset: 3px; border-radius: 4px; }
+.wrap {
+  width: 100%; max-width: var(--wrap); margin-inline: auto;
+  padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px));
+}
+.eyebrow { font: 600 12px/1 var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--dust); }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-height: .95; letter-spacing: .01em; }
+h2 { font-size: clamp(44px, 6.4vw, 84px); font-weight: 900; text-transform: uppercase; }
+h3 { font-size: 30px; font-weight: 800; text-transform: uppercase; letter-spacing: .02em; }
+p { margin: 0; max-width: 62ch; }
+.muted { color: var(--dust); }
+code, kbd, .mono { font-family: var(--mono); font-size: .88em; }
+
+/* ------------------------------------------------------------ nav */
+nav.top {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20;
+  background: color-mix(in oklab, var(--void) 82%, transparent); backdrop-filter: blur(14px);
+  border-bottom: 1px solid color-mix(in oklab, var(--seam) 70%, transparent);
+}
+nav.top .wrap { display: flex; align-items: center; gap: 28px; height: 60px; }
+.mark { display: flex; align-items: center; gap: 10px; text-decoration: none; font: 900 22px/1 var(--display); letter-spacing: .12em; }
+.mark i { width: 12px; height: 12px; border-radius: 50%; background: var(--z1); box-shadow: 0 0 14px var(--z1), 0 0 3px var(--z1); }
+nav.top ul { display: flex; gap: 22px; list-style: none; margin: 0 0 0 auto; padding: 0; font-size: 15px; }
+nav.top ul a { text-decoration: none; color: var(--dust); }
+nav.top ul a:hover { color: var(--ink); }
+@media (max-width: 720px) { nav.top ul li.opt { display: none; } }
+
+/* ------------------------------------------------------------ hero */
+.hero { position: relative; overflow: hidden; padding-block: 56px 40px; }
+.hero::before {
+  content: ""; position: absolute; inset: -20% -10% auto auto; width: 80vw; height: 120%; pointer-events: none;
+  background:
+    radial-gradient(closest-side at 62% 52%, color-mix(in oklab, var(--z1) 24%, transparent), transparent),
+    radial-gradient(closest-side at 50% 40%, color-mix(in oklab, var(--z0) 16%, transparent), transparent 80%);
+  filter: blur(10px); transition: background .2s linear;
+}
+.hero .wrap { position: relative; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); gap: 40px; align-items: center; }
+.hero h1 { font-size: clamp(58px, 9vw, 128px); font-weight: 900; text-transform: uppercase; margin-block: 18px 22px; }
+.hero h1 em { font-style: normal; color: transparent; -webkit-text-stroke: 1.5px var(--ink); }
+.hero h1 .lit { color: var(--z1); text-shadow: 0 0 28px color-mix(in oklab, var(--z1) 55%, transparent); }
+.hero p.lede { font-size: 19px; color: color-mix(in oklab, var(--ink) 82%, var(--dust)); }
+.install-chip { margin-top: 30px; display: flex; align-items: stretch; max-width: 600px; border: 1px solid var(--seam); border-radius: 12px; background: var(--carbon); overflow: hidden; }
+.install-chip code { flex: 1; min-width: 0; padding: 15px 16px; overflow-x: auto; white-space: nowrap; color: var(--ink); font-size: 14px; }
+.install-chip code b { color: var(--z1); font-weight: 600; }
+.copy {
+  border: 0; border-left: 1px solid var(--seam); background: var(--graphite); color: var(--ink);
+  font: 600 13px/1 var(--body); padding: 0 18px; cursor: pointer; letter-spacing: .04em;
+}
+.copy:hover { background: color-mix(in oklab, var(--graphite) 70%, var(--z1)); }
+.copy.done { color: var(--z1); }
+.hero .alt { margin-top: 14px; font-size: 14px; display: flex; flex-wrap: wrap; gap: 6px 18px; }
+
+/* the rig */
+.rig { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) 150px; gap: 18px; align-items: center; }
+.rig .panel { display: grid; gap: 10px; align-self: center; }
+.fx { display: grid; gap: 6px; }
+.fx button {
+  text-align: left; border: 1px solid var(--seam); background: var(--carbon); color: var(--dust);
+  font: 500 14px/1 var(--body); padding: 10px 12px; border-radius: 9px; cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.fx button:hover { color: var(--ink); border-color: color-mix(in oklab, var(--seam) 50%, var(--z1)); }
+.fx button[aria-pressed="true"] { color: var(--ink); border-color: var(--z1); background: color-mix(in oklab, var(--carbon) 80%, var(--z1)); }
+.fx button small { font: 600 10px/1 var(--mono); color: var(--dust); letter-spacing: .08em; }
+.swatches { display: flex; flex-wrap: wrap; gap: 7px; }
+.swatches button { width: 22px; height: 22px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; padding: 0; }
+.swatches button[aria-pressed="true"] { border-color: var(--ink); }
+.stage { border: 1px solid var(--seam); border-radius: 10px; overflow: hidden; background: #000; aspect-ratio: 16 / 9; }
+.stage canvas { width: 100%; height: 100%; display: block; }
+.readout { font: 900 44px/1 var(--display); letter-spacing: .02em; text-align: center; }
+.readout small { display: block; font: 600 11px/1.4 var(--mono); color: var(--dust); letter-spacing: .12em; }
+.caption { font-size: 13px; color: var(--dust); line-height: 1.45; min-height: 3.2em; }
+.hint { position: absolute; left: 0; bottom: -6px; font: 600 11px/1 var(--mono); color: var(--dust); letter-spacing: .08em; }
+.photo { position: relative; justify-self: center; width: 100%; max-width: 340px; }
+.photo canvas { width: 100%; height: auto; display: block; cursor: default; }
+.photo canvas.clickable { cursor: pointer; }
+.nophoto { position: absolute; inset: 30% 6% auto; text-align: center; font-size: 14px; color: var(--dust); }
+@media (max-width: 900px) {
+  .hero .wrap { grid-template-columns: minmax(0, 1fr); }
+  .rig { grid-template-columns: minmax(0, 1fr); }
+  .rig .panel { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+  .fx { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-column: 1 / -1; }
+  .photo { max-width: 260px; }
+}
+
+/* ------------------------------------------------------------ DPI ruler */
+.ruler { background: var(--carbon); border-block: 1px solid var(--seam); padding-block: 34px; }
+.ruler .wrap { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 30px; align-items: center; }
+.ruler h3 { font-size: 26px; }
+.ruler .wrap > div:first-child { display: grid; gap: 10px; }
+.ruler svg { width: 100%; height: auto; overflow: visible; }
+.ruler text { font: 600 11px var(--mono); fill: var(--dust); }
+.ruler .lvl circle { fill: var(--graphite); stroke: var(--dust); stroke-width: 1.4; }
+.ruler .lvl.default circle { fill: var(--z1); stroke: var(--z1); }
+.ruler .lvl.sniper circle.ring { fill: none; stroke: var(--heat); stroke-width: 2; }
+.ruler .lvl text { fill: var(--ink); text-anchor: middle; font-weight: 600; }
+@media (max-width: 720px) { .ruler .wrap { grid-template-columns: minmax(0, 1fr); } }
+
+/* ------------------------------------------------------------ chapters */
+section.chapter { padding-block: 96px 30px; }
+.chapter .wrap { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 54px; align-items: center; }
+.chapter.flip .wrap { grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); }
+.chapter.flip .copytext { order: 2; }
+.copytext { display: grid; gap: 18px; }
+.copytext ul { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 10px; }
+.copytext li { padding-left: 22px; position: relative; color: color-mix(in oklab, var(--ink) 86%, var(--dust)); }
+.copytext li::before { content: ""; position: absolute; left: 2px; top: .62em; width: 8px; height: 8px; border-radius: 2px; background: var(--z1); box-shadow: 0 0 10px var(--z1); }
+.copytext li b { color: var(--ink); font-weight: 600; }
+.appwin, .window {
+  margin: 0; border-radius: 12px; overflow: hidden; border: 1px solid var(--seam); background: var(--void);
+  box-shadow: 0 30px 80px -30px #000, 0 0 0 1px #000, 0 0 60px -20px color-mix(in oklab, var(--z1) 45%, transparent);
+  transform: perspective(1600px) rotateY(-4deg); transition: transform .5s ease;
+}
+.chapter.flip .appwin, .chapter.flip .window { transform: perspective(1600px) rotateY(4deg); }
+.appwin:hover, .window:hover { transform: none; }
+.appbar {
+  display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-bottom: 1px solid var(--seam);
+  font: 600 10px/1 var(--body); letter-spacing: .1em; color: var(--dust);
+}
+.appbar b { color: var(--ink); font-weight: 700; margin-right: auto; }
+.appbar .pill { border: 1px solid var(--seam); border-radius: 99px; padding: 5px 10px; white-space: nowrap; }
+.appbody { display: grid; grid-template-columns: 502fr 778fr; background: radial-gradient(60% 70% at 70% 55%, #14202b, var(--void)); }
+.appbody img { width: 100%; height: auto; }
+.appbody canvas { width: 100%; height: 100%; object-fit: contain; display: block; }
+.appwin figcaption { font: 600 11px var(--mono); letter-spacing: .08em; color: var(--dust); padding: 8px 12px; border-top: 1px solid var(--seam); }
+.window .bar { height: 30px; display: flex; align-items: center; gap: 7px; padding-inline: 12px; border-bottom: 1px solid var(--seam); }
+.window .bar i { width: 10px; height: 10px; border-radius: 50%; background: var(--seam); }
+.window .bar span { margin-left: 8px; font: 600 11px var(--mono); color: var(--dust); letter-spacing: .06em; }
+@media (max-width: 560px) { .appbar .pill { display: none; } }
+@media (max-width: 900px) {
+  .chapter .wrap, .chapter.flip .wrap { grid-template-columns: minmax(0, 1fr); gap: 30px; }
+  .chapter.flip .copytext { order: 0; }
+  .appwin, .window, .chapter.flip .appwin, .chapter.flip .window { transform: none; }
+}
+
+/* ------------------------------------------------------------ rules */
+.rules { padding-block: 110px 40px; }
+.rules .head { display: grid; gap: 16px; margin-bottom: 40px; }
+.rulelist { display: grid; gap: 10px; }
+.rule {
+  display: grid; grid-template-columns: 70px minmax(0, 1fr) 40px minmax(0, 1fr); align-items: center; gap: 14px;
+  padding: 16px 18px; border: 1px solid var(--seam); border-radius: 12px; background: var(--carbon);
+}
+.rule .k { font: 600 11px var(--mono); letter-spacing: .12em; color: var(--dust); }
+.rule .arrow { color: var(--dust); text-align: center; font-family: var(--mono); }
+.rule .then { display: flex; align-items: center; gap: 10px; }
+.rule .dot { width: 14px; height: 14px; border-radius: 50%; flex: none; }
+.rule.on { border-color: var(--z1); box-shadow: 0 0 0 1px color-mix(in oklab, var(--z1) 40%, transparent) inset; }
+.rule.on .k::after { content: " · ACTIVE"; color: var(--z1); }
+.twocol { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 40px; align-items: start; }
+.cards { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; margin-top: 60px; }
+.card { border: 1px solid var(--seam); border-radius: 14px; padding: 26px; background: linear-gradient(160deg, var(--graphite), var(--carbon)); display: grid; gap: 12px; align-content: start; }
+.card .tag { font: 600 11px var(--mono); letter-spacing: .12em; color: var(--z1); }
+@media (max-width: 900px) {
+  .twocol, .cards { grid-template-columns: minmax(0, 1fr); }
+  .rule { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .rule .arrow { display: none; }
+}
+
+/* ------------------------------------------------------------ safety log */
+.safety { padding-block: 110px 40px; }
+.log {
+  font: 400 13.5px/1.75 var(--mono); background: #05060a; border: 1px solid var(--seam); border-radius: 12px;
+  padding: 22px 24px; overflow-x: auto; white-space: pre; color: var(--dust);
+}
+.log .c { color: var(--ink); }
+.log .ok { color: #3ddc84; }
+.log .h { color: var(--z1); }
+
+/* ------------------------------------------------------------ install */
+.install { padding-block: 120px 60px; }
+.install .box { border: 1px solid var(--seam); border-radius: 16px; background: var(--carbon); overflow: hidden; margin-top: 34px; }
+.tabs { display: flex; border-bottom: 1px solid var(--seam); overflow-x: auto; }
+.tabs button {
+  border: 0; background: none; color: var(--dust); font: 600 14px/1 var(--body); padding: 16px 20px; cursor: pointer;
+  border-bottom: 2px solid transparent; white-space: nowrap;
+}
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--z1); }
+.tabpanel { padding: 24px; display: grid; gap: 14px; }
+.term { display: flex; align-items: stretch; border: 1px solid var(--seam); border-radius: 10px; background: #05060a; overflow: hidden; }
+.term pre { margin: 0; flex: 1; min-width: 0; padding: 16px; overflow-x: auto; font: 400 14px/1.7 var(--mono); color: var(--ink); }
+.term pre .p { color: var(--z1); user-select: none; }
+.reqs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 26px; }
+.reqs div { border-top: 1px solid var(--seam); padding-top: 14px; font-size: 15px; }
+.reqs b { display: block; font: 800 20px/1.1 var(--display); text-transform: uppercase; letter-spacing: .03em; margin-bottom: 6px; }
+@media (max-width: 720px) { .reqs { grid-template-columns: minmax(0, 1fr); } }
+
+/* ------------------------------------------------------------ faq + footer */
+.faq { padding-block: 90px 40px; }
+.faq details { border-bottom: 1px solid var(--seam); padding-block: 18px; }
+.faq summary { cursor: pointer; font-weight: 600; font-size: 18px; list-style: none; display: flex; justify-content: space-between; gap: 20px; }
+.faq summary::after { content: "+"; font-family: var(--mono); color: var(--z1); }
+.faq details[open] summary::after { content: "−"; }
+.faq details p { margin-top: 10px; color: var(--dust); }
+footer { margin-top: 80px; border-top: 1px solid var(--seam); background: var(--carbon); padding-block: 40px; }
+footer .wrap { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 20px 40px; align-items: start; }
+footer .made { font: 900 30px/1 var(--display); text-transform: uppercase; letter-spacing: .03em; }
+footer .made span { color: var(--z1); }
+footer .links { display: flex; gap: 18px; flex-wrap: wrap; }
+footer .fine { grid-column: 1 / -1; font-size: 13px; color: var(--dust); max-width: 90ch; }
+@media (max-width: 720px) { footer .wrap { grid-template-columns: minmax(0, 1fr); } }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .appwin, .window, .chapter.flip .appwin, .chapter.flip .window { transform: none; transition: none; }
+  .hero::before { transition: none; }
+}
+</style>
+</head>
+<body>
+
+<nav class="top" aria-label="Main">
+  <div class="wrap">
+    <a class="mark" href="#top"><i></i>G502 HUB</a>
+    <ul>
+      <li class="opt"><a href="#lighting">Features</a></li>
+      <li class="opt"><a href="#rules">Rules</a></li>
+      <li><a href="#install">Install</a></li>
+      <li class="opt"><a href="#faq">FAQ</a></li>
+      <li><a href="https://github.com/Ahmedxsaad/g502-hub">GitHub ↗</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="wrap">
+    <div>
+      <div class="eyebrow">Unofficial · for the Logitech G502 HERO · Linux</div>
+      <h1>The <span class="lit">G HUB</span> experience, <em>on Linux</em></h1>
+      <p class="lede">DPI levels and sniper, five onboard profiles, button remapping with G-Shift, and lighting that follows your screen, your music and your games. Free, open source, and no Windows anywhere.</p>
+      <div class="install-chip">
+        <code id="oneliner">curl -fsSL https://Ahmedxsaad.github.io/g502-hub/<b>install.sh</b> | sh</code>
+        <button class="copy" type="button" data-copy="oneliner">Copy</button>
+      </div>
+      <div class="alt muted">
+        <span>Arch / EndeavourOS: <code>yay -S g502-hub</code></span>
+        <a href="#install">Other ways to install</a>
+      </div>
+    </div>
+
+    <div class="rig" aria-label="Lighting demo">
+      <div class="photo">
+        <canvas id="mouse" width="618" height="1110" role="img" aria-label="The Logitech G502 HERO from above, its DPI lights and logo lit by the effect you pick"></canvas>
+        <p class="nophoto" id="nophoto" hidden>The picture of the mouse is Logitech's product photo, loaded from logitechg.com. It didn't load just now, but the effects below still run.</p>
+      </div>
+      <div class="panel">
+        <div class="fx" role="group" aria-label="Lighting effect">
+          <button type="button" data-fx="fixed">Fixed <small>MOUSE</small></button>
+          <button type="button" data-fx="breathing">Breathing <small>MOUSE</small></button>
+          <button type="button" data-fx="cycle">Cycle <small>MOUSE</small></button>
+          <button type="button" data-fx="wave">Wave <small>LIVE</small></button>
+          <button type="button" data-fx="screen" aria-pressed="true">Screen <small>LIVE</small></button>
+          <button type="button" data-fx="audio">Audio <small>LIVE</small></button>
+          <button type="button" data-fx="dpi">DPI <small>LIVE</small></button>
+        </div>
+        <div class="swatches" id="swatches" aria-label="Color" hidden></div>
+        <div class="stage" id="stage"><canvas id="film" width="160" height="90" aria-label="A demo film the screen sampler follows"></canvas></div>
+        <div class="readout" id="readout" hidden>1600<small>DPI · LEVEL 3/5</small></div>
+        <p class="caption" id="caption">Screen sampler: the lights follow what's on your screen. Here, a demo film.</p>
+      </div>
+      <span class="hint" id="hint" hidden>TRY G7 / G8 ON THE MOUSE</span>
+    </div>
+  </div>
+</header>
+
+<section class="ruler" aria-label="DPI range">
+  <div class="wrap">
+    <div>
+      <div class="eyebrow">HERO 25K sensor</div>
+      <h3>100 to 25,600 DPI</h3>
+    </div>
+    <svg viewBox="-20 0 1040 70" role="img" aria-label="DPI scale from 100 to 25,600 with five levels marked: 400, 800, 1600 as default, 3200, 6400, and 400 as sniper">
+      <line x1="0" y1="34" x2="1000" y2="34" stroke="#262a35" stroke-width="4" stroke-linecap="round"/>
+      <g stroke="#3b404c">
+        <line x1="0" y1="44" x2="0" y2="52"/><line x1="125" y1="44" x2="125" y2="52"/><line x1="250" y1="44" x2="250" y2="52"/>
+        <line x1="375" y1="44" x2="375" y2="52"/><line x1="500" y1="44" x2="500" y2="52"/><line x1="625" y1="44" x2="625" y2="52"/>
+        <line x1="750" y1="44" x2="750" y2="52"/><line x1="875" y1="44" x2="875" y2="52"/><line x1="1000" y1="44" x2="1000" y2="52"/>
+      </g>
+      <g text-anchor="middle">
+        <text x="0" y="66">100</text><text x="125" y="66">200</text><text x="250" y="66">400</text><text x="375" y="66">800</text>
+        <text x="500" y="66">1600</text><text x="625" y="66">3200</text><text x="750" y="66">6400</text><text x="875" y="66">12.8k</text><text x="1000" y="66">25.6k</text>
+      </g>
+      <g class="lvl sniper"><circle class="ring" cx="250" cy="34" r="14"/><circle cx="250" cy="34" r="9"/><text x="250" y="38">1</text></g>
+      <g class="lvl"><circle cx="375" cy="34" r="9"/><text x="375" y="38">2</text></g>
+      <g class="lvl default"><circle cx="500" cy="34" r="9"/><text x="500" y="38" style="fill:#001018">3</text></g>
+      <g class="lvl"><circle cx="625" cy="34" r="9"/><text x="625" y="38">4</text></g>
+      <g class="lvl"><circle cx="750" cy="34" r="9"/><text x="750" y="38">5</text></g>
+      <text x="250" y="12" text-anchor="middle" style="fill:#ff4d3d">SNIPER</text>
+      <text x="500" y="12" text-anchor="middle" style="fill:var(--z1)">DEFAULT</text>
+    </svg>
+  </div>
+</section>
+
+<section class="chapter" id="lighting">
+  <div class="wrap">
+    <div class="copytext">
+      <div class="eyebrow">Lightsync</div>
+      <h2>Lighting that watches with you</h2>
+      <p class="muted">Effects saved on the mouse work anywhere. Live effects run from the tray and react to what's happening.</p>
+      <ul>
+        <li><b>Screen sampler</b> for films, videos and games, per zone: the whole screen, the center, or an edge.</li>
+        <li><b>Audio visualizer</b> in pulse, spectrum or rainbow-beat style, from whatever is playing.</li>
+        <li><b>Color wave</b> and <b>DPI colors</b>, so you always see which level you're on.</li>
+        <li>Fixed, breathing and color cycle stored in the mouse, with a color wheel and your own saved colors.</li>
+      </ul>
+    </div>
+    <figure class="appwin" data-colors="#ff2d95,#00e5ff">
+      <div class="appbar"><b>G502 HERO</b><span class="pill">PROFILE 2: PROFILE 2</span><span class="pill dpi">1600 DPI · LEVEL 3/4</span></div>
+      <div class="appbody">
+        <img src="screenshots/lighting-live.webp" width="1004" height="1472" alt="The Lightsync page with the screen sampler selected" loading="eager">
+        <canvas class="lit" width="778" height="736" aria-hidden="true"></canvas>
+      </div>
+      <figcaption>LIGHTSYNC · LIVE EFFECTS</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="chapter flip" id="sensitivity">
+  <div class="wrap">
+    <div class="copytext">
+      <div class="eyebrow">Sensitivity</div>
+      <h2>DPI you can feel</h2>
+      <p class="muted">Drag a level on the track and the sensor follows while you drag.</p>
+      <ul>
+        <li><b>Five levels</b> from 100 to 25,600 in 50-DPI steps, with a default and a sniper level.</li>
+        <li><b>Report rate</b> from 125 to 1000 Hz.</li>
+        <li>An <b>on-screen popup</b> shows the new DPI when you press G7 or G8.</li>
+      </ul>
+    </div>
+    <figure class="appwin" data-colors="#14b4ff,#14b4ff">
+      <div class="appbar"><b>G502 HERO</b><span class="pill">PROFILE 2: PROFILE 2</span><span class="pill dpi">1600 DPI · LEVEL 3/4</span></div>
+      <div class="appbody">
+        <img src="screenshots/sensitivity.webp" width="1004" height="1472" alt="The Sensitivity page with four DPI levels on a track and the report rate at 1000 Hz" loading="lazy">
+        <canvas class="lit" width="778" height="736" aria-hidden="true"></canvas>
+      </div>
+      <figcaption>SENSITIVITY</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="chapter" id="assignments">
+  <div class="wrap">
+    <div class="copytext">
+      <div class="eyebrow">Assignments</div>
+      <h2>Eleven buttons, two layers</h2>
+      <p class="muted">Hold G-Shift and every button does something else.</p>
+      <ul>
+        <li><b>Any key combination</b>, labelled for your keyboard layout: QWERTY, AZERTY, QWERTZ and the rest.</li>
+        <li>Mouse buttons, scrolling, DPI and profile controls, and <b>media keys</b>.</li>
+        <li><b>Macros</b> recorded or built step by step: saved on the mouse, or run by the app to type text and repeat while held.</li>
+        <li>Everything is stored in the mouse, so it works on any computer.</li>
+      </ul>
+    </div>
+    <figure class="appwin" data-colors="#3ddc84,#3ddc84">
+      <div class="appbar"><b>G502 HERO</b><span class="pill">PROFILE 2: PROFILE 2</span><span class="pill dpi">1600 DPI · LEVEL 3/4</span></div>
+      <div class="appbody">
+        <img src="screenshots/assignments.webp" width="1004" height="1472" alt="The Assignments page with the G6 sniper button selected" loading="lazy">
+        <canvas class="lit" width="778" height="736" aria-hidden="true"></canvas>
+      </div>
+      <figcaption>ASSIGNMENTS</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="chapter flip" id="profiles">
+  <div class="wrap">
+    <div class="copytext">
+      <div class="eyebrow">Profiles</div>
+      <h2>Five setups that live in the mouse</h2>
+      <p class="muted">G9 switches between them, with or without the app.</p>
+      <ul>
+        <li><b>Export a profile to a file</b> and share it; import someone else's into any slot.</li>
+        <li>Rename, reorder the G9 cycle, copy, or reset a slot to factory.</li>
+        <li>A <b>full backup</b> of the mouse's memory before the first change of every session.</li>
+      </ul>
+    </div>
+    <figure class="window full" style="margin:0">
+      <div class="bar"><i></i><i></i><i></i><span>PROFILES</span></div>
+      <img src="screenshots/profiles.webp" width="1920" height="1200" alt="The Profiles page with five onboard slots" loading="lazy">
+    </figure>
+  </div>
+</section>
+
+<section class="rules" id="rules">
+  <div class="wrap">
+    <div class="head">
+      <div class="eyebrow">Games &amp; apps</div>
+      <h2>Rules that know what you're doing</h2>
+      <p class="muted">The first rule that matches wins. When none does, your normal lighting and profile come back on their own.</p>
+    </div>
+    <div class="twocol">
+      <div class="rulelist" id="rulelist">
+        <div class="rule on"><span class="k">WHEN</span><span>YouTube is playing</span><span class="arrow">→</span><span class="then"><i class="dot" style="background:#ff1e1e"></i>Red</span></div>
+        <div class="rule"><span class="k">WHEN</span><span>“One Piece” is playing</span><span class="arrow">→</span><span class="then"><i class="dot" style="background:#ff8a00"></i>Orange breathing, slot 3</span></div>
+        <div class="rule"><span class="k">WHEN</span><span>Any Steam game runs</span><span class="arrow">→</span><span class="then"><i class="dot" style="background:conic-gradient(#09c6ff,#ffc08e,#09c6ff)"></i>Cover art colors, slot 1</span></div>
+        <div class="rule"><span class="k">WHEN</span><span>Counter-Strike 2 runs</span><span class="arrow">→</span><span class="then"><i class="dot" style="background:linear-gradient(90deg,#3ddc84,#ffd400,#ff2a2a)"></i>Health, bomb, flashbangs</span></div>
+        <div class="rule"><span class="k">WHEN</span><span>mpv is in front</span><span class="arrow">→</span><span class="then"><i class="dot" style="background:#7c4dff"></i>Screen sampler</span></div>
+      </div>
+      <figure class="appwin" data-colors="#ff1e1e,#ff1e1e">
+      <div class="appbar"><b>G502 HERO</b><span class="pill">PROFILE 2: PROFILE 2</span><span class="pill dpi">1600 DPI · LEVEL 3/4</span></div>
+      <div class="appbody">
+        <img src="screenshots/games.webp" width="1004" height="1472" alt="The Games and apps page with a YouTube rule active" loading="lazy">
+        <canvas class="lit" width="778" height="736" aria-hidden="true"></canvas>
+      </div>
+      <figcaption>GAMES & APPS</figcaption>
+    </figure>
+    </div>
+    <div class="cards">
+      <div class="card">
+        <div class="tag">CS2 · DOTA 2</div>
+        <h3>The game drives the lights</h3>
+        <p class="muted">Through Valve's official Game State Integration: health on the logo, your team color on the DPI lights, a red beep that speeds up as the bomb counts down, a white flash for flashbangs. Set it up with one click.</p>
+      </div>
+      <div class="card">
+        <div class="tag">PROTON · EXPERIMENTAL</div>
+        <h3>LIGHTSYNC games, through Proton</h3>
+        <p class="muted">Games like GTA V, Borderlands 3 or The Last of Us Part I talk to Logitech's lighting SDK. G502 Hub adds a small stand-in for it to that game's Proton prefix, so the game lights your mouse the way it does on Windows.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="safety" id="safety">
+  <div class="wrap twocol">
+    <div class="copytext">
+      <div class="eyebrow">Safety</div>
+      <h2>Built not to brick anything</h2>
+      <ul>
+        <li>Talks to the mouse over <b>HID++ 2.0</b>, the protocol G HUB uses, with no kernel driver and no root.</li>
+        <li>Backs up the whole onboard memory before the first change of a session, and every backup can be restored.</li>
+        <li>Writes only the user profile area, never the factory profiles, and <b>reads every write back</b>.</li>
+        <li>Keeps bytes it doesn't understand exactly as they were.</li>
+      </ul>
+    </div>
+    <div>
+      <div class="eyebrow" style="margin-bottom:12px">What a save does</div>
+<div class="log" role="img" aria-label="An example of the steps the app takes when it saves a profile"><span class="h">backup</span>  <span class="c">onboard-20261025-180055.json</span>   16 sectors + 6 ROM
+<span class="h">write </span>  <span class="c">sector 0x0002</span>  255 bytes   crc 0xcb2f
+<span class="h">verify</span>  read back                <span class="ok">✓ identical</span>
+<span class="h">reload</span>  slot 2 → 3 → 2           <span class="ok">✓ 0.1 s</span>
+<span class="h">dpi   </span>  level 3 · 1600           <span class="ok">✓ kept</span></div>
+    </div>
+  </div>
+</section>
+
+<section class="install" id="install">
+  <div class="wrap">
+    <div class="eyebrow">Install</div>
+    <h2>One line. Then plug in the mouse.</h2>
+    <div class="box">
+      <div class="tabs" role="tablist" aria-label="Ways to install">
+        <button type="button" role="tab" id="tab-line" aria-selected="true" aria-controls="panel-line">One line</button>
+        <button type="button" role="tab" id="tab-aur" aria-selected="false" aria-controls="panel-aur">AUR</button>
+        <button type="button" role="tab" id="tab-src" aria-selected="false" aria-controls="panel-src">From source</button>
+      </div>
+      <div class="tabpanel" role="tabpanel" id="panel-line" aria-labelledby="tab-line">
+        <div class="term"><pre id="cmd-line"><span class="p">$ </span>curl -fsSL https://Ahmedxsaad.github.io/g502-hub/install.sh | sh</pre><button class="copy" type="button" data-copy="cmd-line">Copy</button></div>
+        <p class="muted">Installs what it needs with your package manager (it asks for your password), adds the permission rule that lets your user talk to the mouse, and puts G502 Hub in your applications menu. Remove it with the same line plus <code>-s -- --uninstall</code>.</p>
+      </div>
+      <div class="tabpanel" role="tabpanel" id="panel-aur" aria-labelledby="tab-aur" hidden>
+        <div class="term"><pre id="cmd-aur"><span class="p">$ </span>yay -S g502-hub</pre><button class="copy" type="button" data-copy="cmd-aur">Copy</button></div>
+        <p class="muted">For Arch, EndeavourOS, Manjaro and CachyOS. Builds the Proton bridge too.</p>
+      </div>
+      <div class="tabpanel" role="tabpanel" id="panel-src" aria-labelledby="tab-src" hidden>
+        <div class="term"><pre id="cmd-src"><span class="p">$ </span>git clone https://github.com/Ahmedxsaad/g502-hub && cd g502-hub
+<span class="p">$ </span>sudo install -m644 udev/70-g502-hub.rules /etc/udev/rules.d/
+<span class="p">$ </span>sudo udevadm control --reload && sudo udevadm trigger
+<span class="p">$ </span>python3 -m g502hub.gui</pre><button class="copy" type="button" data-copy="cmd-src">Copy</button></div>
+        <p class="muted">Needs Python 3.11+, PySide6 and numpy; the live effects also use GStreamer with PipeWire, PyGObject, dbus-fast and parec.</p>
+      </div>
+    </div>
+    <div class="reqs">
+      <div><b>Mouse</b>Logitech G502 HERO, wired (USB 046d:c08b).</div>
+      <div><b>System</b>Built on EndeavourOS with KDE Plasma 6 on Wayland. Fedora and Ubuntu: best effort.</div>
+      <div><b>Close Piper</b>ratbagd rewrites the mouse's G-Shift layer when it saves, so quit it first.</div>
+    </div>
+  </div>
+</section>
+
+<section class="faq" id="faq">
+  <div class="wrap">
+    <div class="eyebrow">FAQ</div>
+    <h2 style="margin-bottom:20px">Questions</h2>
+    <details><summary>Does it need Windows, Wine or G HUB?</summary><p>No. G502 Hub is a native Linux app that talks to the mouse directly. Wine only comes in if you want Proton games to drive the lights.</p></details>
+    <details><summary>Does anything leave my computer?</summary><p>No. Screen and sound are analysed on your machine and never sent anywhere. The only download is the optional product photo of the mouse.</p></details>
+    <details><summary>Will my settings work without the app?</summary><p>Yes. DPI, buttons, report rate and the saved lighting live in the mouse's own memory, on Linux, Windows or a console. Live effects and rules need the app running, which it does quietly in the tray.</p></details>
+    <details><summary>What about other G502 models?</summary><p>Only the wired G502 HERO for now. If you have another G502 and want to help, open an issue with the info from the About page's "Copy for a bug report" button.</p></details>
+    <details><summary>Macros?</summary><p>Yes, two kinds. Saved on the mouse, a macro plays on any computer: keys, media keys, clicks, scrolling and waits. Run by G502 Hub, it can also type text in your keyboard layout, repeat while you hold the button, or toggle on and off. Record one by typing, or build it step by step.</p></details>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="made">Made by <span>Ahmed Saad</span></div>
+    <div class="links">
+      <a href="https://github.com/Ahmedxsaad/g502-hub">GitHub</a>
+      <a href="https://github.com/Ahmedxsaad/g502-hub/issues">Report a bug</a>
+      <a href="https://github.com/Ahmedxsaad/g502-hub/blob/main/LICENSE">GPL-3.0</a>
+    </div>
+    <p class="fine">An unofficial, independent project. Not affiliated with, endorsed or supported by Logitech. Logitech, Logitech G, G HUB, LIGHTSYNC, HERO and G502 are trademarks of Logitech Europe S.A.; Counter-Strike 2, Dota 2 and Steam are trademarks of Valve Corporation. The mouse photo on this page is Logitech's, loaded straight from logitechg.com; it isn't hosted here, and the app downloads its own copy from Logitech the first time it starts.</p>
+  </div>
+</footer>
+
+<script>
+(() => {
+  const root = document.documentElement;
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const $ = (s) => document.querySelector(s);
+
+  // ---------------------------------------------------------- copy buttons
+  document.querySelectorAll("[data-copy]").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const el = document.getElementById(btn.dataset.copy);
+      const text = el.innerText.replace(/^\$ /gm, "").trim();
+      try {
+        await navigator.clipboard.writeText(text);
+        btn.textContent = "Copied"; btn.classList.add("done");
+        setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("done"); }, 1600);
+      } catch {
+        const range = document.createRange(); range.selectNodeContents(el);
+        const sel = getSelection(); sel.removeAllRanges(); sel.addRange(range);
+        btn.textContent = "Press Ctrl+C";
+      }
+    });
+  });
+
+  // ---------------------------------------------------------- install tabs
+  const tabs = [...document.querySelectorAll('[role="tab"]')];
+  tabs.forEach((tab) => tab.addEventListener("click", () => {
+    tabs.forEach((t) => {
+      const on = t === tab;
+      t.setAttribute("aria-selected", on);
+      document.getElementById(t.getAttribute("aria-controls")).hidden = !on;
+    });
+  }));
+
+  // ---------------------------------------------------------- the lighting rig
+  // Same maths as the app's lightfx: colors are [r, g, b] in 0..1
+  const hsv = (h, s, v) => {
+    const f = (n) => { const k = (n + h * 6) % 6; return v - v * s * Math.max(0, Math.min(k, 4 - k, 1)); };
+    return [f(5), f(3), f(1)];
+  };
+  const hex = (c) => "#" + c.map((x) => Math.round(Math.max(0, Math.min(1, x)) * 255).toString(16).padStart(2, "0")).join("");
+  const fromHex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16) / 255);
+  const scale = (c, a) => c.map((x) => x * a);
+  const mix = (a, b, t) => a.map((x, i) => x + (b[i] - x) * t);
+
+  const SWATCHES = ["#14b4ff", "#ff2d95", "#ff1e1e", "#ff8a00", "#ffd400", "#3ddc84", "#7c4dff", "#ffffff"];
+  const DPI = [{ dpi: 400, c: "#ff2a2a" }, { dpi: 800, c: "#ffd400" }, { dpi: 1600, c: "#3ddc84" },
+               { dpi: 3200, c: "#14b4ff" }, { dpi: 6400, c: "#a040ff" }];
+  const CAPTIONS = {
+    fixed: "Fixed: one color, saved in the mouse. Pick one below.",
+    breathing: "Breathing: fades in and out, saved in the mouse.",
+    cycle: "Color cycle: slowly through every hue, saved in the mouse.",
+    wave: "Color wave: a rainbow flowing from the DPI lights to the logo.",
+    screen: "Screen sampler: the lights follow what's on your screen. Here, a demo film.",
+    audio: "Audio visualizer: kicks with the bass of whatever is playing. Here, a silent demo beat.",
+    dpi: "DPI colors: each level has its own color. Press G7 or G8 on the mouse.",
+  };
+  let fx = "screen", color = fromHex(SWATCHES[0]), level = 2;
+  const sw = $("#swatches");
+  SWATCHES.forEach((c, i) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.style.background = c; b.setAttribute("aria-label", c);
+    b.setAttribute("aria-pressed", i === 0);
+    b.addEventListener("click", () => {
+      color = fromHex(c);
+      sw.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b));
+      if (still) frame(0);
+    });
+    sw.appendChild(b);
+  });
+  const fxButtons = document.querySelectorAll("[data-fx]");
+  fxButtons.forEach((b) => b.addEventListener("click", () => {
+    fx = b.dataset.fx;
+    fxButtons.forEach((x) => x.setAttribute("aria-pressed", x === b));
+    sw.hidden = !(fx === "fixed" || fx === "breathing");
+    $("#stage").hidden = !(fx === "screen" || fx === "audio");
+    $("#readout").hidden = $("#hint").hidden = fx !== "dpi";
+    $("#caption").textContent = CAPTIONS[fx];
+    if (still) frame(0);
+  }));
+  // ---------------------------------------------------------- Logitech's photo, lit like in the app
+  // Loaded straight from Logitech's server (it's their image; nothing of it is hosted here).
+  const PHOTO = window.G502_PHOTO || "https://resource.logitechg.com/c_crop,x_730,y_130,w_1030,h_1850/c_scale,w_618/f_png/" +
+    "content/dam/gaming/en/non-braid/hyjal-g502-hero/2025/g502-hero-mouse-top-angle-gallery-1.png";
+  const W = 618, H = 1110;
+  // Lit areas in the photo, as in the app (g502hub/gui/photo.py): box, glow center, glow radius
+  const LEDS = [{ x: 112, y: 529, w: 41, h: 116, cx: 132, cy: 586, r: 70 },
+                { x: 202, y: 704, w: 98, h: 100, cx: 251, cy: 754, r: 120 }];
+  const KEYS = [{ key: "G8", x0: 100, y0: 244, x1: 168, y1: 338 }, { key: "G7", x0: 92, y0: 334, x1: 168, y1: 404 }];
+  let base = null, masks = null;
+
+  function prepare(img) {
+    // Split the photo into an "LEDs off" base and one light mask per zone (same maths as the app)
+    const c = document.createElement("canvas"); c.width = W; c.height = H;
+    const g2 = c.getContext("2d", { willReadFrequently: true });
+    g2.drawImage(img, 0, 0, W, H);
+    const all = g2.getImageData(0, 0, W, H);
+    masks = LEDS.map((L) => {
+      const px = g2.getImageData(L.x, L.y, L.w, L.h), d = px.data, n = L.w * L.h;
+      const strength = new Float32Array(n), mxs = new Float32Array(n);
+      let peak = 1e-6;
+      for (let i = 0; i < n; i++) {
+        const r = d[i * 4] / 255, gg = d[i * 4 + 1] / 255, b = d[i * 4 + 2] / 255;
+        const mx = Math.max(r, gg, b), mn = Math.min(r, gg, b), sat = mx ? (mx - mn) / mx : 0;
+        const blue = b - Math.max(r, gg) * .55;
+        strength[i] = blue > .05 ? Math.min(1, Math.max(0, (sat - .18) / .35)) * Math.min(1, Math.max(0, (mx - .08) / .3)) : 0;
+        mxs[i] = mx; peak = Math.max(peak, mx);
+      }
+      const m = document.createElement("canvas"); m.width = L.w; m.height = L.h;
+      const mg = m.getContext("2d"), md = mg.createImageData(L.w, L.h);
+      for (let i = 0; i < n; i++) {
+        const s0 = strength[i], off = mxs[i] * .28 + .05;
+        const o = ((L.y + Math.floor(i / L.w)) * W + L.x + (i % L.w)) * 4;
+        all.data[o] = (d[i * 4] / 255 * (1 - s0) + off * .94 * s0) * 255;       // LEDs off: dark smoked plastic
+        all.data[o + 1] = (d[i * 4 + 1] / 255 * (1 - s0) + off * .98 * s0) * 255;
+        all.data[o + 2] = (d[i * 4 + 2] / 255 * (1 - s0) + off * s0) * 255;
+        md.data[i * 4] = md.data[i * 4 + 1] = md.data[i * 4 + 2] = 255;
+        md.data[i * 4 + 3] = Math.min(1, s0 * (.55 + .45 * mxs[i] / peak)) * 255;
+      }
+      mg.putImageData(md, 0, 0);
+      return m;
+    });
+    g2.putImageData(all, 0, 0);
+    base = c;
+  }
+
+  const tint = document.createElement("canvas"), tg = tint.getContext("2d");
+  function paint(ctx, z0, z1, dx = 0, dy = 0, scale = 1) {
+    ctx.save(); ctx.translate(dx, dy); ctx.scale(scale, scale);
+    ctx.drawImage(base, 0, 0);
+    [z0, z1].forEach((color, zone) => {
+      const L = LEDS[zone], hx = hex(color);
+      if (Math.max(...color) < .03) return;
+      ctx.globalCompositeOperation = "lighter";
+      const glow = ctx.createRadialGradient(L.cx, L.cy, 0, L.cx, L.cy, L.r);
+      glow.addColorStop(0, hx + "5a"); glow.addColorStop(.45, hx + "1c"); glow.addColorStop(1, hx + "00");
+      ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(L.cx, L.cy, L.r, 0, 7); ctx.fill();
+      ctx.globalCompositeOperation = "source-over";
+      tint.width = L.w; tint.height = L.h;
+      tg.fillStyle = hx; tg.fillRect(0, 0, L.w, L.h);
+      tg.globalCompositeOperation = "destination-in"; tg.drawImage(masks[zone], 0, 0); tg.globalCompositeOperation = "source-over";
+      ctx.drawImage(tint, L.x, L.y);
+    });
+    ctx.restore();
+  }
+
+  const hero = $("#mouse"), hctx = hero.getContext("2d");
+  hero.addEventListener("click", (e) => {
+    if (fx !== "dpi") return;
+    const r = hero.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * W, y = (e.clientY - r.top) / r.height * H;
+    const hit = KEYS.find((k) => x >= k.x0 && x <= k.x1 && y >= k.y0 && y <= k.y1);
+    if (!hit) return;
+    level = Math.max(0, Math.min(DPI.length - 1, level + (hit.key === "G8" ? 1 : -1)));
+    if (still) frame(0);
+  });
+
+  function litWindows() {   // each feature window: the photo, lit in that section's colors
+    document.querySelectorAll(".appwin canvas.lit").forEach((cv) => {
+      const [c0, c1] = cv.closest(".appwin").dataset.colors.split(",").map(fromHex);
+      const ctx = cv.getContext("2d"), scale = cv.height / H * .94;
+      ctx.clearRect(0, 0, cv.width, cv.height);
+      paint(ctx, c0, c1, (cv.width - W * scale) / 2, cv.height * .03, scale);
+    });
+  }
+
+  const photo = new Image();
+  photo.crossOrigin = "anonymous";
+  photo.onload = () => {
+    try { prepare(photo); } catch { base = null; }
+    if (!base) { $("#nophoto").hidden = false; return; }
+    litWindows();
+    if (still) frame(0);
+  };
+  photo.onerror = () => { $("#nophoto").hidden = false; };
+  photo.src = PHOTO;
+
+  // A tiny procedural film for the screen sampler: dusk, ocean, neon city
+  const film = $("#film"), g = film.getContext("2d", { willReadFrequently: true });
+  const SCENES = [
+    (t) => { const sky = g.createLinearGradient(0, 0, 0, 90); sky.addColorStop(0, "#2b0f4c"); sky.addColorStop(.6, "#ff5e3a"); sky.addColorStop(1, "#ffb36b");
+             g.fillStyle = sky; g.fillRect(0, 0, 160, 90); g.fillStyle = "#ffd97a"; g.beginPath(); g.arc(80, 70 - t * 18, 14, 0, 7); g.fill();
+             g.fillStyle = "#14081f"; g.fillRect(0, 74, 160, 16); },
+    (t) => { const sea = g.createLinearGradient(0, 0, 0, 90); sea.addColorStop(0, "#04273d"); sea.addColorStop(1, "#00c2c7");
+             g.fillStyle = sea; g.fillRect(0, 0, 160, 90); g.fillStyle = "#7ff6ff55";
+             for (let i = 0; i < 6; i++) { g.fillRect(0, 30 + i * 10 + Math.sin(t * 6 + i) * 3, 160, 2); } },
+    (t) => { g.fillStyle = "#06040d"; g.fillRect(0, 0, 160, 90);
+             for (let i = 0; i < 9; i++) { const h = 20 + ((i * 37) % 50); g.fillStyle = i % 3 ? "#1a1230" : "#22173d"; g.fillRect(i * 18, 90 - h, 16, h); }
+             g.fillStyle = `hsl(${(310 + t * 80) % 360} 100% 60%)`; g.fillRect(20 + t * 90, 30, 30, 6);
+             g.fillStyle = "#00e5ff"; g.fillRect(110 - t * 60, 50, 22, 4); },
+  ];
+  const vivid = (x0, x1) => {   // weighted toward saturated, bright pixels; brightness follows the scene
+    const d = g.getImageData(x0, 0, x1 - x0, 90).data;
+    let r = 0, gg = 0, b = 0, w = 0, scene = 0;
+    for (let i = 0; i < d.length; i += 16) {
+      const R = d[i] / 255, G = d[i + 1] / 255, B = d[i + 2] / 255, mx = Math.max(R, G, B), mn = Math.min(R, G, B);
+      const s = mx ? (mx - mn) / mx : 0, wt = s * s * mx * mx + 1e-4;
+      r += R * wt; gg += G * wt; b += B * wt; w += wt; scene += mx * mx;
+    }
+    const c = [r / w, gg / w, b / w], peak = Math.max(...c) || 1, lit = Math.min(1, .15 + Math.sqrt(scene / (d.length / 16)) * 1.6);
+    return c.map((x) => x / peak * lit);
+  };
+  const drawBeat = (t, kick) => {
+    g.fillStyle = "#05060a"; g.fillRect(0, 0, 160, 90);
+    for (let i = 0; i < 16; i++) {
+      const f = i / 15, v = Math.max(.08, (1 - f) * kick * .9 + Math.abs(Math.sin(t * 9 + i * 1.7)) * .35 * (1 - kick * .5));
+      g.fillStyle = hex(hsv(.66 - .66 * f, 1, 1)); g.fillRect(6 + i * 9.4, 84 - v * 74, 7, v * 74);
+    }
+  };
+
+  let cur0 = null, cur1 = null, last = 0;
+  function frame(ms) {
+    const t = ms / 1000;
+    let z0, z1, smooth = 1;
+    if (fx === "fixed") { z0 = z1 = color; }
+    else if (fx === "breathing") { const p = (1 - Math.cos(2 * Math.PI * t / 4)) / 2; z0 = z1 = scale(color, .06 + .94 * p); }
+    else if (fx === "cycle") { z0 = z1 = hsv((t / 8) % 1, 1, 1); }
+    else if (fx === "wave") { z0 = hsv((t / 6) % 1, 1, 1); z1 = hsv((t / 6 - .18 + 1) % 1, 1, 1); }
+    else if (fx === "screen") {
+      const n = (t / 5) % SCENES.length, scene = Math.floor(n);
+      SCENES[scene](n - scene); z0 = vivid(0, 160); z1 = vivid(32, 128); smooth = .18;
+    } else if (fx === "audio") {
+      const beat = (t * 2) % 1, kick = Math.pow(1 - beat, 3);
+      drawBeat(t, kick); z0 = scale(fromHex("#ff2d95"), .1 + .9 * kick); z1 = scale(fromHex("#14b4ff"), .15 + .85 * kick);
+    } else { z0 = z1 = fromHex(DPI[level].c); }
+    if (fx === "dpi") $("#readout").innerHTML = `${DPI[level].dpi}<small>DPI · LEVEL ${level + 1}/5</small>`;
+    cur0 = cur0 && smooth < 1 ? mix(cur0, z0, smooth) : z0;
+    cur1 = cur1 && smooth < 1 ? mix(cur1, z1, smooth) : z1;
+    if (ms - last > 30 || still) {
+      root.style.setProperty("--z0", hex(cur0)); root.style.setProperty("--z1", hex(cur1));
+      if (base) { hctx.clearRect(0, 0, W, H); paint(hctx, cur0, cur1); }
+      hero.classList.toggle("clickable", fx === "dpi");
+      last = ms;
+    }
+    if (!still) requestAnimationFrame(frame);
+  }
+  if (still) {   // no animation: show a still, lit frame and update on clicks
+    fx = "fixed"; fxButtons.forEach((b) => b.setAttribute("aria-pressed", b.dataset.fx === "fixed"));
+    sw.hidden = false; $("#stage").hidden = true; $("#caption").textContent = CAPTIONS.fixed;
+    SCENES[0](0); frame(0);
+  } else {
+    requestAnimationFrame(frame);
+  }
+})();
+</script>
+</body>
+</html>
