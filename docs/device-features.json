@@ -1,0 +1,195 @@
+{
+  "hidraw": "/dev/hidraw1",
+  "protocol": "4.2",
+  "features": [
+    {
+      "index": 0,
+      "id": "0x0000",
+      "name": "Root",
+      "version": 0,
+      "flags": []
+    },
+    {
+      "index": 1,
+      "id": "0x0001",
+      "name": "FeatureSet",
+      "version": 1,
+      "flags": []
+    },
+    {
+      "index": 2,
+      "id": "0x8070",
+      "name": "ColorLedEffects",
+      "version": 3,
+      "flags": []
+    },
+    {
+      "index": 3,
+      "id": "0x0003",
+      "name": "DeviceFwVersion",
+      "version": 2,
+      "flags": []
+    },
+    {
+      "index": 4,
+      "id": "0x0005",
+      "name": "DeviceName",
+      "version": 0,
+      "flags": []
+    },
+    {
+      "index": 5,
+      "id": "0x1300",
+      "name": "LedControl",
+      "version": 0,
+      "flags": []
+    },
+    {
+      "index": 6,
+      "id": "0x18A1",
+      "name": "?LedTest",
+      "version": 0,
+      "flags": [
+        "hidden",
+        "engineering",
+        "manuf-deactivatable"
+      ]
+    },
+    {
+      "index": 7,
+      "id": "0x1E00",
+      "name": "EnableHiddenFeatures",
+      "version": 0,
+      "flags": [
+        "hidden"
+      ]
+    },
+    {
+      "index": 8,
+      "id": "0x1E22",
+      "name": "?SpiDirectAccess",
+      "version": 0,
+      "flags": [
+        "hidden",
+        "engineering",
+        "manuf-deactivatable"
+      ]
+    },
+    {
+      "index": 9,
+      "id": "0x1EB0",
+      "name": "?TdeAccess",
+      "version": 0,
+      "flags": [
+        "hidden",
+        "engineering",
+        "manuf-deactivatable"
+      ]
+    },
+    {
+      "index": 10,
+      "id": "0x2201",
+      "name": "AdjustableDpi",
+      "version": 1,
+      "flags": []
+    },
+    {
+      "index": 11,
+      "id": "0x8060",
+      "name": "AdjustableReportRate",
+      "version": 0,
+      "flags": []
+    },
+    {
+      "index": 12,
+      "id": "0x8100",
+      "name": "OnboardProfiles",
+      "version": 0,
+      "flags": []
+    },
+    {
+      "index": 13,
+      "id": "0x8110",
+      "name": "MouseButtonSpy",
+      "version": 0,
+      "flags": []
+    },
+    {
+      "index": 14,
+      "id": "0x00C2",
+      "name": "DfuControlSigned",
+      "version": 0,
+      "flags": []
+    },
+    {
+      "index": 15,
+      "id": "0x1801",
+      "name": "unknown",
+      "version": 0,
+      "flags": [
+        "hidden",
+        "engineering",
+        "manuf-deactivatable"
+      ]
+    },
+    {
+      "index": 16,
+      "id": "0x1802",
+      "name": "DeviceReset",
+      "version": 0,
+      "flags": [
+        "hidden",
+        "engineering",
+        "manuf-deactivatable"
+      ]
+    },
+    {
+      "index": 17,
+      "id": "0x1806",
+      "name": "ConfigurableDeviceProperties",
+      "version": 5,
+      "flags": [
+        "hidden",
+        "engineering",
+        "manuf-deactivatable"
+      ]
+    },
+    {
+      "index": 18,
+      "id": "0x18B1",
+      "name": "unknown",
+      "version": 0,
+      "flags": [
+        "hidden",
+        "engineering",
+        "manuf-deactivatable"
+      ]
+    },
+    {
+      "index": 19,
+      "id": "0x180B",
+      "name": "unknown",
+      "version": 0,
+      "flags": [
+        "hidden",
+        "engineering",
+        "manuf-deactivatable"
+      ]
+    }
+  ],
+  "name": "G502 HERO Gaming Mouse",
+  "firmware": [
+    {
+      "type": "main",
+      "name": "U1",
+      "version": "69.00",
+      "build": "0009"
+    },
+    {
+      "type": "bootloader",
+      "name": "BL2",
+      "version": "40.00",
+      "build": "0009"
+    }
+  ]
+}
