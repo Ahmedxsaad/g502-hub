@@ -12,7 +12,11 @@ from collections import deque
 SHORT, LONG = 0x10, 0x11
 SIZES = {SHORT: 7, LONG: 20}
 CORDED = 0xFF  # device index of a corded device
-SW_ID = 0x06  # unused by kernel (1), OpenRGB (7), libratbag (8), Solaar (B), G HUB (D)
+# Software IDs tag our requests so replies can be told apart from other programs' ones.
+# Skips the kernel (1), OpenRGB (7), libratbag (8), Solaar (B) and G HUB (D); each process
+# picks its own, so the app and the command line can run side by side.
+FREE_SW_IDS = (0x6, 0x2, 0x3, 0x4, 0x5, 0x9, 0xA, 0xC, 0xE, 0xF)
+SW_ID = FREE_SW_IDS[os.getpid() % len(FREE_SW_IDS)]
 
 ERRORS = {
     0x01: "unknown", 0x02: "invalid argument", 0x03: "out of range",

@@ -3,10 +3,15 @@
 Function numbers and payloads come from docs/protocol.md.
 """
 
+import fcntl
+import functools
+import os
+import time
+from contextlib import contextmanager
 from dataclasses import dataclass
 
 from . import onboard
-from .hidpp import ERR_HARDWARE, Hidpp, HidppError, find_hidraw
+from .hidpp import ERR_BUSY, ERR_HARDWARE, Hidpp, HidppError, find_hidraw
 
 VID, PID = 0x046D, 0xC08B
 
@@ -20,6 +25,19 @@ ROM = 0x0100  # memory type 1 = read-only factory profiles
 
 class DeviceNotFound(Exception):
     pass
+
+
+class NoPermission(DeviceNotFound):
+    """The mouse is there but this user may not open it (the udev rule is missing)."""
+
+
+def _exclusive(method):
+    """Run a multi-request device method under G502.exclusive()."""
+    @functools.wraps(method)
+    def wrapper(self, *args, **kwargs):
+        with self.exclusive():
+            return method(self, *args, **kwargs)
+    return wrapper
 
 
 def parse_dpi_list(payload):
@@ -73,10 +91,12 @@ class G502:
         try:
             self.hidpp = Hidpp(path)
         except PermissionError:
-            raise DeviceNotFound(f"no permission on {path}: install udev/70-g502-hub.rules") from None
+            raise NoPermission(f"no permission on {path}: install udev/70-g502-hub.rules") from None
         self.path = path
         self._onboard_info = None
         self._zones = None
+        self._lock_fd = None
+        self._lock_depth = 0
 
     def close(self):
         self.hidpp.close()
@@ -145,6 +165,36 @@ class G502:
     def set_current_profile(self, sector):
         self._call(ONBOARD_PROFILES, 3, sector.to_bytes(2, "big"))
 
+    @contextmanager
+    def exclusive(self, timeout=10.0):
+        """Keep other programs off the mouse during a multi-request sequence.
+
+        Memory reads and writes are several requests long; another program
+        talking to the mouse in between can break them.
+        """
+        if self._lock_depth == 0:
+            if self._lock_fd is None:
+                runtime = os.environ.get("XDG_RUNTIME_DIR") or f"/tmp/g502-hub-{os.getuid()}"
+                os.makedirs(runtime, exist_ok=True)
+                self._lock_fd = os.open(os.path.join(runtime, "g502-hub.lock"), os.O_RDWR | os.O_CREAT, 0o600)
+            deadline = time.monotonic() + timeout
+            while True:
+                try:
+                    fcntl.flock(self._lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    break
+                except BlockingIOError:
+                    if time.monotonic() > deadline:
+                        raise IOError("another program is busy with the mouse; try again") from None
+                    time.sleep(0.02)
+        self._lock_depth += 1
+        try:
+            yield
+        finally:
+            self._lock_depth -= 1
+            if self._lock_depth == 0:
+                fcntl.flock(self._lock_fd, fcntl.LOCK_UN)
+
+    @_exclusive
     def reload_current_profile(self, dpi_index=None):
         """Make the firmware re-read the active profile after it was rewritten.
 
@@ -174,6 +224,7 @@ class G502:
             raise ValueError("DPI index must be 0-4")
         self._call(ONBOARD_PROFILES, 12, [index])
 
+    @_exclusive
     def read_sector(self, sector):
         size = self.onboard_info().sector_size
         data = bytearray(size)
@@ -183,6 +234,7 @@ class G502:
             data[start:start + 16] = r[:16]
         return bytes(data)
 
+    @_exclusive
     def write_sector(self, sector, data, allow_bad_crc=False):
         """Write a full sector and verify it by reading it back.
 
@@ -198,6 +250,19 @@ class G502:
         sealed = onboard.crc_ok(data)
         if not sealed and not allow_bad_crc:
             raise ValueError("refusing to write a sector with a bad CRC")
+        # A whole-sector write is safe to repeat, so a busy or silent mouse gets two more tries
+        for attempt in range(3):
+            try:
+                self._write_once(sector, data, sealed)
+                break
+            except (TimeoutError, HidppError) as e:
+                if attempt == 2 or (isinstance(e, HidppError) and e.code != ERR_BUSY):
+                    raise
+                time.sleep(0.05)
+        if self.read_sector(sector) != bytes(data):
+            raise IOError(f"read-back of sector 0x{sector:04X} does not match what was written")
+
+    def _write_once(self, sector, data, sealed):
         self._call(ONBOARD_PROFILES, 6, sector.to_bytes(2, "big") + b"\0\0" +
                    len(data).to_bytes(2, "big"), retries=0)
         for off in range(0, len(data), 16):
@@ -209,8 +274,6 @@ class G502:
                 raise
             if sealed:
                 raise IOError(f"mouse rejected the CRC of sector 0x{sector:04X}") from e
-        if self.read_sector(sector) != bytes(data):
-            raise IOError(f"read-back of sector 0x{sector:04X} does not match what was written")
 
     def read_directory(self):
         """The user profile directory, or the ROM one if the user one was never written."""
