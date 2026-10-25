@@ -32,7 +32,7 @@ STYLESHEET = f"""
 QMainWindow, #Root {{ background: {BG}; }}
 #TopBar {{ background: {BG}; border-bottom: 1px solid {BORDER}; }}
 #Rail {{ background: {BG}; border-right: 1px solid {BORDER}; }}
-#SidePanel {{ background: {PANEL}; border-left: 1px solid {BORDER}; }}
+#SidePanel {{ background: {PANEL}; border-right: 1px solid {BORDER}; }}
 #Card {{ background: {RAISED}; border: 1px solid {BORDER}; border-radius: 6px; }}
 #Card[active="true"] {{ border: 1px solid {ACCENT}; }}
 
@@ -87,7 +87,14 @@ QLineEdit, QSpinBox, QComboBox {{
     selection-background-color: {ACCENT_DIM};
 }}
 QLineEdit:focus, QSpinBox:focus, QComboBox:focus {{ border: 1px solid {ACCENT}; }}
-QComboBox::drop-down {{ border: none; width: 22px; }}
+QComboBox::drop-down {{ border: none; width: 26px; }}
+QComboBox::down-arrow {{ image: url({ASSETS}/chevron-down.svg); width: 12px; height: 12px; }}
+QComboBox#ProfileBox {{
+    /* Qt drops a radius larger than half the height, so the height is fixed */
+    background: transparent; border: 1px solid {BORDER}; border-radius: 17px; padding: 0 16px;
+    min-height: 34px; max-height: 34px; font-size: 11px; font-weight: 600; letter-spacing: 1.2px;
+}}
+QComboBox#ProfileBox:hover {{ border-color: {ACCENT}; }}
 QComboBox QAbstractItemView {{
     background: {RAISED}; border: 1px solid {BORDER}; selection-background-color: {HOVER};
     outline: none;

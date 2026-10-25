@@ -1,9 +1,12 @@
 """Small reusable widgets: segmented tabs, color picker, slider rows, key capture."""
 
+from math import atan2, cos, hypot, pi, sin
+
+import numpy as np
 from PySide6.QtCore import QPointF, QRectF, Qt, Signal
-from PySide6.QtGui import QColor, QConicalGradient, QLinearGradient, QPainter, QPainterPath, QPen
+from PySide6.QtGui import QColor, QConicalGradient, QImage, QLinearGradient, QPainter, QPen
 from PySide6.QtWidgets import (QButtonGroup, QFrame, QGridLayout, QHBoxLayout, QLabel,
-                               QLineEdit, QPushButton, QSlider, QVBoxLayout, QWidget)
+                               QLineEdit, QPushButton, QSlider, QSpinBox, QVBoxLayout, QWidget)
 
 from .. import keys, settings
 from . import theme
@@ -61,6 +64,30 @@ class LedSwatch(QWidget):
             p.setPen(Qt.PenStyle.NoPen)
             p.setBrush(QColor(*e.color))
         p.drawEllipse(r)
+
+
+class Switcher(QWidget):
+    """Shows one of its pages at a time and takes that page's size (unlike QStackedWidget)."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._col = QVBoxLayout(self)
+        self._col.setContentsMargins(0, 0, 0, 0)
+        self.pages = []
+        self._current = 0
+
+    def addWidget(self, page):
+        self.pages.append(page)
+        self._col.addWidget(page)
+        page.setVisible(len(self.pages) - 1 == self._current)
+
+    def setCurrentIndex(self, i):
+        self._current = i
+        for n, page in enumerate(self.pages):
+            page.setVisible(n == i)
+
+    def currentIndex(self):
+        return self._current
 
 
 class Segmented(QWidget):
@@ -134,7 +161,7 @@ class SliderRow(QWidget):
 
     def __init__(self, label, lo, hi, fmt="{}", step=1, parent=None):
         super().__init__(parent)
-        self.fmt = fmt
+        self.fmt = fmt if callable(fmt) else fmt.format  # "{} %" or a function of the value
         col = QVBoxLayout(self)
         col.setContentsMargins(0, 0, 0, 0)
         col.setSpacing(6)
@@ -154,7 +181,7 @@ class SliderRow(QWidget):
         self.slider.sliderReleased.connect(lambda: self.committed.emit(self.slider.value()))
 
     def _changed(self, v):
-        self.value_label.setText(self.fmt.format(v))
+        self.value_label.setText(self.fmt(v))
         self.moved.emit(v)
         if not self.slider.isSliderDown():
             self.committed.emit(v)  # keyboard or click on the groove
@@ -163,45 +190,64 @@ class SliderRow(QWidget):
         self.slider.blockSignals(True)
         self.slider.setValue(v)
         self.slider.blockSignals(False)
-        self.value_label.setText(self.fmt.format(v))
+        self.value_label.setText(self.fmt(v))
 
 
-class _SatValSquare(QWidget):
-    picked = Signal(float, float, bool)  # saturation, value, final
+class _HueSatWheel(QWidget):
+    """Hue around, saturation outwards, like G HUB's color wheel."""
 
-    def __init__(self):
+    picked = Signal(float, float, bool)  # hue, saturation, final
+
+    def __init__(self, size=220):
         super().__init__()
-        self.hue, self.sat, self.val = 0.0, 1.0, 1.0
-        self.setMinimumHeight(150)
+        self.setFixedSize(size, size)
         self.setCursor(Qt.CursorShape.CrossCursor)
+        self.hue, self.sat, self.val = 0.0, 1.0, 1.0
+        self._image = self._render(size)
+
+    @staticmethod
+    def _render(size, dpr=2):
+        n = size * dpr
+        y, x = np.mgrid[0:n, 0:n].astype(np.float32)
+        c = (n - 1) / 2
+        dx, dy = (x - c) / c, (c - y) / c
+        r = np.hypot(dx, dy)
+        hue6 = (np.arctan2(dy, dx) / (2 * np.pi) % 1.0) * 6
+        # HSV -> RGB at full value: f(n) = 1 - S * clamp(min(k, 4 - k), 0, 1), k = (n + H/60) mod 6
+        k = (np.array([5, 3, 1], np.float32) + hue6[..., None]) % 6
+        rgb = 1 - np.clip(r, 0, 1)[..., None] * np.clip(np.minimum(k, 4 - k), 0, 1)
+        alpha = np.clip((1 - r) * c + 0.5, 0, 1)[..., None]  # antialiased rim
+        bgra = np.concatenate([rgb[..., ::-1] * alpha, alpha], -1)  # premultiplied, memory order
+        data = (bgra * 255 + 0.5).astype(np.uint8).tobytes()
+        image = QImage(data, n, n, n * 4, QImage.Format.Format_ARGB32_Premultiplied).copy()
+        image.setDevicePixelRatio(dpr)
+        return image
 
     def paintEvent(self, _):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        r = QRectF(self.rect()).adjusted(1, 1, -1, -1)
-        path = QPainterPath()
-        path.addRoundedRect(r, 4, 4)
-        p.setClipPath(path)
-        horizontal = QLinearGradient(r.topLeft(), r.topRight())
-        horizontal.setColorAt(0, QColor("white"))
-        horizontal.setColorAt(1, QColor.fromHsvF(self.hue, 1, 1))
-        p.fillRect(r, horizontal)
-        vertical = QLinearGradient(r.topLeft(), r.bottomLeft())
-        vertical.setColorAt(0, QColor(0, 0, 0, 0))
-        vertical.setColorAt(1, QColor(0, 0, 0, 255))
-        p.fillRect(r, vertical)
-        p.setClipping(False)
-        x = r.left() + self.sat * r.width()
-        y = r.top() + (1 - self.val) * r.height()
-        p.setPen(QPen(QColor("white"), 2))
+        p.drawImage(0, 0, self._image)
+        if self.val < 1:  # show the chosen brightness over the whole wheel
+            p.setPen(Qt.PenStyle.NoPen)
+            p.setBrush(QColor(0, 0, 0, int((1 - self.val) * 255)))
+            p.drawEllipse(QRectF(self.rect()).adjusted(0.5, 0.5, -0.5, -0.5))
+        c = self.width() / 2
+        a = self.hue * 2 * pi
+        pos = QPointF(c + cos(a) * self.sat * (c - 1), c - sin(a) * self.sat * (c - 1))
+        p.setPen(QPen(QColor(0, 0, 0, 120), 4))
         p.setBrush(Qt.BrushStyle.NoBrush)
-        p.drawEllipse(QPointF(x, y), 6, 6)
+        p.drawEllipse(pos, 9, 9)
+        p.setPen(QPen(QColor("white"), 2.5))
+        p.setBrush(QColor.fromHsvF(self.hue, self.sat, self.val))
+        p.drawEllipse(pos, 9, 9)
 
     def _pick(self, pos, final):
-        self.sat = min(max(pos.x() / max(self.width(), 1), 0), 1)
-        self.val = 1 - min(max(pos.y() / max(self.height(), 1), 0), 1)
+        c = self.width() / 2
+        dx, dy = (pos.x() - c) / c, (c - pos.y()) / c
+        self.hue = (atan2(dy, dx) / (2 * pi)) % 1.0
+        self.sat = min(hypot(dx, dy), 1.0)
         self.update()
-        self.picked.emit(self.sat, self.val, final)
+        self.picked.emit(self.hue, self.sat, final)
 
     def mousePressEvent(self, e):
         self._pick(e.position(), False)
@@ -213,34 +259,37 @@ class _SatValSquare(QWidget):
         self._pick(e.position(), True)
 
 
-class _HueBar(QWidget):
+class _ValueBar(QWidget):
+    """Brightness of the chosen hue, black to full."""
+
     picked = Signal(float, bool)
 
     def __init__(self):
         super().__init__()
-        self.hue = 0.0
-        self.setFixedHeight(14)
+        self.hue, self.sat, self.val = 0.0, 1.0, 1.0
+        self.setFixedHeight(18)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
     def paintEvent(self, _):
         p = QPainter(self)
         p.setRenderHint(QPainter.RenderHint.Antialiasing)
-        r = QRectF(self.rect()).adjusted(1, 2, -1, -2)
+        r = QRectF(self.rect()).adjusted(9, 4, -9, -4)
         g = QLinearGradient(r.topLeft(), r.topRight())
-        for i in range(7):
-            g.setColorAt(i / 6, QColor.fromHsvF((i / 6) % 1.0, 1, 1))
-        p.setPen(Qt.PenStyle.NoPen)
+        g.setColorAt(0, QColor("black"))
+        g.setColorAt(1, QColor.fromHsvF(self.hue, self.sat, 1))
+        p.setPen(QPen(QColor(theme.BORDER), 1))
         p.setBrush(g)
         p.drawRoundedRect(r, 5, 5)
-        x = r.left() + self.hue * r.width()
+        x = r.left() + self.val * r.width()
         p.setPen(QPen(QColor("white"), 2))
-        p.setBrush(QColor.fromHsvF(self.hue, 1, 1))
-        p.drawEllipse(QPointF(x, self.height() / 2), 6, 6)
+        p.setBrush(QColor.fromHsvF(self.hue, self.sat, self.val))
+        p.drawEllipse(QPointF(x, self.height() / 2), 7, 7)
 
     def _pick(self, pos, final):
-        self.hue = min(max(pos.x() / max(self.width(), 1), 0), 0.999)
+        r = QRectF(self.rect()).adjusted(9, 4, -9, -4)
+        self.val = min(max((pos.x() - r.left()) / max(r.width(), 1), 0), 1)
         self.update()
-        self.picked.emit(self.hue, final)
+        self.picked.emit(self.val, final)
 
     def mousePressEvent(self, e):
         self._pick(e.position(), False)
@@ -258,7 +307,7 @@ MAX_SAVED = 10
 
 
 class ColorPicker(QWidget):
-    """Saturation/value square, hue bar, hex field and swatches.
+    """Hue/saturation wheel, brightness bar, hex and RGB fields, presets and saved colors.
 
     `changed(QColor, final)` fires live while dragging (final=False) and once on release.
     """
@@ -269,51 +318,58 @@ class ColorPicker(QWidget):
         super().__init__(parent)
         col = QVBoxLayout(self)
         col.setContentsMargins(0, 0, 0, 0)
-        col.setSpacing(10)
-        self.square = _SatValSquare()
-        self.hue = _HueBar()
-        col.addWidget(self.square)
-        col.addWidget(self.hue)
+        col.setSpacing(12)
+        self.wheel = _HueSatWheel()
+        col.addWidget(self.wheel, 0, Qt.AlignmentFlag.AlignHCenter)
+        self.value = _ValueBar()
+        col.addWidget(self.value)
+
         row = QHBoxLayout()
         row.setSpacing(6)
         self.preview = QLabel()
-        self.preview.setFixedSize(30, 30)
+        self.preview.setFixedSize(32, 32)
         row.addWidget(self.preview)
         self.hex = QLineEdit()
         self.hex.setMaxLength(7)
-        self.hex.setFixedWidth(90)
+        self.hex.setFixedWidth(84)
+        self.hex.setToolTip("Hex color, e.g. #14b4ff")
         self.hex.editingFinished.connect(self._hex_entered)
         row.addWidget(self.hex)
-        self.save_btn = QPushButton("+  Save color")
-        self.save_btn.setObjectName("Flat")
-        self.save_btn.setToolTip("Add this color to My colors")
-        self.save_btn.clicked.connect(self._save_color)
-        row.addWidget(self.save_btn)
+        self.rgb = []
+        for name in "RGB":
+            spin = QSpinBox()
+            spin.setRange(0, 255)
+            spin.setPrefix(f"{name}  ")
+            spin.setKeyboardTracking(False)
+            spin.setMinimumWidth(66)
+            spin.valueChanged.connect(self._rgb_entered)
+            self.rgb.append(spin)
+            row.addWidget(spin)
         row.addStretch()
         col.addLayout(row)
+
         swatches = QHBoxLayout()
         swatches.setSpacing(6)
         for color in SWATCHES:
             swatches.addWidget(self._swatch(color))
         swatches.addStretch()
         col.addLayout(swatches)
-        self.saved_heading = QLabel("MY COLORS")
-        self.saved_heading.setObjectName("Heading")
-        col.addWidget(self.saved_heading)
+        col.addWidget(heading("My colors"))
         self.saved_row = QHBoxLayout()
         self.saved_row.setSpacing(6)
         col.addLayout(self.saved_row)
         self.saved = [c for c in settings.load().get("colors", []) if QColor.isValidColorName(c)][:MAX_SAVED]
         self._show_saved()
-        self.square.picked.connect(lambda s, v, final: self._emit(final))
-        self.hue.picked.connect(self._hue_picked)
+        self.wheel.picked.connect(self._wheel_picked)
+        self.value.picked.connect(self._value_picked)
         self.set_color(QColor(theme.ACCENT))
 
     def _swatch(self, color, removable=False):
         b = QPushButton()
-        b.setFixedSize(22, 22)
+        b.setFixedSize(24, 24)
         b.setCursor(Qt.CursorShape.PointingHandCursor)
-        b.setStyleSheet(f"background:{color}; border:1px solid {theme.BORDER}; border-radius:11px; padding:0;")
+        b.setStyleSheet(f"QPushButton {{ background:{color}; border:1px solid {theme.BORDER}; border-radius:12px; padding:0; }}"
+                        f"QPushButton:hover {{ border:2px solid {theme.TEXT}; }}")
         b.setToolTip(color + ("  ·  right-click to remove" if removable else ""))
         b.clicked.connect(lambda _=False: self.set_color(QColor(color), emit=True))
         if removable:
@@ -328,9 +384,17 @@ class ColorPicker(QWidget):
                 item.widget().deleteLater()
         for color in self.saved:
             self.saved_row.addWidget(self._swatch(color, removable=True))
+        if len(self.saved) < MAX_SAVED:
+            add = QPushButton("+")
+            add.setFixedSize(24, 24)
+            add.setCursor(Qt.CursorShape.PointingHandCursor)
+            add.setToolTip("Save the current color")
+            add.setStyleSheet(f"QPushButton {{ background: transparent; border:1px dashed {theme.FAINT}; "
+                              f"border-radius:12px; padding:0; color:{theme.MUTED}; font-size:15px; }}"
+                              f"QPushButton:hover {{ border-color:{theme.ACCENT}; color:{theme.TEXT}; }}")
+            add.clicked.connect(self._save_color)
+            self.saved_row.addWidget(add)
         self.saved_row.addStretch()
-        self.saved_heading.setVisible(bool(self.saved))
-        self.save_btn.setEnabled(len(self.saved) < MAX_SAVED)
 
     def _save_color(self):
         color = self.color().name()
@@ -345,21 +409,26 @@ class ColorPicker(QWidget):
         self._show_saved()
 
     def color(self):
-        return QColor.fromHsvF(self.hue.hue, self.square.sat, self.square.val)
+        return QColor.fromHsvF(self.wheel.hue, self.wheel.sat, self.value.val)
 
     def set_color(self, color, emit=False):
         h, s, v, _ = color.getHsvF()
-        self.hue.hue = max(h, 0.0)
-        self.square.hue, self.square.sat, self.square.val = self.hue.hue, s, v
-        self.hue.update()
-        self.square.update()
+        hue = max(h, 0.0)  # -1 for greys
+        for w in (self.wheel, self.value):
+            w.hue, w.sat, w.val = hue, s, v
+            w.update()
         self._show(color)
         if emit:
             self.changed.emit(color, True)
 
-    def _hue_picked(self, hue, final):
-        self.square.hue = hue
-        self.square.update()
+    def _wheel_picked(self, hue, sat, final):
+        self.value.hue, self.value.sat = hue, sat
+        self.value.update()
+        self._emit(final)
+
+    def _value_picked(self, val, final):
+        self.wheel.val = val
+        self.wheel.update()
         self._emit(final)
 
     def _emit(self, final):
@@ -368,14 +437,21 @@ class ColorPicker(QWidget):
         self.changed.emit(color, final)
 
     def _show(self, color):
-        self.preview.setStyleSheet(f"background:{color.name()}; border:1px solid {theme.BORDER}; border-radius:4px;")
+        self.preview.setStyleSheet(f"background:{color.name()}; border:1px solid {theme.BORDER}; border-radius:16px;")
         if not self.hex.hasFocus():
             self.hex.setText(color.name())
+        for spin, v in zip(self.rgb, (color.red(), color.green(), color.blue())):
+            spin.blockSignals(True)
+            spin.setValue(v)
+            spin.blockSignals(False)
 
     def _hex_entered(self):
         color = QColor(self.hex.text().strip())
-        if color.isValid():
+        if color.isValid() and color != self.color():
             self.set_color(color, emit=True)
+
+    def _rgb_entered(self):
+        self.set_color(QColor(*(s.value() for s in self.rgb)), emit=True)
 
 
 class KeyCapture(QPushButton):

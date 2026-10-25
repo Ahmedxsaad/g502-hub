@@ -1,5 +1,6 @@
 """Pages of the main window. Each owns a side panel and drives the mouse view."""
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QScrollArea, QVBoxLayout, QWidget
 
 
@@ -15,6 +16,7 @@ class Page:
         self.keylabels = keylabels
         self.panel = QScrollArea()
         self.panel.setWidgetResizable(True)
+        self.panel.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         inner = QWidget()
         self.layout = QVBoxLayout(inner)
         self.layout.setContentsMargins(22, 20, 22, 20)
