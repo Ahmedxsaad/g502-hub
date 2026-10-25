@@ -1,8 +1,8 @@
 #!/bin/sh
 # G502 Hub installer: the G HUB experience for the Logitech G502 HERO, on Linux.
 #
-#   curl -fsSL https://Ahmedxsaad.github.io/g502-hub/install.sh | sh
-#   curl -fsSL https://Ahmedxsaad.github.io/g502-hub/install.sh | sh -s -- --uninstall
+#   curl -fsSL https://g502hub.ahmedxsaad.me/install.sh | sh
+#   curl -fsSL https://g502hub.ahmedxsaad.me/install.sh | sh -s -- --uninstall
 #
 # Installs the dependencies with your package manager (asks for your password;
 # set G502HUB_SKIP_DEPS=1 to skip that and install them yourself),

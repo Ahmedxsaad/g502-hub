@@ -1,0 +1,14 @@
+// The project website on Cloudflare: static files only, served at g502hub.ahmedxsaad.me.
+// Deploy with tools/deploy-site.sh, which builds dist/site first.
+{
+  "name": "g502-hub-site",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./dist/site"
+  },
+  "routes": [
+    { "pattern": "g502hub.ahmedxsaad.me", "custom_domain": true }
+  ],
+  "workers_dev": false,
+  "preview_urls": false
+}

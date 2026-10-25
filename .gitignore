@@ -5,3 +5,5 @@ __pycache__/
 build/
 g502hub/bridge_bin/
 backups/
+dist/
+.wrangler/
