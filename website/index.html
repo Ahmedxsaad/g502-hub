@@ -505,7 +505,7 @@ footer .fine { grid-column: 1 / -1; font-size: 13px; color: var(--dust); max-wid
     <div class="box">
       <div class="tabs" role="tablist" aria-label="Ways to install">
         <button type="button" role="tab" id="tab-line" aria-selected="true" aria-controls="panel-line">One line</button>
-        <button type="button" role="tab" id="tab-aur" aria-selected="false" aria-controls="panel-aur">AUR</button>
+        <button type="button" role="tab" id="tab-aur" aria-selected="false" aria-controls="panel-aur">Arch package</button>
         <button type="button" role="tab" id="tab-src" aria-selected="false" aria-controls="panel-src">From source</button>
       </div>
       <div class="tabpanel" role="tabpanel" id="panel-line" aria-labelledby="tab-line">
@@ -513,8 +513,9 @@ footer .fine { grid-column: 1 / -1; font-size: 13px; color: var(--dust); max-wid
         <p class="muted">Installs what it needs with your package manager (it asks for your password), adds the permission rule that lets your user talk to the mouse, and puts G502 Hub in your applications menu. Remove it with the same line plus <code>-s -- --uninstall</code>.</p>
       </div>
       <div class="tabpanel" role="tabpanel" id="panel-aur" aria-labelledby="tab-aur" hidden>
-        <div class="term"><pre id="cmd-aur"><span class="p">$ </span>yay -S g502-hub</pre><button class="copy" type="button" data-copy="cmd-aur">Copy</button></div>
-        <p class="muted">For Arch, EndeavourOS, Manjaro and CachyOS. It builds the Proton bridge too, and updates with the rest of your system. See the <a href="https://aur.archlinux.org/packages/g502-hub">package page</a>.</p>
+        <div class="term"><pre id="cmd-aur"><span class="p">$ </span>git clone https://github.com/Ahmedxsaad/g502-hub && cd g502-hub/packaging/aur
+<span class="p">$ </span>makepkg -si</pre><button class="copy" type="button" data-copy="cmd-aur">Copy</button></div>
+        <p class="muted">For Arch, EndeavourOS, Manjaro and CachyOS: builds a real pacman package, the Proton bridge included, so <code>pacman -R g502-hub</code> removes it cleanly. It will be on the AUR (<code>yay -S g502-hub</code>) as soon as AUR registration reopens.</p>
       </div>
       <div class="tabpanel" role="tabpanel" id="panel-src" aria-labelledby="tab-src" hidden>
         <div class="term"><pre id="cmd-src"><span class="p">$ </span>git clone https://github.com/Ahmedxsaad/g502-hub && cd g502-hub
