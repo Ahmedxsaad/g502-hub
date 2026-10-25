@@ -14,14 +14,14 @@ jobs:
           pacman -Syu --noconfirm --needed git python python-pytest pyside6 python-numpy
           python-gobject python-dbus-fast gst-plugins-base gst-plugin-pipewire libpulse dbus
           clang llvm lld
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Build the LIGHTSYNC bridge DLLs
         run: sh bridge/logitechled/build.sh
       - name: Run the tests
         env:
           QT_QPA_PLATFORM: offscreen
         run: python -m pytest -q
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: LogitechLed-dlls
           path: g502hub/bridge_bin
