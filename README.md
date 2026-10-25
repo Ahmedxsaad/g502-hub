@@ -11,7 +11,8 @@ libratbag and no root.
 |---|---|
 | 1. Core engine: onboard profiles (incl. G-Shift layer, lighting, names), backup/restore, CLI | done |
 | 2. App window (G HUB-style) for onboard mode: lighting, sensitivity, assignments, profiles | done |
-| 3. Software mode service: animated lighting, per-game profiles, DPI OSD, tray, G-Shift with any action | next |
+| 3. Live lighting (screen, audio, wave, DPI colors) and tray | in progress |
+| 3b. Per-game profiles, DPI OSD, G-Shift with any action | next |
 | 4. Macros, Lua scripts, profile import/export | planned |
 
 ## Setup
@@ -27,16 +28,30 @@ Stop Piper/ratbagd while using this. ratbagd forces onboard mode, and every save
 
 ## App
 
-Needs PySide6 (`sudo pacman -S pyside6`).
+Needs PySide6 (`sudo pacman -S pyside6`). The live effects also use numpy,
+GStreamer with `gst-plugin-pipewire`, python-gobject, python-dbus-fast and
+`parec` (libpulse), all in the Arch repos.
 
 ```sh
 python -m g502hub.gui             # run from this folder
 ./tools/install-desktop.sh        # add "G502 Hub" to the application menu
+./tools/fetch-photo.py            # optional: show Logitech's photo of the mouse
 ```
 
-- **Lightsync**: Fixed, Breathing, Color cycle or Off for the DPI lights and
-  the logo, together or separately. Changes show on the mouse right away.
-  Saved colors are kept in `~/.config/g502-hub/settings.json`.
+`fetch-photo.py` downloads Logitech's top-down product photo to
+`~/.local/share/g502-hub/`. It is Logitech's image, so it isn't in this
+repository; without it the app shows its own drawing of the mouse.
+
+- **Lightsync**
+  - *On the mouse*: Fixed, Breathing, Color cycle or Off for the DPI lights
+    and the logo, together or separately, saved on the mouse.
+  - *Live effects*, made by the app while it runs (it stays in the tray):
+    **Screen sampler** (follows the video or game on screen, per zone: whole
+    screen, center, or an edge), **Audio visualizer** (pulse, spectrum or
+    rainbow beats, from whatever is playing), **Color wave** and **DPI
+    colors** (the lights show which DPI level you're on). Turning one off
+    brings the saved lighting back.
+  - Color wheel with hex/RGB fields and your own saved colors.
 - **Assignments**: any button on the primary or G-Shift layer, set to a mouse,
   scroll, DPI, profile or G-Shift command, a key combo, or a media key. Key
   names follow your keyboard layout.
@@ -46,8 +61,13 @@ python -m g502hub.gui             # run from this folder
 - **Profiles**: the 5 onboard slots. Rename, activate, include in or skip
   from the G9 cycle, reset to factory, copy, plus backup and restore.
 
-Changes are saved to the mouse automatically about a second after you make
-them, so they keep working without the app, and on other computers.
+Changes to the saved settings go to the mouse about a second after you make
+them, so they keep working without the app, and on other computers. App
+settings (saved colors, live effect options) are in
+`~/.config/g502-hub/settings.json`.
+
+The screen sampler uses the desktop's screen-sharing portal: the first time,
+KDE asks which screen to share; after that it remembers.
 
 ## CLI
 
@@ -90,6 +110,8 @@ g502hub/macro.py    onboard macro codec (format 1)
 g502hub/backup.py   dump/restore
 g502hub/cli.py      command line
 g502hub/gui/        the app (PySide6)
+g502hub/lightfx.py  color maths for the live effects
+g502hub/effects/    screen (portal + PipeWire) and audio (parec) capture
 docs/protocol.md    wire protocol reference with sources
 docs/ghub-features.md  what G HUB offers for this mouse
 docs/hardware-notes.md behaviour verified on this unit
