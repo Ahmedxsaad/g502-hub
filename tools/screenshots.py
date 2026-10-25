@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """Take the README / website screenshots in a demo setup.
 
-    QT_QPA_PLATFORM=offscreen tools/screenshots.py [OUT_DIR]
+    QT_QPA_PLATFORM=offscreen tools/screenshots.py
 
 Needs the mouse plugged in (the pages show its real profiles), but never
 changes it: LED writes are switched off and the rules use made-up activity.
-Settings go to a throwaway folder. Pages that show the mouse are saved as just
-the rail and settings panel, since the photo is Logitech's and isn't ours to
-publish; the website puts Logitech's own copy next to them.
+Settings go to a throwaway folder. Every page is saved as the full window in
+docs/screenshots/ (for the README). For the website, pages that show the mouse
+are saved as just the rail and settings panel (website/screenshots/NAME-panel.webp),
+shown there next to Logitech's photo loaded live from logitechg.com, and pages
+without the mouse as the full window.
 """
 
 import os
@@ -27,7 +29,8 @@ from PySide6.QtWidgets import QApplication  # noqa: E402
 from g502hub import context, device, settings  # noqa: E402
 from g502hub.rules import Rule  # noqa: E402
 
-OUT = Path(sys.argv[1] if len(sys.argv) > 1 else ROOT / "website" / "screenshots")
+FULL = ROOT / "docs" / "screenshots"
+SITE = ROOT / "website" / "screenshots"
 
 device.G502.set_led = lambda self, *a, **k: None  # screenshots never touch the lights
 
@@ -74,7 +77,8 @@ app.setStyleSheet(theme.STYLESHEET)
 w = MainWindow()
 w.resize(1280, 800)
 w.show()
-OUT.mkdir(parents=True, exist_ok=True)
+FULL.mkdir(parents=True, exist_ok=True)
+SITE.mkdir(parents=True, exist_ok=True)
 NEON = {0: QColor("#ff2d95"), 1: QColor("#00e5ff")}
 
 
@@ -109,15 +113,19 @@ def run(it=None, wait=0):
 
     def save():
         image = w.grab().toImage()
+        full = image.scaledToWidth(1920, Qt.TransformationMode.SmoothTransformation)
+        full.save(str(FULL / f"{name}.webp"), "WEBP", 88)
+        print(f"saved {FULL / name}.webp")
         if w.center.currentWidget() is w.view:
-            # Only the rail and settings panel: the mouse photo is Logitech's, so it's never in a screenshot
+            # The rail and settings panel alone: the website puts Logitech's photo next to it, live
             ratio = image.devicePixelRatio()
             panel = w.side.geometry().right() + 1
-            image = image.copy(0, round(64 * ratio), round(panel * ratio), round((w.height() - 64) * ratio))
+            crop = image.copy(0, round(64 * ratio), round(panel * ratio), round((w.height() - 64) * ratio))
+            crop.save(str(SITE / f"{name}-panel.webp"), "WEBP", 88)
+            print(f"saved {SITE / name}-panel.webp")
         else:
-            image = image.scaledToWidth(1920, Qt.TransformationMode.SmoothTransformation)
-        image.save(str(OUT / f"{name}.webp"), "WEBP", 88)
-        print(f"saved {OUT / name}.webp  {image.width()}x{image.height()}")
+            full.save(str(SITE / f"{name}.webp"), "WEBP", 88)
+            print(f"saved {SITE / name}.webp")
         run(it)
     QTimer.singleShot(900, save)
 

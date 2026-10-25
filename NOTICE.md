@@ -19,12 +19,12 @@ All other trademarks are the property of their respective owners.
 
 ## The mouse photo
 
-The picture of the mouse in the app is Logitech's product photo. It is **not
-part of this project** and is not included in this repository, its releases,
-packages or website. Each installation downloads it once, directly from
-Logitech's website (logitechg.com), the first time the app starts, and keeps
-it in `~/.local/share/g502-hub/` for that user. The project website shows it
-the same way: each visitor's browser loads it from Logitech's server.
+The picture of the mouse in the app is Logitech's product photo. The photo file
+is not part of this project's code or packages: each installation downloads it
+once, directly from Logitech's website (logitechg.com), the first time the app
+starts, and keeps it in `~/.local/share/g502-hub/` for that user. The project
+website loads it the same way, from Logitech's server. Screenshots of the app
+in this repository show the app as it looks, with that photo in it.
 
 ## How the mouse is supported
 

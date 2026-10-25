@@ -7,11 +7,7 @@ button remapping with G-Shift, five onboard profiles, and rules that change
 everything when you start a game or a YouTube video. No Windows, no Wine,
 no root.
 
-<p align="center">
-  <img src="website/screenshots/lighting-live.webp" width="32%" alt="Live lighting effects">
-  <img src="website/screenshots/games.webp" width="32%" alt="Rules for games and apps">
-  <img src="website/screenshots/sensitivity.webp" width="32%" alt="DPI levels and report rate">
-</p>
+![G502 Hub: live lighting following the screen](docs/screenshots/lighting-live.webp)
 
 ## Install
 
@@ -91,16 +87,13 @@ playing contains something (browsers, mpv, VLC, Spotify, anime apps…).
 
 ## Screenshots
 
-<p align="center">
-  <img src="website/screenshots/lighting.webp" width="32%" alt="Lighting saved on the mouse, with the color wheel">
-  <img src="website/screenshots/assignments.webp" width="32%" alt="Button assignments">
-  <img src="website/screenshots/profiles.webp" width="64%" alt="The five onboard profiles">
-</p>
+| | |
+|---|---|
+| ![Games & apps rules](docs/screenshots/games.webp) | ![Lighting saved on the mouse](docs/screenshots/lighting.webp) |
+| ![Sensitivity](docs/screenshots/sensitivity.webp) | ![Assignments](docs/screenshots/assignments.webp) |
 
-Next to these panels the app shows a photo of your mouse with its lights
-recolored live. That photo is Logitech's, so it isn't part of this project or
-these screenshots: the app downloads it from logitechg.com the first time it
-starts ([NOTICE.md](NOTICE.md)).
+The mouse in the app is Logitech's product photo, which the app downloads from
+logitechg.com the first time it starts ([NOTICE.md](NOTICE.md)).
 
 ## Safety
 
