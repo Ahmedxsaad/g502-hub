@@ -184,6 +184,34 @@ def _icon_path(name):
     elif name == "profiles":
         for y in (5, 12, 19):
             p.addRoundedRect(QRectF(3, y - 2.5, 18, 5), 1.5, 1.5)
+    elif name == "games":  # gamepad
+        p.addRoundedRect(QRectF(2, 7, 20, 11), 5.5, 5.5)
+        p.moveTo(5.5, 12.5)
+        p.lineTo(9.5, 12.5)
+        p.moveTo(7.5, 10.5)
+        p.lineTo(7.5, 14.5)
+        p.addEllipse(QPointF(15.5, 11.2), 1, 1)
+        p.addEllipse(QPointF(17.8, 13.8), 1, 1)
+    elif name == "settings":  # gear
+        p.addEllipse(QPointF(12, 12), 3, 3)
+        for i in range(8):
+            a = i * pi / 4
+            p.moveTo(12 + 6 * cos(a), 12 + 6 * sin(a))
+            p.lineTo(12 + 9.5 * cos(a), 12 + 9.5 * sin(a))
+        p.addEllipse(QPointF(12, 12), 6.5, 6.5)
+    elif name == "macros":  # a list with a play triangle
+        for y in (6, 11, 16):
+            p.moveTo(3, y)
+            p.lineTo(12, y)
+        p.moveTo(15, 9)
+        p.lineTo(22, 13.5)
+        p.lineTo(15, 18)
+        p.closeSubpath()
+    elif name == "about":  # i in a circle
+        p.addEllipse(QPointF(12, 12), 9, 9)
+        p.moveTo(12, 10.5)
+        p.lineTo(12, 16.5)
+        p.addEllipse(QPointF(12, 7.6), 0.6, 0.6)
     return p
 
 

@@ -142,6 +142,9 @@ class ChoiceList(QWidget):
             grid.addWidget(b, i // columns, i % columns)
         self.group.idClicked.connect(lambda i: self.changed.emit(self.values[i]))
 
+    def value(self):
+        return self.values[self.group.checkedId()] if self.group.checkedButton() else None
+
     def set_value(self, value):
         if value in self.values:
             self.group.button(self.values.index(value)).setChecked(True)
