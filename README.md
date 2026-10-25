@@ -155,6 +155,7 @@ From a source checkout use `python3 -m g502hub` instead of `g502hub`.
 git clone https://github.com/Ahmedxsaad/g502-hub && cd g502-hub
 sudo install -m644 udev/70-g502-hub.rules /etc/udev/rules.d/
 sudo udevadm control --reload && sudo udevadm trigger --action=change --subsystem-match=hidraw
+sudo udevadm trigger --action=change --sysname-match=uinput
 python3 -m g502hub.gui                     # the app
 QT_QPA_PLATFORM=offscreen python3 -m pytest
 sh bridge/logitechled/build.sh             # LogitechLed.dll (needs clang, llvm, lld)

@@ -1,5 +1,7 @@
 """SETTINGS page: startup, on-screen popups, mouse picture, device access, game integrations."""
 
+import os
+
 from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from ... import settings
@@ -87,10 +89,18 @@ class SettingsPage(Page):
             f"{photo.PHOTO_PATH.parent}." if ready else self.view.skin.message)
         self.picture_btn.setText("Downloading…" if self.view.fetcher.busy else "Download it again")
         self.picture_btn.setEnabled(not self.view.fetcher.busy)
-        ok = system.udev_rule_installed()
-        self.access.setText("Your user can configure the mouse without root." if ok else
-                            "The permission rule isn't installed, so the app can't open the mouse.")
-        self.fix_btn.setVisible(not ok)
+        rule = system.udev_rule_status()
+        if rule == "old" and os.access("/dev/uinput", os.W_OK):
+            rule = "current"  # the old rule covers the mouse, and Steam's rule already opens uinput
+        self.access.setText({
+            "current": "Your user can configure the mouse without root.",
+            "old": "The permission rule is from an older version. Update it so macros run by the app "
+                   "can always type.",
+            "missing": "The permission rule isn't installed, so the app can't open the mouse.",
+        }[rule])
+        self.fix_btn.setText("Update the rule (asks for your password)" if rule == "old" else
+                             "Allow access (asks for your password)")
+        self.fix_btn.setVisible(rule != "current")
         self._show_games()
         self._show_bridge()
 

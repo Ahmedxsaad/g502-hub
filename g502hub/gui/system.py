@@ -16,6 +16,9 @@ UDEV_RULE = """\
 # Give the logged-in user access to the Logitech G502 HERO's HID++ channel,
 # so g502-hub can configure the mouse without root.
 KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c08b", TAG+="uaccess"
+# Let it create the virtual keyboard that plays macros run by the app
+# (the same rule Steam ships for its controllers).
+KERNEL=="uinput", SUBSYSTEM=="misc", TAG+="uaccess", OPTIONS+="static_node=uinput"
 """
 
 CONFIG = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config")
@@ -71,14 +74,17 @@ def show_osd(text, icon="input-mouse"):
 
 # ------------------------------------------------------------ permissions
 
-def udev_rule_installed():
+def udev_rule_status():
+    """"current", "old" (a rule from an earlier version) or "missing"."""
+    status = "missing"
     for path in (UDEV_RULE_PATH, PACKAGED_RULE_PATH):
         try:
             if Path(path).read_text() == UDEV_RULE:
-                return True
+                return "current"
         except OSError:
             continue
-    return False
+        status = "old"
+    return status
 
 
 class PermissionFix(QObject):
@@ -92,7 +98,8 @@ class PermissionFix(QObject):
 
     def start(self):
         script = (f"cat > {UDEV_RULE_PATH} && chmod 644 {UDEV_RULE_PATH} && udevadm control --reload "
-                  "&& udevadm trigger --action=change --subsystem-match=hidraw")
+                  "&& udevadm trigger --action=change --subsystem-match=hidraw "
+                  "&& udevadm trigger --action=change --sysname-match=uinput")
         self._proc = QProcess(self)
         self._proc.finished.connect(self._done)
         self._proc.errorOccurred.connect(lambda _: self.finished.emit(False, "pkexec isn't available"))

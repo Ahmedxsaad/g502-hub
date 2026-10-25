@@ -1,3 +1,6 @@
 # Give the logged-in user access to the Logitech G502 HERO's HID++ channel,
 # so g502-hub can configure the mouse without root.
 KERNEL=="hidraw*", SUBSYSTEM=="hidraw", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c08b", TAG+="uaccess"
+# Let it create the virtual keyboard that plays macros run by the app
+# (the same rule Steam ships for its controllers).
+KERNEL=="uinput", SUBSYSTEM=="misc", TAG+="uaccess", OPTIONS+="static_node=uinput"

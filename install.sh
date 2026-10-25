@@ -49,20 +49,20 @@ say "Installing dependencies"
 if [ -n "${G502HUB_SKIP_DEPS:-}" ]; then
     note "skipped (G502HUB_SKIP_DEPS is set)"
 elif have pacman; then
-    $SUDO pacman -S --needed --noconfirm git python pyside6 python-numpy python-gobject python-dbus-fast \
+    $SUDO pacman -S --needed --noconfirm git python pyside6 python-numpy python-gobject python-dbus-fast python-evdev \
         gst-plugins-base gst-plugin-pipewire libpulse clang llvm lld
 elif have dnf; then
-    $SUDO dnf install -y git python3 python3-pyside6 python3-numpy python3-gobject python3-dbus-fast \
+    $SUDO dnf install -y git python3 python3-pyside6 python3-numpy python3-gobject python3-dbus-fast python3-evdev \
         gstreamer1-plugins-base pipewire-gstreamer pulseaudio-utils clang llvm lld || \
         note "some packages weren't found; the app still runs, a few live effects may not"
 elif have apt-get; then
     $SUDO apt-get update -qq
     $SUDO apt-get install -y git python3 python3-pyside6.qtwidgets python3-pyside6.qtgui \
         python3-pyside6.qtcore python3-pyside6.qtdbus python3-numpy python3-gi gir1.2-gstreamer-1.0 \
-        gstreamer1.0-plugins-base gstreamer1.0-pipewire python3-dbus-fast pulseaudio-utils clang llvm lld || \
+        gstreamer1.0-plugins-base gstreamer1.0-pipewire python3-dbus-fast python3-evdev pulseaudio-utils clang llvm lld || \
         note "some packages weren't found; the app still runs, a few live effects may not"
 else
-    note "unknown package manager: install git, Python 3, PySide6, numpy, PyGObject, dbus-fast,"
+    note "unknown package manager: install git, Python 3, PySide6, numpy, PyGObject, dbus-fast, evdev,"
     note "GStreamer with the PipeWire plugin and parec yourself, then run this again."
 fi
 python3 -c "import PySide6" 2>/dev/null || die "PySide6 isn't importable; install it with your package manager"
@@ -91,6 +91,7 @@ if ! cmp -s "$APP/udev/70-g502-hub.rules" "$RULE" 2>/dev/null; then
     $SUDO install -m644 "$APP/udev/70-g502-hub.rules" "$RULE"
     $SUDO udevadm control --reload
     $SUDO udevadm trigger --action=change --subsystem-match=hidraw
+    $SUDO udevadm trigger --action=change --sysname-match=uinput
 fi
 note "$RULE"
 

@@ -521,7 +521,7 @@ footer .fine { grid-column: 1 / -1; font-size: 13px; color: var(--dust); max-wid
 <span class="p">$ </span>sudo install -m644 udev/70-g502-hub.rules /etc/udev/rules.d/
 <span class="p">$ </span>sudo udevadm control --reload && sudo udevadm trigger
 <span class="p">$ </span>python3 -m g502hub.gui</pre><button class="copy" type="button" data-copy="cmd-src">Copy</button></div>
-        <p class="muted">Needs Python 3.11+, PySide6 and numpy; the live effects also use GStreamer with PipeWire, PyGObject, dbus-fast and parec.</p>
+        <p class="muted">Needs Python 3.11+, PySide6 and numpy; the live effects also use GStreamer with PipeWire, PyGObject, dbus-fast and parec, and macros run by the app use python-evdev.</p>
       </div>
     </div>
     <div class="reqs">
