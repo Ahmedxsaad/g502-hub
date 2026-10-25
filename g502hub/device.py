@@ -145,13 +145,16 @@ class G502:
     def set_current_profile(self, sector):
         self._call(ONBOARD_PROFILES, 3, sector.to_bytes(2, "big"))
 
-    def reload_current_profile(self):
+    def reload_current_profile(self, dpi_index=None):
         """Make the firmware re-read the active profile after it was rewritten.
 
         Selecting the profile that is already active does nothing, so hop to
         another slot and straight back (factory profiles can't be selected).
+        Afterwards go to DPI level `dpi_index`, or back to the one the user was on.
         """
         current = self.get_current_profile()
+        if dpi_index is None:
+            dpi_index = self.get_current_dpi_index()
         entries = self.read_directory().entries
         others = [e.sector for e in entries if e.sector != current and e.enabled] + \
                  [e.sector for e in entries if e.sector != current and not e.enabled]
@@ -159,6 +162,9 @@ class G502:
             raise IOError("no other profile slot to reload through")
         self.set_current_profile(others[0])
         self.set_current_profile(current)
+        # Loading resets to the default DPI level; keep the one the user was on
+        if dpi_index < len(self.read_profile(current).dpi_levels()):
+            self.set_current_dpi_index(dpi_index)
 
     def get_current_dpi_index(self):
         return self._call(ONBOARD_PROFILES, 11)[0]
