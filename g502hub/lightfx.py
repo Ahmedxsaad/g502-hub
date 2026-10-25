@@ -4,6 +4,7 @@ Colors are (r, g, b) floats in 0..1; `to_rgb8` converts for the mouse.
 """
 
 import colorsys
+from math import cos, pi
 
 import numpy as np
 
@@ -53,6 +54,49 @@ def sample(frame, area="screen", vivid=True):
     return tuple(float(c) / peak * level for c in color)
 
 
+def _hues(px):
+    """Hue 0..1, saturation and value of an (n, 3) float array."""
+    mx, mn = px.max(1), px.min(1)
+    c = mx - mn
+    r, g, b = px.T
+    h = np.zeros_like(mx)
+    m = c > 1e-6
+    rm = m & (mx == r)
+    gm = m & (mx == g) & ~rm
+    bm = m & ~rm & ~gm
+    h[rm] = ((g - b)[rm] / c[rm]) % 6
+    h[gm] = (b - r)[gm] / c[gm] + 2
+    h[bm] = (r - g)[bm] / c[bm] + 4
+    return h / 6, np.where(mx > 0, c / np.maximum(mx, 1e-6), 0), mx
+
+
+def palette(frame, n=2, bins=36):
+    """The n most prominent vivid colors of an image, in distinct hues, at full brightness.
+
+    For cover-art lighting. Grey art gives white; fewer distinct hues than n repeat the first.
+    """
+    px = frame.reshape(-1, 3).astype(np.float32) / 255
+    hue, sat, val = _hues(px)
+    weight = sat ** 2 * val
+    if weight.sum() < 1e-3 * len(px):
+        return [(1.0, 1.0, 1.0)] * n
+    idx = np.minimum((hue * bins).astype(int), bins - 1)
+    hist = np.bincount(idx, weights=weight, minlength=bins)
+    hist = hist + 0.5 * (np.roll(hist, 1) + np.roll(hist, -1))  # circular smoothing
+    out = []
+    for _ in range(n):
+        peak = int(np.argmax(hist))
+        if hist[peak] <= 0:
+            break
+        near = np.abs((idx - peak + bins // 2) % bins - bins // 2) <= 1
+        w = weight * near
+        color = (px * w[:, None]).sum(0) / max(float(w.sum()), 1e-6)
+        out.append(tuple(float(c) / max(float(color.max()), 1e-6) for c in color))
+        for d in range(-3, 4):  # keep the next color a clearly different hue
+            hist[(peak + d) % bins] = 0
+    return (out + [out[0]] * n)[:n] if out else [(1.0, 1.0, 1.0)] * n
+
+
 def adjust(rgb, saturation=1.0, brightness=1.0):
     """Scale saturation and brightness (both multipliers, results clipped to 0..1)."""
     h, s, v = colorsys.rgb_to_hsv(*rgb)
@@ -74,6 +118,12 @@ def wave(t, period_s, zone, saturation=1.0, brightness=1.0, reverse=False):
 
 def scale(rgb, amount):
     return tuple(c * amount for c in rgb)
+
+
+def breathe(rgb, t, period_s):
+    """Fade a color in and out, never quite to black."""
+    phase = (1 - cos(2 * pi * t / max(period_s, 0.1))) / 2
+    return scale(rgb, 0.06 + 0.94 * phase)
 
 
 def audio_pulse(levels, rgb, sensitivity=1.0):

@@ -2,15 +2,20 @@
 
 The mouse stays in onboard mode; colors go to its LEDs' RAM only, so turning
 an effect off (or quitting) brings the saved lighting straight back.
+
+What shows, highest first: a rule's lighting (set_override), the live effect
+the user turned on, the lighting saved on the mouse.
 """
 
 import time
 
-from PySide6.QtCore import QObject, QTimer, Signal
-from PySide6.QtGui import QColor
+import numpy as np
+from PySide6.QtCore import QObject, Qt, QTimer, Signal
+from PySide6.QtGui import QColor, QImage
 
 from .. import lightfx, settings
 from ..onboard import LedEffect
+from .state import POLL_MS
 
 FPS = 30
 KEEPALIVE_S = 1.0  # resend even unchanged colors, e.g. after G9 loads another profile
@@ -19,6 +24,7 @@ FAST_POLL_MS = 120
 EFFECTS = [("screen", "Screen sampler"), ("audio", "Audio visualizer"),
            ("wave", "Color wave"), ("dpi", "DPI colors")]
 EFFECT_NAMES = dict(EFFECTS)
+GSI_GAMES = {730: "cs2", 570: "dota2"}
 
 DEFAULTS = {
     "screen": {"dpi_area": "screen", "logo_area": "center", "vivid": True,
@@ -29,8 +35,21 @@ DEFAULTS = {
 }
 
 
+def art_palette(path):
+    """Two lighting colors from a cover image: {logo: main color, DPI lights: second color}."""
+    image = QImage(path)
+    if image.isNull():
+        return None
+    image = image.scaled(96, 54, Qt.AspectRatioMode.IgnoreAspectRatio,
+                         Qt.TransformationMode.SmoothTransformation).convertToFormat(QImage.Format.Format_RGB888)
+    rows = np.frombuffer(image.constBits(), np.uint8).reshape(image.height(), image.bytesPerLine())
+    frame = rows[:, :image.width() * 3].reshape(image.height(), image.width(), 3)
+    main, second = lightfx.palette(frame, 2)
+    return {1: main, 0: second}
+
+
 class LiveLighting(QObject):
-    colors = Signal(object)     # {zone: QColor} while running, {} when stopped
+    colors = Signal(object)     # {zone: QColor} while something live shows, {} when not
     status = Signal(str, str)   # kind (busy, ok, error, info), text
     runningChanged = Signal(bool)
 
@@ -41,8 +60,12 @@ class LiveLighting(QObject):
         self.options = {k: {**v, **saved.get("options", {}).get(k, {})} for k, v in DEFAULTS.items()}
         self.selected = saved.get("effect", "screen") if saved.get("effect") in DEFAULTS else "screen"
         self.wanted_on = bool(saved.get("on"))
-        self.effect = None
-        self.screen = self.audio = None
+        self.effect = None      # the user's live effect, when on
+        self.override = None    # a rule's lighting: {"lighting", "color", "period_ms", "game", "name"}
+        self.screen = self.audio = self.gsi = self.lightsync = None
+        self._gsi_fx = {}
+        self._art = {}
+        self._shown = None
         self._current = {}
         self._sent = {}
         self._sent_at = 0.0
@@ -54,35 +77,42 @@ class LiveLighting(QObject):
 
     @property
     def running(self):
+        """The user's own live effect is on."""
         return self.effect is not None
+
+    @property
+    def active(self):
+        """What is showing now: a lighting kind, or None for the saved lighting."""
+        return self.override["lighting"] if self.override else self.effect
 
     # ------------------------------------------------------------ control
 
     def start(self, effect=None):
         effect = effect or self.selected
         self.selected, self.effect = effect, effect
-        self._current, self._sent = {}, {}
-        self._sync_sources()
-        self.state.set_poll_ms(FAST_POLL_MS if effect == "dpi" else 500)
-        self._timer.start()
         self._save(on=True)
+        self._refresh()
         self.runningChanged.emit(True)
         if effect != "screen":
             self.status.emit("ok", f"{EFFECT_NAMES[effect]} is on")
 
     def stop(self, remember=True):
         was_running = self.running
-        self._timer.stop()
         self.effect = None
-        self._sync_sources()
-        self.state.set_poll_ms(500)
-        self.colors.emit({})
+        self._refresh()
         if was_running:
-            self._restore_saved_lighting()
             self.runningChanged.emit(False)
-            self.status.emit("info", "Live lighting off: back to the lighting saved on the mouse")
+            if not self.override:
+                self.status.emit("info", "Live lighting off: back to the lighting saved on the mouse")
         if remember:
             self._save(on=False)
+
+    def set_override(self, spec):
+        """Show a rule's lighting instead (None to end it)."""
+        if spec == self.override:
+            return
+        self.override = spec
+        self._refresh()
 
     def resume(self):
         """Turn the last live effect back on if it was on when the app closed."""
@@ -103,12 +133,37 @@ class LiveLighting(QObject):
 
     def choose_another_screen(self):
         settings.update(screen_token=None)
-        if self.effect == "screen":
-            self.start("screen")
+        if self.screen is not None:
+            self.screen.stop()
+            self.screen = None
+            self._refresh()
+
+    def shutdown(self):
+        self.override = None
+        self.stop(remember=False)
+        for source in (self.gsi, self.lightsync):
+            if source is not None:
+                source.stop()
 
     def _save(self, on):
         self.wanted_on = on
         settings.update(live={"effect": self.selected, "on": on, "options": self.options})
+
+    def _refresh(self):
+        """Start or stop sources and the frame timer for whatever should show now."""
+        kind = self.active
+        if kind != self._shown:
+            self._current, self._sent = {}, {}
+        self._sync_sources(kind)
+        self.state.set_poll_ms(FAST_POLL_MS if kind == "dpi" else POLL_MS)
+        if kind:
+            self._timer.start()
+        else:
+            self._timer.stop()
+            self.colors.emit({})
+            if self._shown:
+                self._restore_saved_lighting()
+        self._shown = kind
 
     def _restore_saved_lighting(self):
         profile = self.state.profile()
@@ -116,26 +171,48 @@ class LiveLighting(QObject):
             for zone, effect in enumerate(profile.leds):
                 self.state.preview_led(zone, effect)
 
+    def _source_failed(self, text):
+        """A capture source gave up: drop whatever was using it."""
+        if self.override:
+            self.override = None
+            self._refresh()
+        else:
+            self.stop()
+        self.status.emit("error", text)
+
     # ------------------------------------------------------------ sources
 
-    def _sync_sources(self):
-        want_screen, want_audio = self.effect == "screen", self.effect == "audio"
-        if self.screen is not None and not want_screen:
+    def _sync_sources(self, kind):
+        want = {"screen": kind == "screen", "audio": kind == "audio", "game": kind == "game"}
+        if self.screen is not None and not want["screen"]:
             self.screen.stop()
             self.screen = None
-        if self.audio is not None and not want_audio:
+        if self.audio is not None and not want["audio"]:
             self.audio.stop()
             self.audio = None
-        if want_screen and self.screen is None:
+        if want["screen"] and self.screen is None:
             from ..effects.screen import ScreenCapture
             self.screen = ScreenCapture(restore_token=settings.load().get("screen_token"), fps=FPS)
             self._screen_state = None
             self.screen.start()
             self.status.emit("busy", "Starting screen capture… pick a screen if asked")
-        if want_audio and self.audio is None:
+        if want["audio"] and self.audio is None:
             from ..effects.audio import AudioMonitor
             self.audio = AudioMonitor()
             self.audio.start()
+        if want["game"]:  # both listeners are cheap; they stay up once a game rule has run
+            if self.gsi is None:
+                from ..effects.gsi import GameStateServer
+                self.gsi = GameStateServer()
+                self.gsi.start()
+            if self.lightsync is None:
+                try:
+                    from ..effects.lightsync import LightsyncReceiver
+                except ImportError:
+                    self.lightsync = False
+                else:
+                    self.lightsync = LightsyncReceiver()
+                    self.lightsync.start()
 
     def _check_screen(self):
         state = self.screen.state
@@ -148,20 +225,58 @@ class LiveLighting(QObject):
             size = self.screen.source_size
             self.status.emit("ok", "Screen sampler is on" + (f" ({size[0]}×{size[1]})" if size else ""))
         elif state == "cancelled":
-            self.stop()
-            self.status.emit("error", "Screen sharing was cancelled, so the screen sampler is off")
+            self._source_failed("Screen sharing was cancelled, so the screen sampler is off")
         elif state == "error":
-            error = self.screen.error
-            self.stop()
-            self.status.emit("error", f"Screen capture failed: {error}")
+            self._source_failed(f"Screen capture failed: {self.screen.error}")
         return state == "running"
 
     # ------------------------------------------------------------ frames
 
+    def _art_colors(self, game):
+        path = game.art if game else None
+        if path not in self._art:
+            self._art[path] = art_palette(path) if path else None
+        return self._art[path]
+
+    def _game_colors(self, game, t):
+        """Game-driven: CS2/Dota 2 game state, else the LIGHTSYNC bridge, else cover art."""
+        name = GSI_GAMES.get(game.appid) if game else None
+        if name and self.gsi is not None:
+            state = self.gsi.latest()
+            if state is not None and state.game == name:
+                if name not in self._gsi_fx:
+                    from ..effects import gsi
+                    self._gsi_fx[name] = gsi.Cs2Lighting() if name == "cs2" else gsi.Dota2Lighting()
+                try:
+                    out = self._gsi_fx[name](state, t)
+                except (TypeError, ValueError, KeyError, AttributeError):
+                    out = None  # an odd payload; keep going with the fallbacks
+                if out is not None:
+                    return out
+        if self.lightsync:
+            out = self.lightsync.colors(t)
+            if out is not None:
+                return out
+        return self._art_colors(game)
+
     def _targets(self, t):
         """{zone: rgb} for this frame, or None to keep the current colors."""
-        o = self.options[self.effect]
-        if self.effect == "screen":
+        kind = self.active
+        if self.override:
+            o = self.override
+            if kind == "color":
+                rgb = lightfx.hex_to_rgb(o["color"])
+                return {0: rgb, 1: rgb}
+            if kind == "breathing":
+                rgb = lightfx.breathe(lightfx.hex_to_rgb(o["color"]), t, o["period_ms"] / 1000)
+                return {0: rgb, 1: rgb}
+            if kind == "art":
+                return self._art_colors(o.get("game")) or {0: lightfx.hex_to_rgb(o["color"]),
+                                                           1: lightfx.hex_to_rgb(o["color"])}
+            if kind == "game":
+                return self._game_colors(o.get("game"), t)
+        o = self.options[kind]
+        if kind == "screen":
             if not self._check_screen() or (frame := self.screen.frame()) is None:
                 return None
             out = {}
@@ -169,11 +284,9 @@ class LiveLighting(QObject):
                 rgb = lightfx.sample(frame, area, o["vivid"])
                 out[zone] = lightfx.adjust(rgb, o["saturation"], o["brightness"])
             return out
-        if self.effect == "audio":
+        if kind == "audio":
             if self.audio.state == "error":
-                error = self.audio.error
-                self.stop()
-                self.status.emit("error", f"Couldn't capture sound: {error}")
+                self._source_failed(f"Couldn't capture sound: {self.audio.error}")
                 return None
             levels = self.audio.levels()
             sensitivity = o["sensitivity"]
@@ -184,10 +297,10 @@ class LiveLighting(QObject):
             else:
                 out = lightfx.audio_pulse(levels, lightfx.hex_to_rgb(o["color"]), sensitivity)
             return {z: lightfx.scale(rgb, o["brightness"]) for z, rgb in out.items()}
-        if self.effect == "wave":
+        if kind == "wave":
             return {z: lightfx.wave(t, o["period"], z, o["saturation"], o["brightness"], o["reverse"])
                     for z in (0, 1)}
-        if self.effect == "dpi":
+        if kind == "dpi":
             profile = self.state.profile()
             levels = [s for s, _ in profile.dpi_levels()] if profile else []
             if self.state.dpi_index not in levels:
@@ -197,15 +310,18 @@ class LiveLighting(QObject):
         return None
 
     def _tick(self):
-        if not self.running:
+        kind = self.active
+        if not kind:
             return
         now = time.monotonic()
         targets = self._targets(now - self._t0)
-        if not self.running or targets is None:
+        if self.active != kind or targets is None:
             return
         response = 1.0
-        if self.effect == "screen":
+        if kind == "screen":
             response = 1.0 - 0.93 * self.options["screen"]["smoothing"]
+        elif kind == "art":
+            response = 0.08  # fade into a new game's colors
         for zone, rgb in targets.items():
             self._current[zone] = lightfx.smooth(self._current.get(zone), rgb, response)
         rgb8 = {z: lightfx.to_rgb8(c) for z, c in self._current.items()}

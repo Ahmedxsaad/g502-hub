@@ -80,3 +80,26 @@ def test_beat_rainbow_moves_on_beats():
 def test_to_rgb8():
     assert lightfx.to_rgb8((1.0, 0.5, -1)) == (255, 128, 0)
     assert lightfx.hex_to_rgb("#ff8000") == (1.0, 128 / 255, 0.0)
+
+
+def test_palette_finds_the_main_hues():
+    f = frame((0, 0, 0))
+    f[:, :40] = (220, 30, 20)    # mostly red
+    f[:, 40:] = (20, 60, 230)    # some blue
+    first, second = lightfx.palette(f)
+    assert first[0] == 1.0 and first[2] < 0.3
+    assert second[2] == 1.0 and second[0] < 0.3
+
+
+def test_palette_grey_art_is_white():
+    assert lightfx.palette(frame((128, 128, 128))) == [(1.0, 1.0, 1.0)] * 2
+
+
+def test_palette_single_hue_repeats():
+    a, b = lightfx.palette(frame((0, 200, 0)))
+    assert a == b and a[1] == 1.0
+
+
+def test_breathe_fades_between_dim_and_full():
+    assert lightfx.breathe((1, 0, 0), 0, 4)[0] < 0.1
+    assert abs(lightfx.breathe((1, 0, 0), 2, 4)[0] - 1.0) < 1e-6
