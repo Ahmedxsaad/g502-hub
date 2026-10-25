@@ -4,11 +4,11 @@ import time
 
 from PySide6.QtCore import QCoreApplication, QEventLoop, QObject, QThread, QTimer, Signal, Slot
 
-from .. import backup, onboard
-from ..device import MODE_ONBOARD, ROM, DeviceNotFound, G502
+from .. import backup, onboard, settings
+from ..device import MODE_ONBOARD, ROM, DeviceNotFound, G502, NoPermission
 
 SAVE_DELAY_MS = 700
-POLL_MS = 500
+POLL_MS = 250
 RECONNECT_MS = 2000
 
 
@@ -86,6 +86,7 @@ class MouseState(QObject):
         super().__init__()
         self.bridge = Bridge()
         self.connected = False
+        self.no_permission = False
         self.name = ""
         self.firmware = []
         self.info = None
@@ -95,6 +96,7 @@ class MouseState(QObject):
         self.directory = None
         self.profiles = []  # slot n is profiles[n - 1]
         self.factory = []
+        self.pages = {}  # sector -> bytes, for sectors that aren't profiles (onboard macros)
         self.active_slot = None
         self.dpi_index = None
         self._dirty = {}  # slot -> needs a firmware reload to apply
@@ -133,6 +135,9 @@ class MouseState(QObject):
                 "intervals": dev.report_intervals(), "directory": directory,
                 "profiles": [dev.read_profile(e.sector) for e in directory.entries],
                 "factory": [dev.read_profile(e.sector) for e in rom.entries],
+                # Sectors that aren't profiles hold onboard macros (or nothing)
+                "pages": {n: dev.read_sector(n) for n in range(1, dev.onboard_info().sector_count)
+                          if n not in {e.sector for e in directory.entries}},
                 "active": dev.get_current_profile(), "dpi_index": dev.get_current_dpi_index(),
             }
 
@@ -142,6 +147,11 @@ class MouseState(QObject):
 
     def _loaded(self, data, error):
         self._loading = False
+        self.no_permission = isinstance(error, NoPermission)
+        if self.no_permission:
+            self._set_connected(False)
+            self.status.emit("error", "The mouse is plugged in, but this user isn't allowed to open it yet.")
+            return
         if error:
             self._set_connected(False)
             if not isinstance(error, (OSError, DeviceNotFound)):
@@ -151,7 +161,7 @@ class MouseState(QObject):
                                  else "Mouse disconnected")
             return
         for key in ("name", "firmware", "info", "zones", "dpi_range", "intervals",
-                    "directory", "profiles", "factory", "dpi_index"):
+                    "directory", "profiles", "factory", "dpi_index", "pages"):
             setattr(self, key, data[key])
         self.active_slot = self.slot_of(data["active"])
         self._dirty.clear()
@@ -283,6 +293,90 @@ class MouseState(QObject):
         """Replace a slot with its factory profile."""
         factory = self.factory[(slot - 1) % len(self.factory)]
         self.profiles[slot - 1] = onboard.Profile.decode(onboard.seal(factory.raw))
+        self.edit(lambda p: None, slot)
+
+    # ------------------------------------------------------------ onboard macros
+
+    def macro_references(self, sector):
+        """(slot, layer, button) of every binding that plays the macro stored in `sector`."""
+        out = []
+        for slot, profile in enumerate(self.profiles, 1):
+            for layer, bindings in enumerate((profile.buttons, profile.gshift)):
+                out += [(slot, layer, i) for i, b in enumerate(bindings)
+                        if isinstance(b, onboard.Macro) and b.page == sector]
+        return out
+
+    def macro_sector(self, macro_id):
+        """Where a macro stored in the mouse lives, reusing its sector or taking a blank one."""
+        owned = settings.load().get("macro_pages", {})
+        if macro_id in owned and int(owned[macro_id]) in self.pages:
+            return int(owned[macro_id])
+        mine = {int(v) for v in owned.values()}
+        for n, data in sorted(self.pages.items()):
+            if n not in mine and data == b"\xff" * len(data) and not self.macro_references(n):
+                return n
+        raise IOError("the mouse's memory has no room for another macro; delete one first")
+
+    def store_macro(self, macro_id, data, done=None):
+        """Write macro bytes (format 1, ending with END) into the mouse; done(sector, error)."""
+        try:
+            sector = self.macro_sector(macro_id)
+        except IOError as e:
+            if done:
+                done(None, e)
+            return
+        size = self.info.sector_size
+        if len(data) > size - 2:
+            if done:
+                done(None, ValueError("macro too long for one sector"))
+            return
+        page = onboard.seal(data + b"\xff" * (size - 2 - len(data)) + b"\0\0")
+        need_backup = not self._backed_up
+
+        def job(dev):
+            if need_backup:
+                backup.save(backup.dump(dev))
+            dev.write_sector(sector, page)
+            return sector
+
+        def finished(result, error):
+            if not error:
+                self._backed_up = True
+                self.pages[sector] = page
+                owned = settings.load().get("macro_pages", {})
+                owned[macro_id] = sector
+                settings.update(macro_pages=owned)
+            if done:
+                done(result, error)
+        self.bridge.call(job, finished)
+
+    def free_macro_pages(self, keep=()):
+        """Erase sectors holding our macros that no binding plays any more (except ids in `keep`)."""
+        owned = settings.load().get("macro_pages", {})
+        unused = {mid: int(n) for mid, n in owned.items()
+                  if mid not in keep and not self.macro_references(int(n))}
+        if not unused:
+            return
+        size = self.info.sector_size
+
+        def job(dev):
+            for sector in unused.values():
+                dev.write_sector(sector, b"\xff" * size, allow_bad_crc=True)
+
+        def finished(_, error):
+            if error:
+                self.status.emit("error", f"Couldn't free macro memory: {error}")
+                return
+            left = settings.load().get("macro_pages", {})
+            for mid, sector in unused.items():
+                left.pop(mid, None)
+                self.pages[sector] = b"\xff" * size
+            settings.update(macro_pages=left)
+        self.bridge.call(job, finished)
+
+    def replace_slot(self, slot, profile):
+        """Put an imported profile into a slot."""
+        self.profiles[slot - 1] = onboard.Profile.decode(profile.encode())
         self.edit(lambda p: None, slot)
 
     def copy_slot(self, source, target):
