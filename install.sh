@@ -1,5 +1,5 @@
 #!/bin/sh
-# G502 Hub installer: the G HUB experience for the Logitech G502 HERO, on Linux.
+# G502 Hub installer: an unofficial G HUB alternative for the Logitech G502 HERO, on Linux.
 #
 #   curl -fsSL https://g502hub.ahmedxsaad.me/install.sh | sh
 #   curl -fsSL https://g502hub.ahmedxsaad.me/install.sh | sh -s -- --uninstall
