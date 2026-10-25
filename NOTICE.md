@@ -55,8 +55,9 @@ your package manager and are not included in this repository.
 | libxkbcommon | MIT |
 | PipeWire / libpulse (`parec`) | MIT / LGPL-2.1-or-later |
 
-The website uses the Big Shoulders Display, Instrument Sans and JetBrains Mono
-fonts from Google Fonts, all under the SIL Open Font License.
+The website serves its own copies of the Big Shoulders Display, Instrument Sans
+and JetBrains Mono fonts, all under the SIL Open Font License (the license
+files are in `website/fonts/`).
 
 ## Privacy
 

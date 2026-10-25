@@ -21,8 +21,9 @@ It installs the dependencies with your package manager, puts the app in
 to the mouse, and adds **G502 Hub** to your applications menu. Uninstall with
 `curl -fsSL https://g502hub.ahmedxsaad.me/install.sh | sh -s -- --uninstall`.
 
-An AUR package for Arch, EndeavourOS, Manjaro and CachyOS is ready in
-[`packaging/aur`](packaging/aur) and will be published soon (`yay -S g502-hub`).
+On Arch, EndeavourOS, Manjaro and CachyOS you can install the
+[AUR package](https://aur.archlinux.org/packages/g502-hub) instead:
+`yay -S g502-hub` (or `paru -S g502-hub`).
 
 Built and tested on EndeavourOS with KDE Plasma 6 (Wayland). Fedora and
 Debian/Ubuntu package names in the installer are best effort; reports welcome.
