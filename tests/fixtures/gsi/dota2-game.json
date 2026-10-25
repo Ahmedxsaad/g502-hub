@@ -1,0 +1,14 @@
+{
+  "provider": {"name": "Dota 2", "appid": 570, "version": 47, "timestamp": 1792950000},
+  "map": {"name": "start", "matchid": "8000000000", "game_time": 812, "clock_time": 720, "daytime": true,
+          "nightstalker_night": false, "game_state": "DOTA_GAMERULES_STATE_GAME_IN_PROGRESS", "paused": false,
+          "win_team": "none", "customgamename": ""},
+  "player": {"steamid": "76561198000000001", "name": "player", "activity": "playing", "kills": 3, "deaths": 1,
+             "assists": 5, "last_hits": 61, "denies": 4, "kill_streak": 2, "team_name": "radiant", "gold": 1210},
+  "hero": {"id": 74, "name": "npc_dota_hero_invoker", "level": 11, "alive": true, "respawn_seconds": 0,
+           "buyback_cost": 640, "buyback_cooldown": 0, "health": 1012, "max_health": 1240, "health_percent": 81,
+           "mana": 520, "max_mana": 1300, "mana_percent": 40, "silenced": false, "stunned": false,
+           "disarmed": false, "magicimmune": false, "hexed": false, "muted": false, "break": false,
+           "smoked": false, "has_debuff": false},
+  "auth": {"token": "g502hub"}
+}
