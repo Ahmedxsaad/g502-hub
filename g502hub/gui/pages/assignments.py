@@ -55,8 +55,10 @@ class AssignmentsPage(Page):
     icon = "assignments"
     mouse_mode = "assign"
 
-    def __init__(self, *args):
-        super().__init__(*args)
+    def __init__(self, state, view, keylabels, engine):
+        super().__init__(state, view, keylabels)
+        self.engine = engine
+        self.open_macros = None  # set by the window: show the Macros page
         self.slot = 5  # G6
         self.layer = 0
         title = QLabel("Assignments")
@@ -86,7 +88,7 @@ class AssignmentsPage(Page):
         current.body.addLayout(row)
         self.layout.addWidget(current)
 
-        self.categories = Segmented(["Commands", "Keys", "Media"])
+        self.categories = Segmented(["Commands", "Keys", "Media", "Macros"])
         self.layout.addWidget(self.categories)
         self.stack = QStackedWidget()
         self.categories.changed.connect(self.stack.setCurrentIndex)
@@ -136,6 +138,22 @@ class AssignmentsPage(Page):
         col.addWidget(lst)
         col.addStretch()
         self.stack.addWidget(media)
+
+        macro_page = QWidget()
+        col = QVBoxLayout(macro_page)
+        col.setContentsMargins(0, 4, 0, 0)
+        col.setSpacing(10)
+        self.macro_hint = muted("", "Faint")
+        col.addWidget(self.macro_hint)
+        self.macro_holder = QVBoxLayout()
+        col.addLayout(self.macro_holder)
+        self.macro_list = None
+        make = QPushButton("Make a macro…")
+        make.clicked.connect(lambda: self.open_macros and self.open_macros())
+        col.addWidget(make)
+        col.addStretch()
+        self.stack.addWidget(macro_page)
+        engine.changed.connect(self.refresh)
         self.layout.addStretch()
 
     def _bindings(self, profile):
@@ -167,7 +185,28 @@ class AssignmentsPage(Page):
                     self.refresh()
                     return
         slot, layer = self.slot, self.layer
+        self.engine.unassign_app(self.state.active_slot, layer, slot)
         self.state.edit(lambda p: (p.gshift if layer else p.buttons).__setitem__(slot, binding))
+        self.state.free_macro_pages()  # if this button played a macro stored in the mouse
+
+    def _assign_macro(self, macro_id):
+        def done(error):
+            if error:
+                self.state.status.emit("error", f"Couldn't put the macro on {labels.BUTTON_NAMES[self.slot]}: {error}")
+            self.refresh()
+        self.engine.assign(self.state.active_slot, self.layer, self.slot, macro_id, done)
+
+    def _show_macros(self, current):
+        if self.macro_list is not None:
+            self.macro_list.deleteLater()
+        where = {"mouse": "saved on the mouse", "app": "run by the app"}
+        choices = [(m.id, f"{m.name}   ·   {where[m.target]}") for m in self.engine.macros]
+        self.macro_list = ChoiceList(choices, columns=1)
+        self.macro_list.changed.connect(self._assign_macro)
+        self.macro_list.set_value(current.id if current else None)
+        self.macro_holder.addWidget(self.macro_list)
+        self.macro_hint.setText("Pick a macro for this button." if choices else
+                                "You don't have any macros yet.")
 
     def _restore_default(self):
         if self.layer:
@@ -186,8 +225,12 @@ class AssignmentsPage(Page):
                               for i in range(len(labels.BUTTON_NAMES))}
         self.view.set_selected([self.slot])
         current = bindings[self.slot]
+        macro = self.engine.macro_on(self.state.active_slot, self.layer, self.slot, current)
         self.button_name.setText(labels.BUTTON_NAMES[self.slot])
-        self.current.setText(("G-Shift layer: " if self.layer else "") + labels.binding(current, self.keylabels))
+        text = (f"Macro “{macro.name}”, " + ("saved on the mouse" if macro.target == "mouse" else "run by the app")
+                if macro else labels.binding(current, self.keylabels))
+        self.current.setText(("G-Shift layer: " if self.layer else "") + text)
+        self._show_macros(macro)
         for lst in self.choice_lists:
             match = next((v for v in lst.values if same_action(v, current)), None)
             lst.set_value(match)
