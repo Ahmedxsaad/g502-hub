@@ -1,0 +1,34 @@
+name: Bug report
+description: Something doesn't work right
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: system
+    attributes:
+      label: System info
+      description: In G502 Hub, open About and press "Copy for a bug report", then paste here.
+      render: text
+    validations:
+      required: true
+  - type: dropdown
+    id: mouse
+    attributes:
+      label: Which mouse?
+      options:
+        - G502 HERO (wired, 046d:c08b)
+        - Another G502 (please say which in the description)
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Terminal output
+      description: Optional. Start the app from a terminal with `python3 -m g502hub.gui` (or `g502hub-gui`) and paste any errors.
+      render: text

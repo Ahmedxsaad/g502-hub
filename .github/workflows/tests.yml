@@ -1,0 +1,27 @@
+name: Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - name: Install dependencies
+        run: >
+          pacman -Syu --noconfirm --needed git python python-pytest pyside6 python-numpy
+          python-gobject python-dbus-fast gst-plugins-base gst-plugin-pipewire libpulse dbus
+          clang llvm lld
+      - uses: actions/checkout@v4
+      - name: Build the LIGHTSYNC bridge DLLs
+        run: sh bridge/logitechled/build.sh
+      - name: Run the tests
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: python -m pytest -q
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LogitechLed-dlls
+          path: g502hub/bridge_bin

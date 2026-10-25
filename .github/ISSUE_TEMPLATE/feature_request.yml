@@ -1,0 +1,11 @@
+name: Idea
+description: Something G HUB does (or should do) that you'd like here
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like?
+      description: If G HUB has it, a screenshot or a short description of how it works there helps a lot.
+    validations:
+      required: true
