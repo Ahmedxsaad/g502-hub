@@ -5,7 +5,9 @@ from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (QCheckBox, QFileDialog, QGridLayout, QHBoxLayout, QLabel, QLineEdit,
                                QMenu, QMessageBox, QPushButton, QScrollArea, QWidget)
 
-from ... import backup
+from pathlib import Path
+
+from ... import backup, sharing
 from .. import theme
 from .. import labels
 from ..widgets import Card, LedSwatch, heading, muted
@@ -56,6 +58,9 @@ class SlotCard(Card):
         row.addWidget(self.activate_btn)
         more = QPushButton("More  ▾")
         menu = QMenu(more)
+        menu.addAction("Export to a file…", self._export)
+        menu.addAction("Import from a file…", self._import)
+        menu.addSeparator()
         menu.addAction("Reset to factory profile", self._reset)
         copy = menu.addMenu("Copy this profile to")
         for other in range(1, 6):
@@ -71,6 +76,39 @@ class SlotCard(Card):
         profile = self.page.state.profile(self.slot)
         if profile is not None and (profile.name or None) != text:
             self.page.state.edit(lambda p: setattr(p, "name", text), slot=self.slot, reload=False)
+
+    def _export(self):
+        profile = self.page.state.profile(self.slot)
+        name = (profile.name or f"G502 profile {self.slot}").replace("/", "-")
+        path, _ = QFileDialog.getSaveFileName(self, "Export profile", str(Path.home() / f"{name}{sharing.SUFFIX}"),
+                                              f"G502 Hub profiles (*{sharing.SUFFIX})")
+        if not path:
+            return
+        if not path.endswith(sharing.SUFFIX):
+            path += sharing.SUFFIX
+        try:
+            Path(path).write_text(sharing.export(profile))
+        except OSError as e:
+            QMessageBox.warning(self, "Export profile", f"Couldn't save the file: {e}")
+            return
+        self.page.state.status.emit("ok", f"Exported slot {self.slot} to {path}")
+
+    def _import(self):
+        path, _ = QFileDialog.getOpenFileName(self, "Import profile", str(Path.home()),
+                                              f"G502 Hub profiles (*{sharing.SUFFIX});;All files (*)")
+        if not path:
+            return
+        try:
+            profile, notes = sharing.load(Path(path).read_text())
+        except (OSError, UnicodeDecodeError, sharing.ShareError) as e:
+            QMessageBox.warning(self, "Import profile", f"Couldn't import {Path(path).name}: {e}")
+            return
+        name = profile.name or Path(path).stem
+        text = f"Replace slot {self.slot} with \"{name}\"? Your backup keeps the current one."
+        if notes:
+            text += "\n\n" + "\n".join(f"• {n}" for n in notes)
+        if QMessageBox.question(self, "Import profile", text) == QMessageBox.StandardButton.Yes:
+            self.page.state.replace_slot(self.slot, profile)
 
     def _reset(self):
         if QMessageBox.question(self, "Reset slot", f"Replace slot {self.slot} with its factory "
