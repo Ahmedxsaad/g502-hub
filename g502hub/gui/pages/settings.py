@@ -26,8 +26,13 @@ class SettingsPage(Page):
         self.autostart.setChecked(system.autostart_enabled())
         self.autostart.toggled.connect(system.set_autostart)
         self.layout.addWidget(self.autostart)
-        self.layout.addWidget(muted("Needed for live lighting and game rules to work without opening "
-                                    "the window. Settings saved on the mouse work either way.", "Faint"))
+        self.close_to_tray = QCheckBox("Keep running in the tray when I close the window")
+        self.close_to_tray.setChecked(settings.load().get("close_to_tray", True))
+        self.close_to_tray.toggled.connect(lambda on: settings.update(close_to_tray=on))
+        self.layout.addWidget(self.close_to_tray)
+        self.layout.addWidget(muted("Game rules, macros run by the app, live lighting and the DPI popup only "
+                                    "work while G502 Hub runs. Settings saved on the mouse work either way.",
+                                    "Faint"))
 
         self.layout.addWidget(heading("On-screen popup"))
         self.osd = QCheckBox("Show DPI and profile changes on screen")

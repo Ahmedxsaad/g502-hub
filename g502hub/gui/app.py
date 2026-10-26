@@ -65,7 +65,6 @@ class MainWindow(QMainWindow):
         self.view = MouseView()
         self._shown_slot = None
         self._resumed = False
-        self._told_about_tray = False
 
         root = QWidget()
         root.setObjectName("Root")
@@ -345,14 +344,15 @@ class MainWindow(QMainWindow):
         QApplication.quit()
 
     def closeEvent(self, e):
-        if self.live.running and self.tray is not None:
-            # Keep the live effect going from the tray
+        prefs = settings.load()
+        if self.tray is not None and prefs.get("close_to_tray", True):
+            # Keep rules, app macros, live lighting and the DPI popup going from the tray
             e.ignore()
             self.hide()
-            if not self._told_about_tray:
-                self._told_about_tray = True
-                self.tray.showMessage("G502 Hub", f"{EFFECT_NAMES[self.live.effect]} keeps running in the "
-                                      "tray. Quit from the tray menu to stop it.", QSystemTrayIcon.MessageIcon.Information, 4000)
+            if not prefs.get("tray_hint_shown"):
+                settings.update(tray_hint_shown=True)
+                self.tray.showMessage("G502 Hub", "G502 Hub keeps running in the tray. Quit it from the "
+                                      "tray menu.", QSystemTrayIcon.MessageIcon.Information, 4000)
             return
         self.quit()
         super().closeEvent(e)
