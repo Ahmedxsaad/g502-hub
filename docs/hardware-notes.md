@@ -20,10 +20,16 @@ HID++ 4.2, profile format 2. Tested 2026-10-25.
   on this system shows it one slot off.
 - **ROM profiles cannot be selected**: setCurrentProfile(`0x0101`) answers
   INVALID_ARGUMENT.
+- **Disabled slots cannot be selected either**: INVALID_ARGUMENT, the same error.
+  G HUB often leaves only one slot enabled (issue #1). Tested 2026-10-28.
+- Disabling the active slot in the directory moves the mouse to the next enabled
+  slot straight away.
 - **Selecting the profile that is already active does nothing.** Neither does
   setCurrentDpiIndex with the index that is already active: a live DPI change
   survives both. Switching to another slot and back reloads the profile, and
   takes about 0.1 s.
+- Rewriting the active profile's sector, even with the same bytes, also throws
+  away a live DPI change (only DPI was checked).
 
 ## Modes
 | | Onboard (1) | Host (2) |
@@ -36,7 +42,8 @@ HID++ 4.2, profile format 2. Tested 2026-10-25.
 | spy getMapping | `01..0B` | `01..0B` |
 
 - On entering host mode the mouse keeps the DPI and rate it had.
-- Leaving host mode reloads the stored current profile.
+- Leaving host mode reloads the stored current profile and keeps the DPI level
+  it was on.
 
 ## Mouse Button Spy (0x8110)
 - Events stream after startMouseButtonSpy in **onboard mode**, with no mode switch.

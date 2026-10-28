@@ -265,6 +265,8 @@ class MouseState(QObject):
 
     def activate(self, slot):
         self.flush()
+        if not self.directory.entries[slot - 1].enabled:
+            self.set_slot_enabled(slot, True)  # the mouse won't switch to a disabled slot
         sector = self.sector_of(slot)
 
         def done(_, error):
@@ -277,14 +279,23 @@ class MouseState(QObject):
         self.bridge.call(lambda dev: dev.set_current_profile(sector), done)
 
     def set_slot_enabled(self, slot, enabled):
-        self.directory.entries[slot - 1].enabled = enabled
+        entries = self.directory.entries
+        if not enabled and not any(e.enabled for e in entries[:slot - 1] + entries[slot:]):
+            self.status.emit("error", "At least one profile has to stay included")
+            self.profileEdited.emit(slot)  # puts the checkbox back
+            return
+        entries[slot - 1].enabled = enabled
         data = self.directory.encode(self.info.sector_size)
         self.directory.raw = data
+        sectors = {e.sector for e in entries if e.enabled}
 
         def job(dev):
             current = dev.get_current_profile()
             dev.write_sector(0, data)
-            dev.set_current_profile(current)  # directory writes can shift it
+            # Directory writes can shift it. Disabling the active slot moves the mouse on to
+            # the next enabled one, and the next poll shows that.
+            if current in sectors:
+                dev.set_current_profile(current)
 
         self.bridge.call(job, lambda _, e: self.status.emit(
             "error" if e else "ok", f"Saving failed: {e}" if e else "Saved to mouse"))
