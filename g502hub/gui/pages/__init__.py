@@ -1,6 +1,6 @@
 """Pages of the main window. Each owns a side panel and drives the mouse view."""
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QCoreApplication, Qt
 from PySide6.QtWidgets import QScrollArea, QVBoxLayout, QWidget
 
 
@@ -22,6 +22,9 @@ class Page:
         self.layout.setContentsMargins(22, 20, 22, 20)
         self.layout.setSpacing(16)
         self.panel.setWidget(inner)
+
+    def tr(self, text: str, disambiguation: str = None, n: int = -1) -> str:
+        return QCoreApplication.translate(type(self).__name__, text, disambiguation, n)
 
     def activate(self):
         self.view.set_mode(self.mouse_mode)

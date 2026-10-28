@@ -91,6 +91,10 @@ playing contains something (browsers, mpv, VLC, Spotify, anime apps…).
   Proton prefix, so they light the mouse like they do with G HUB on Windows.
   Experimental; turn it on per game in Settings.
 
+**Internationalization (i18n)**
+- Native multi-language support (English and Simplified Chinese / 简体中文).
+- Automatically matches your system locale with a toggle in Settings.
+
 ## Screenshots
 
 | | |
@@ -165,6 +169,7 @@ sudo udevadm control --reload && sudo udevadm trigger --action=change --subsyste
 sudo udevadm trigger --action=change --sysname-match=uinput
 python3 -m g502hub.gui                     # the app
 QT_QPA_PLATFORM=offscreen python3 -m pytest
+tools/update-translations.sh               # extract & compile GUI translations (.ts / .qm)
 sh bridge/logitechled/build.sh             # LogitechLed.dll (needs clang, llvm, lld)
 QT_QPA_PLATFORM=offscreen tools/screenshots.py   # README / website screenshots
 tools/deploy-site.sh                       # publish the website (Cloudflare)
@@ -183,6 +188,7 @@ g502hub/lightfx.py     color maths for the live effects
 g502hub/effects/       screen (portal + PipeWire), audio (parec), CS2/Dota 2 GSI, LIGHTSYNC receiver
 g502hub/lightsync_bridge.py  installs the bridge into Proton prefixes
 g502hub/gui/           the app (PySide6)
+g502hub/gui/translations/  GUI translation files (.ts source and .qm binary)
 bridge/logitechled/    the LogitechLed.dll stand-in (freestanding C)
 docs/protocol.md       wire protocol reference with sources
 docs/hardware-notes.md behaviour verified on the real mouse

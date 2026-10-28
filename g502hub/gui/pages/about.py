@@ -31,8 +31,11 @@ def _label(text, name=None, size=None, weight=None, spacing=None, color=None):
 
 
 class AboutPage(Page):
-    title = "ABOUT"
     icon = "about"
+
+    @property
+    def title(self):
+        return self.tr("ABOUT")
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -46,7 +49,7 @@ class AboutPage(Page):
         col.addWidget(_label(about.APP_NAME.upper(), size=34, weight=800, spacing=6))
         col.addWidget(_label(about.TAGLINE, "Muted", size=14))
         col.addSpacing(18)
-        col.addWidget(_label("MADE BY", "Heading"))
+        col.addWidget(_label(self.tr("MADE BY"), "Heading"))
         col.addWidget(_label(about.AUTHOR, size=22, weight=700, color=theme.ACCENT))
         author = "   ·   ".join(f"<a style='color:{theme.MUTED}; text-decoration:none' href='{url}'>{label}</a>"
                                 for label, url in about.author_links())
@@ -69,10 +72,10 @@ class AboutPage(Page):
         col.addLayout(links)
         col.addSpacing(18)
 
-        col.addWidget(_label(f"Version {about.VERSION}   ·   Free software under the GNU GPL v3 or later",
-                             "Muted"))
+        version_str = self.tr("Version {version}   ·   Free software under the GNU GPL v3 or later").format(version=about.VERSION)
+        col.addWidget(_label(version_str, "Muted"))
         col.addSpacing(24)
-        col.addWidget(_label("BUILT ON THE WORK OF", "Heading"))
+        col.addWidget(_label(self.tr("BUILT ON THE WORK OF"), "Heading"))
         credits = "   ·   ".join(f"<a style='color:{theme.MUTED}; text-decoration:none' href='{url}'>{name}</a>"
                                  for name, url in about.CREDITS)
         credit_label = _label(credits)
@@ -84,14 +87,14 @@ class AboutPage(Page):
         col.addStretch(2)
         self.center.setWidget(inner)
 
-        title = QLabel("About")
+        title = QLabel(self.tr("About"))
         title.setObjectName("Title")
         self.layout.addWidget(title)
-        self.layout.addWidget(heading("This computer"))
+        self.layout.addWidget(heading(self.tr("This computer")))
         self.info = muted("")
         self.info.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         self.layout.addWidget(self.info)
-        copy = QPushButton("Copy for a bug report")
+        copy = QPushButton(self.tr("Copy for a bug report"))
         copy.clicked.connect(self._copy)
         self.layout.addWidget(copy)
         self.copied = muted("", "Faint")
@@ -105,7 +108,7 @@ class AboutPage(Page):
             lines.append(f"{s.name}, firmware {', '.join(f for _, f in s.firmware)}")
             lines.append(f"Profile format {s.info.profile_format}, {s.info.sector_count} × {s.info.sector_size} B")
         else:
-            lines.append("Mouse not connected")
+            lines.append(self.tr("Mouse not connected"))
         return lines
 
     def refresh(self):
@@ -113,4 +116,4 @@ class AboutPage(Page):
 
     def _copy(self):
         QGuiApplication.clipboard().setText("\n".join(self._lines()))
-        self.copied.setText("Copied. Paste it into your bug report.")
+        self.copied.setText(self.tr("Copied. Paste it into your bug report."))

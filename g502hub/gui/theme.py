@@ -25,7 +25,7 @@ FONT_FAMILY = "Inter"
 
 STYLESHEET = f"""
 * {{
-    font-family: "{FONT_FAMILY}", "Noto Sans", sans-serif;
+    font-family: "{FONT_FAMILY}", "Noto Sans", "Noto Sans CJK SC", "Source Han Sans SC", "Microsoft YaHei", sans-serif;
     font-size: 13px;
     color: {TEXT};
 }}

@@ -15,6 +15,8 @@ from PySide6.QtGui import QColor, QImage
 
 from .. import lightfx, settings
 from ..onboard import LedEffect
+from .i18n import tr
+from .labels import _TrDict
 from .state import POLL_MS
 
 FPS = 30
@@ -23,7 +25,7 @@ FAST_POLL_MS = 120
 
 EFFECTS = [("screen", "Screen sampler"), ("audio", "Audio visualizer"),
            ("wave", "Color wave"), ("dpi", "DPI colors")]
-EFFECT_NAMES = dict(EFFECTS)
+EFFECT_NAMES = _TrDict(dict(EFFECTS), "LiveLighting")
 GSI_GAMES = {730: "cs2", 570: "dota2"}
 
 DEFAULTS = {
@@ -94,7 +96,7 @@ class LiveLighting(QObject):
         self._refresh()
         self.runningChanged.emit(True)
         if effect != "screen":
-            self.status.emit("ok", f"{EFFECT_NAMES[effect]} is on")
+            self.status.emit("ok", tr("{effect} is on", "LiveLighting").format(effect=EFFECT_NAMES[effect]))
 
     def stop(self, remember=True):
         was_running = self.running
@@ -103,7 +105,7 @@ class LiveLighting(QObject):
         if was_running:
             self.runningChanged.emit(False)
             if not self.override:
-                self.status.emit("info", "Live lighting off: back to the lighting saved on the mouse")
+                self.status.emit("info", tr("Live lighting off: back to the lighting saved on the mouse", "LiveLighting"))
         if remember:
             self._save(on=False)
 
@@ -195,7 +197,7 @@ class LiveLighting(QObject):
             self.screen = ScreenCapture(restore_token=settings.load().get("screen_token"), fps=FPS)
             self._screen_state = None
             self.screen.start()
-            self.status.emit("busy", "Starting screen capture… pick a screen if asked")
+            self.status.emit("busy", tr("Starting screen capture… pick a screen if asked", "LiveLighting"))
         if want["audio"] and self.audio is None:
             from ..effects.audio import AudioMonitor
             self.audio = AudioMonitor()
@@ -223,11 +225,11 @@ class LiveLighting(QObject):
             if self.screen.restore_token:
                 settings.update(screen_token=self.screen.restore_token)
             size = self.screen.source_size
-            self.status.emit("ok", "Screen sampler is on" + (f" ({size[0]}×{size[1]})" if size else ""))
+            self.status.emit("ok", tr("Screen sampler is on", "LiveLighting") + (f" ({size[0]}×{size[1]})" if size else ""))
         elif state == "cancelled":
-            self._source_failed("Screen sharing was cancelled, so the screen sampler is off")
+            self._source_failed(tr("Screen sharing was cancelled, so the screen sampler is off", "LiveLighting"))
         elif state == "error":
-            self._source_failed(f"Screen capture failed: {self.screen.error}")
+            self._source_failed(tr("Screen capture failed: {error}", "LiveLighting").format(error=self.screen.error))
         return state == "running"
 
     # ------------------------------------------------------------ frames

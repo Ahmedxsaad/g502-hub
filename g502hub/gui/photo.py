@@ -14,6 +14,7 @@ from PySide6.QtCore import QObject, QPointF, QRect, QRectF, Qt, Signal
 from PySide6.QtGui import QColor, QFont, QImage, QPainter, QPen, QRadialGradient
 
 from . import theme
+from .i18n import tr
 from .shapes import Element, ellipse, polygon, rounded
 
 PHOTO_PATH = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local/share") / "g502-hub" / "g502-hero.png"
@@ -112,8 +113,13 @@ class PhotoSkin:
     badge_radius = 17
     badge_font = (13, 19)  # label pixel size for 2-char and 1-char badges
     pen_scale = 2.4
-    callouts = [("DPI LIGHTS", QPointF(110, 586), QPointF(-170, 586), "zone0"),
-                ("LOGO", QPointF(308, 754), QPointF(780, 754), "zone1")]
+
+    @property
+    def callouts(self):
+        return [
+            (tr("DPI LIGHTS", "PhotoSkin"), QPointF(110, 586), QPointF(-170, 586), "zone0"),
+            (tr("LOGO", "PhotoSkin"), QPointF(308, 754), QPointF(780, 754), "zone1"),
+        ]
 
     def __init__(self, image=None):
         self.elements = elements()

@@ -31,7 +31,8 @@ include = ["g502hub*"]
 
 [tool.setuptools.package-data]
 "g502hub" = ["kwin/*.js", "bridge_bin/*/*.dll"]
-"g502hub.gui" = ["assets/*"]
+"g502hub.gui" = ["assets/*", "translations/*.qm"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]
