@@ -1,6 +1,6 @@
 [project]
 name = "g502-hub"
-version = "0.2.0"
+version = "0.2.1"
 description = "An unofficial G HUB alternative for the Logitech G502 HERO on Linux"
 license = "GPL-3.0-or-later"
 authors = [{ name = "Ahmed Saad" }]
