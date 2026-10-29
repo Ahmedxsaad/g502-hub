@@ -44,7 +44,7 @@ G-Shift layer whenever it saves.
 - *On the mouse*: Fixed, Breathing, Color cycle or Off for the DPI lights and
   the logo, together or separately. Saved in the mouse, so it works without
   the app and on any computer.
-- *Live effects*, made by the app while it runs (it stays in the tray):
+- *Live effects*, made by the app while it runs (the background service keeps them running):
   - **Screen sampler**: the mouse glows with the film, video or game on your
     screen. Each zone follows the whole screen, the center or an edge.
   - **Audio visualizer**: pulse, spectrum or rainbow beats, from whatever is playing.
@@ -208,3 +208,23 @@ the mouse photo, third-party components and privacy.
 An unofficial, independent project. Not affiliated with, endorsed or supported
 by Logitech. Logitech, Logitech G, G HUB, LIGHTSYNC, HERO and G502 are
 trademarks of Logitech Europe S.A.
+
+## Background service and settings window
+
+The service (`python3 -m g502hub.daemon`) owns the HID++ connection and runs
+macros, game rules, live effects and the DPI OSD. It uses QCoreApplication,
+without Qt Widgets, a tray icon, or a settings window. Expensive capture/image
+modules are loaded only when the corresponding effect needs them.
+
+Opening G502 Hub starts the service if needed and opens the settings window.
+The window sends versioned JSON requests over a private Unix socket in
+`$XDG_RUNTIME_DIR/g502-hub/`. Only the service opens the mouse. Closing settings
+exits the entire graphical process; the service keeps running. Open G502 Hub
+again from the application menu to change settings. The old `--tray` login
+entry now starts only the service.
+
+Inspect the service with `python3 -m g502hub.daemon --status`; stop it with
+`python3 -m g502hub.daemon --stop`. Its log is `service.log` beside the socket.
+There is no tray icon in this version. Stopping the service stops software
+macros and effects; onboard settings remain in the mouse. Screen capture can
+still ask the desktop portal for permission when an effect is enabled.

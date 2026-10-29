@@ -5,16 +5,16 @@ import subprocess
 import sys
 
 from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QAction, QFont, QIcon
+from PySide6.QtGui import QFont, QIcon
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
 from PySide6.QtWidgets import (QApplication, QButtonGroup, QComboBox, QHBoxLayout, QLabel,
-                               QMainWindow, QMenu, QPushButton, QStackedWidget, QSystemTrayIcon,
+                               QMainWindow, QPushButton, QStackedWidget,
                                QToolButton, QVBoxLayout, QWidget)
 
-from .. import settings
+from .. import ipc, settings
 from ..keylabels import KeyLabels
 from . import system, theme
-from .live import EFFECT_NAMES, LiveLighting
+from .live import LiveLighting
 from .macro_engine import MacroEngine
 from .mouse_view import MouseView
 from .pages.about import AboutPage
@@ -139,10 +139,9 @@ class MainWindow(QMainWindow):
         self.state.connectedChanged.connect(self._connected)
         self.live.colors.connect(self.view.set_live)
         self.live.status.connect(self._status)
-        self.live.runningChanged.connect(self._live_changed)
-        self.tray = self._make_tray()
         self.rules.start()
         self.placeholder.fix.clicked.connect(self._fix_permissions)
+        next(p for p in self.pages if isinstance(p, SettingsPage)).stop_background.clicked.connect(self.quit_all)
         macros_page = next(i for i, p in enumerate(self.pages) if isinstance(p, MacrosPage))
         self.pages[1].open_macros = lambda: self.rail_group.button(macros_page).click()
         self.rail_group.button(0).setChecked(True)
@@ -216,7 +215,6 @@ class MainWindow(QMainWindow):
             self.macros.sync()
 
     def _active_changed(self):
-        self._show_osd()
         self._fill_profile_box()
         if self.state.active_slot != self._shown_slot:
             self._shown_slot = self.state.active_slot
@@ -269,20 +267,6 @@ class MainWindow(QMainWindow):
             self._status("error", "ratbagd (Piper) is running and may overwrite your G-Shift layer. "
                                   "Close Piper / stop ratbagd.")
 
-    def _show_osd(self):
-        """Popup on DPI or profile changes, like G HUB's."""
-        s = self.state
-        now = (s.active_slot, s.dpi_index)
-        before, self._osd_seen = getattr(self, "_osd_seen", None), now
-        if before is None or before == now or not settings.load().get("osd", True):
-            return
-        profile = s.profile()
-        if now[0] != before[0]:
-            name = profile.name if profile and profile.name else f"Profile {now[0]}"
-            system.show_osd(f"{name}  ·  slot {now[0]}")
-        elif profile and now[1] is not None and now[1] < 5 and profile.dpi[now[1]]:
-            system.show_osd(f"{profile.dpi[now[1]]} DPI")
-
     def _fix_permissions(self):
         self.placeholder.fix.setEnabled(False)
         self._permission_fix = system.PermissionFix(self)
@@ -296,66 +280,28 @@ class MainWindow(QMainWindow):
             self.placeholder.fix.hide()
             self.state.load()
 
-    # ------------------------------------------------------------ tray
-
-    def _make_tray(self):
-        if not QSystemTrayIcon.isSystemTrayAvailable():
-            return None
-        tray = QSystemTrayIcon(QIcon.fromTheme("input-mouse", theme.icon("assignments")), self)
-        tray.setToolTip("G502 Hub")
-        menu = QMenu(self)
-        menu.addAction("Open G502 Hub", self._show_window)
-        menu.addSeparator()
-        self.tray_live = QAction("Live lighting", self, checkable=True)
-        self.tray_live.toggled.connect(self._tray_live_toggled)
-        menu.addAction(self.tray_live)
-        menu.addSeparator()
-        menu.addAction("Quit", self.quit)
-        tray.setContextMenu(menu)
-        tray.activated.connect(lambda reason: self._show_window()
-                               if reason == QSystemTrayIcon.ActivationReason.Trigger else None)
-        tray.show()
-        return tray
+    # ------------------------------------------------------------ window lifecycle
 
     def _show_window(self):
         self.show()
         self.raise_()
         self.activateWindow()
 
-    def _tray_live_toggled(self, on):
-        if on and not self.live.running:
-            self.live.start()
-        elif not on and self.live.running:
-            self.live.stop()
-
-    def _live_changed(self, running):
-        if self.tray is not None:
-            self.tray_live.blockSignals(True)
-            self.tray_live.setChecked(running)
-            self.tray_live.blockSignals(False)
-            self.tray_live.setText(f"Live lighting: {EFFECT_NAMES[self.live.selected]}")
-            self.tray.setToolTip(f"G502 Hub · {EFFECT_NAMES[self.live.effect]} on" if running else "G502 Hub")
-
     def quit(self):
         self.rules.stop()
         self.macros.shutdown()
-        self.live.shutdown()  # the saved lighting comes back; a live effect resumes next start
+        self.live.shutdown()  # detach previews; the service keeps effects running
         self.state.shutdown()
         QApplication.quit()
 
-    def closeEvent(self, e):
-        prefs = settings.load()
-        if self.tray is not None and prefs.get("close_to_tray", True):
-            # Keep rules, app macros, live lighting and the DPI popup going from the tray
-            e.ignore()
-            self.hide()
-            if not prefs.get("tray_hint_shown"):
-                settings.update(tray_hint_shown=True)
-                self.tray.showMessage("G502 Hub", "G502 Hub keeps running in the tray. Quit it from the "
-                                      "tray menu.", QSystemTrayIcon.MessageIcon.Information, 4000)
-            return
+    def quit_all(self):
         self.quit()
-        super().closeEvent(e)
+        ipc.request("stop")
+
+    def closeEvent(self, e):
+        # The background service owns ongoing functions. Release the entire UI.
+        self.quit()
+        e.accept()
 
 
 INSTANCE = f"g502-hub-{os.getuid()}"
@@ -380,6 +326,7 @@ def _listen(window):
 
     def connected():
         sock = server.nextPendingConnection()
+        sock.disconnected.connect(sock.deleteLater)
 
         def read():
             if bytes(sock.readAll()).strip() == b"show":
@@ -391,18 +338,21 @@ def _listen(window):
 
 
 def main():
+    # Legacy autostart entries use --tray. They now launch only the service.
+    if "--tray" in sys.argv[1:]:
+        ipc.ensure_service()
+        return
+    ipc.ensure_service()
     app = QApplication(sys.argv)
-    tray_only = "--tray" in sys.argv[1:]
-    if _hand_over(b"tray" if tray_only else b"show"):
+    if _hand_over(b"show"):
         sys.exit(0)
     app.setApplicationName("G502 Hub")
     app.setDesktopFileName("g502-hub")
-    app.setQuitOnLastWindowClosed(False)  # the tray keeps live effects running
+    app.setQuitOnLastWindowClosed(False)  # MainWindow flushes pending edits before quitting
     app.setStyle("Fusion")
     app.setPalette(theme.palette())
     app.setStyleSheet(theme.STYLESHEET)
     window = MainWindow()
     window._instance_server = _listen(window)
-    if not (tray_only and window.tray is not None):
-        window.show()
+    window.show()
     sys.exit(app.exec())

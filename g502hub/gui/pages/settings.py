@@ -22,17 +22,16 @@ class SettingsPage(Page):
         self.layout.addWidget(title)
 
         self.layout.addWidget(heading("Startup"))
-        self.autostart = QCheckBox("Start G502 Hub when I log in (in the tray)")
+        self.autostart = QCheckBox("Start G502 Hub in the background when I log in")
         self.autostart.setChecked(system.autostart_enabled())
         self.autostart.toggled.connect(system.set_autostart)
         self.layout.addWidget(self.autostart)
-        self.close_to_tray = QCheckBox("Keep running in the tray when I close the window")
-        self.close_to_tray.setChecked(settings.load().get("close_to_tray", True))
-        self.close_to_tray.toggled.connect(lambda on: settings.update(close_to_tray=on))
-        self.layout.addWidget(self.close_to_tray)
-        self.layout.addWidget(muted("Game rules, macros run by the app, live lighting and the DPI popup only "
-                                    "work while G502 Hub runs. Settings saved on the mouse work either way.",
-                                    "Faint"))
+        self.layout.addWidget(muted("Closing this window frees the settings interface. Macros, game rules, "
+                                    "live lighting and the DPI popup continue in the background.", "Faint"))
+
+        self.stop_background = QPushButton("Quit G502 Hub completely")
+        self.stop_background.setToolTip("Stops background macros, game rules and live lighting too")
+        self.layout.addWidget(self.stop_background)
 
         self.layout.addWidget(heading("On-screen popup"))
         self.osd = QCheckBox("Show DPI and profile changes on screen")
