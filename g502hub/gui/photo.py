@@ -10,11 +10,10 @@ import threading
 from pathlib import Path
 
 import numpy as np
-from PySide6.QtCore import QObject, QPointF, QRect, QRectF, Qt, Signal
+from PySide6.QtCore import QCoreApplication, QObject, QPointF, QRect, QRectF, Qt, Signal
 from PySide6.QtGui import QColor, QFont, QImage, QPainter, QPen, QRadialGradient
 
 from . import theme
-from .i18n import tr
 from .shapes import Element, ellipse, polygon, rounded
 
 PHOTO_PATH = Path(os.environ.get("XDG_DATA_HOME") or Path.home() / ".local/share") / "g502-hub" / "g502-hero.png"
@@ -117,8 +116,8 @@ class PhotoSkin:
     @property
     def callouts(self):
         return [
-            (tr("DPI LIGHTS", "PhotoSkin"), QPointF(110, 586), QPointF(-170, 586), "zone0"),
-            (tr("LOGO", "PhotoSkin"), QPointF(308, 754), QPointF(780, 754), "zone1"),
+            (QCoreApplication.translate("PhotoSkin", "DPI LIGHTS"), QPointF(110, 586), QPointF(-170, 586), "zone0"),
+            (QCoreApplication.translate("PhotoSkin", "LOGO"), QPointF(308, 754), QPointF(780, 754), "zone1"),
         ]
 
     def __init__(self, image=None):

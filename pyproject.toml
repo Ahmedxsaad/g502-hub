@@ -35,4 +35,3 @@ include = ["g502hub*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["."]

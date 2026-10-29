@@ -9,7 +9,6 @@ from PySide6.QtWidgets import (QCheckBox, QFileDialog, QGridLayout, QHBoxLayout,
 
 from ... import backup, sharing
 from .. import labels, theme
-from ..i18n import tr
 from ..widgets import Card, LedSwatch, heading, muted
 from . import Page
 
@@ -20,14 +19,14 @@ class SlotCard(Card):
         self.page, self.slot = page, slot
         self.setMinimumWidth(250)
         top = QHBoxLayout()
-        top.addWidget(heading(tr("Slot {slot}", "Profiles").format(slot=slot)))
+        top.addWidget(heading(self.tr("Slot {slot}").format(slot=slot)))
         top.addStretch()
-        self.badge = QLabel(tr("ACTIVE", "Profiles"))
+        self.badge = QLabel(self.tr("ACTIVE"))
         self.badge.setStyleSheet(f"color: {theme.ACCENT}; font-size: 11px; font-weight: 600; letter-spacing: 1px;")
         top.addWidget(self.badge)
         self.body.addLayout(top)
         self.name = QLineEdit()
-        self.name.setPlaceholderText(tr("Profile {slot}", "Profiles").format(slot=slot))
+        self.name.setPlaceholderText(self.tr("Profile {slot}").format(slot=slot))
         self.name.setMaxLength(24)
         self.name.editingFinished.connect(self._renamed)
         self.body.addWidget(self.name)
@@ -38,7 +37,7 @@ class SlotCard(Card):
         lights = QHBoxLayout()
         lights.setSpacing(6)
         self.swatches, self.light_names = [], []
-        zone_labels = {"DPI": tr("DPI", "Profiles"), "Logo": tr("Logo", "Profiles")}
+        zone_labels = {"DPI": self.tr("DPI"), "Logo": self.tr("Logo")}
         for zone in ("DPI", "Logo"):
             swatch, name = LedSwatch(), QLabel()
             name.setObjectName("Muted")
@@ -49,24 +48,24 @@ class SlotCard(Card):
             self.light_names.append((zone_labels[zone], name))
         lights.addStretch()
         self.body.addLayout(lights)
-        self.cycle = QCheckBox(tr("Included when G9 cycles profiles", "Profiles"))
+        self.cycle = QCheckBox(self.tr("Included when G9 cycles profiles"))
         self.cycle.clicked.connect(lambda on: page.state.set_slot_enabled(slot, on))
         self.body.addWidget(self.cycle)
         row = QHBoxLayout()
-        self.activate_btn = QPushButton(tr("Activate", "Profiles"))
+        self.activate_btn = QPushButton(self.tr("Activate"))
         self.activate_btn.setObjectName("Primary")
         self.activate_btn.clicked.connect(lambda: page.state.activate(slot))
         row.addWidget(self.activate_btn)
-        more = QPushButton(tr("More  ▾", "Profiles"))
+        more = QPushButton(self.tr("More  ▾"))
         menu = QMenu(more)
-        menu.addAction(tr("Export to a file…", "Profiles"), self._export)
-        menu.addAction(tr("Import from a file…", "Profiles"), self._import)
+        menu.addAction(self.tr("Export to a file…"), self._export)
+        menu.addAction(self.tr("Import from a file…"), self._import)
         menu.addSeparator()
-        menu.addAction(tr("Reset to factory profile", "Profiles"), self._reset)
-        copy = menu.addMenu(tr("Copy this profile to", "Profiles"))
+        menu.addAction(self.tr("Reset to factory profile"), self._reset)
+        copy = menu.addMenu(self.tr("Copy this profile to"))
         for other in range(1, 6):
             if other != slot:
-                copy.addAction(tr("Slot {other}", "Profiles").format(other=other), lambda o=other: self._copy(o))
+                copy.addAction(self.tr("Slot {other}").format(other=other), lambda o=other: self._copy(o))
         more.setMenu(menu)
         row.addWidget(more)
         row.addStretch()
@@ -81,7 +80,7 @@ class SlotCard(Card):
     def _export(self):
         profile = self.page.state.profile(self.slot)
         name = (profile.name or f"G502 profile {self.slot}").replace("/", "-")
-        title = tr("Export profile", "Profiles")
+        title = self.tr("Export profile")
         path, _ = QFileDialog.getSaveFileName(self, title, str(Path.home() / f"{name}{sharing.SUFFIX}"),
                                               f"G502 Hub profiles (*{sharing.SUFFIX})")
         if not path:
@@ -91,12 +90,12 @@ class SlotCard(Card):
         try:
             Path(path).write_text(sharing.export(profile))
         except OSError as e:
-            QMessageBox.warning(self, title, tr("Couldn't save the file: {error}", "Profiles").format(error=e))
+            QMessageBox.warning(self, title, self.tr("Couldn't save the file: {error}").format(error=e))
             return
-        self.page.state.status.emit("ok", tr("Exported slot {slot} to {path}", "Profiles").format(slot=self.slot, path=path))
+        self.page.state.status.emit("ok", self.tr("Exported slot {slot} to {path}").format(slot=self.slot, path=path))
 
     def _import(self):
-        title = tr("Import profile", "Profiles")
+        title = self.tr("Import profile")
         path, _ = QFileDialog.getOpenFileName(self, title, str(Path.home()),
                                               f"G502 Hub profiles (*{sharing.SUFFIX});;All files (*)")
         if not path:
@@ -104,23 +103,23 @@ class SlotCard(Card):
         try:
             profile, notes = sharing.load(Path(path).read_text())
         except (OSError, UnicodeDecodeError, sharing.ShareError) as e:
-            QMessageBox.warning(self, title, tr("Couldn't import {filename}: {error}", "Profiles").format(filename=Path(path).name, error=e))
+            QMessageBox.warning(self, title, self.tr("Couldn't import {filename}: {error}").format(filename=Path(path).name, error=e))
             return
         name = profile.name or Path(path).stem
-        text = tr("Replace slot {slot} with \"{name}\"? Your backup keeps the current one.", "Profiles").format(slot=self.slot, name=name)
+        text = self.tr("Replace slot {slot} with \"{name}\"? Your backup keeps the current one.").format(slot=self.slot, name=name)
         if notes:
             text += "\n\n" + "\n".join(f"• {n}" for n in notes)
         if QMessageBox.question(self, title, text) == QMessageBox.StandardButton.Yes:
             self.page.state.replace_slot(self.slot, profile)
 
     def _reset(self):
-        msg = tr("Replace slot {slot} with its factory profile? Your backup keeps the current one.", "Profiles").format(slot=self.slot)
-        if QMessageBox.question(self, tr("Reset slot", "Profiles"), msg) == QMessageBox.StandardButton.Yes:
+        msg = self.tr("Replace slot {slot} with its factory profile? Your backup keeps the current one.").format(slot=self.slot)
+        if QMessageBox.question(self, self.tr("Reset slot"), msg) == QMessageBox.StandardButton.Yes:
             self.page.state.reset_slot(self.slot)
 
     def _copy(self, target):
-        msg = tr("Overwrite slot {target} with slot {slot}?", "Profiles").format(target=target, slot=self.slot)
-        if QMessageBox.question(self, tr("Copy profile", "Profiles"), msg) == QMessageBox.StandardButton.Yes:
+        msg = self.tr("Overwrite slot {target} with slot {slot}?").format(target=target, slot=self.slot)
+        if QMessageBox.question(self, self.tr("Copy profile"), msg) == QMessageBox.StandardButton.Yes:
             self.page.state.copy_slot(self.slot, target)
 
     def show_profile(self, profile, enabled, active):
@@ -135,7 +134,8 @@ class SlotCard(Card):
         self.summary.setText(f"{profile.report_rate_hz} Hz  ·  {dpis} DPI")
         for led, swatch, (zone, name) in zip(profile.leds, self.swatches, self.light_names):
             swatch.set_effect(led)
-            name.setText(f"{zone}: {labels.EFFECT_LABELS.get(led.effect, tr('custom', 'Profiles')).lower()}")
+            eff = labels.effect_label(led.effect) or self.tr("custom")
+            name.setText(f"{zone}: {eff.lower()}")
         self.cycle.setChecked(enabled)
 
 

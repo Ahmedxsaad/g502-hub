@@ -3,14 +3,12 @@
 import copy
 import time
 
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QAbstractItemView, QHBoxLayout, QLabel, QLineEdit, QListWidget,
                                QPushButton, QSpinBox, QVBoxLayout, QWidget)
 
 from ... import keys, macros
 from ...macros import Macro, Step
 from .. import labels
-from ..i18n import tr
 from ..widgets import Card, ChoiceList, KeyCapture, Segmented, Switcher, heading, muted
 from . import Page
 
@@ -23,7 +21,8 @@ class Recorder(QPushButton):
     """Toggle on, then type: every key press and release is kept with its timing."""
 
     def __init__(self, on_done):
-        super().__init__(tr("●  Record keys", "Macros"))
+        super().__init__()
+        self.setText(self.tr("●  Record keys"))
         self.setCheckable(True)
         self.on_done = on_done
         self.events = []
@@ -31,7 +30,7 @@ class Recorder(QPushButton):
         self.toggled.connect(self._toggled)
 
     def _toggled(self, on):
-        self.setText(tr("■  Stop recording (Esc)", "Macros") if on else tr("●  Record keys", "Macros"))
+        self.setText(self.tr("■  Stop recording (Esc)") if on else self.tr("●  Record keys"))
         if on:
             self.events, self._mods = [], 0
             self.setFocus()
@@ -84,17 +83,17 @@ class MacroCard(Card):
         where_parts = []
         for slot, layer, b in uses:
             b_name = BUTTON_NAMES.get(b, b)
-            gshift = " " + tr("with G-Shift", "Macros") if layer else ""
-            where_parts.append(tr("{button}{gshift} on slot {slot}", "Macros").format(button=b_name, gshift=gshift, slot=slot))
+            gshift = " " + self.tr("with G-Shift") if layer else ""
+            where_parts.append(self.tr("{button}{gshift} on slot {slot}").format(button=b_name, gshift=gshift, slot=slot))
         where = ", ".join(where_parts)
-        uses_text = tr("On {where}", "Macros").format(where=where) if uses else tr("Not on any button yet: pick it under Assignments.", "Macros")
+        uses_text = self.tr("On {where}").format(where=where) if uses else self.tr("Not on any button yet: pick it under Assignments.")
         self.body.addWidget(muted(uses_text, "Faint"))
         row = QHBoxLayout()
-        edit = QPushButton(tr("Edit", "Macros"))
+        edit = QPushButton(self.tr("Edit"))
         edit.clicked.connect(lambda: page.edit(macro))
         row.addWidget(edit)
         row.addStretch()
-        delete = QPushButton(tr("Delete", "Macros"))
+        delete = QPushButton(self.tr("Delete"))
         delete.setObjectName("Flat")
         delete.clicked.connect(lambda: page.engine.delete(macro.id))
         row.addWidget(delete)

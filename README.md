@@ -94,6 +94,7 @@ playing contains something (browsers, mpv, VLC, Spotify, anime apps…).
 **Internationalization (i18n)**
 - Native multi-language support (English and Simplified Chinese / 简体中文).
 - Automatically matches your system locale with a toggle in Settings.
+- Status bar messages and dynamic rule descriptions remain in English for this initial version.
 
 ## Screenshots
 

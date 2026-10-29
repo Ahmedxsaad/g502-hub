@@ -1,15 +1,23 @@
 """LIGHTSYNC page: onboard lighting per zone, plus live effects streamed by the app."""
 
+from PySide6.QtCore import QT_TRANSLATE_NOOP
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QCheckBox, QLabel, QPushButton, QVBoxLayout, QWidget
 
-from ... import lightfx
 from ...onboard import LedEffect
 from .. import labels
-from ..i18n import tr
 from ..live import EFFECTS as LIVE_EFFECTS
 from ..widgets import ChoiceList, ColorPicker, Segmented, SliderRow, Switcher, heading, muted
 from . import Page
+
+SCREEN_AREAS = [
+    ("screen", QT_TRANSLATE_NOOP("LightingPage", "Whole screen")),
+    ("center", QT_TRANSLATE_NOOP("LightingPage", "Center (video)")),
+    ("left", QT_TRANSLATE_NOOP("LightingPage", "Left edge")),
+    ("right", QT_TRANSLATE_NOOP("LightingPage", "Right edge")),
+    ("top", QT_TRANSLATE_NOOP("LightingPage", "Top edge")),
+    ("bottom", QT_TRANSLATE_NOOP("LightingPage", "Bottom edge")),
+]
 
 
 def _column():
@@ -198,7 +206,7 @@ class LightingPage(Page):
         w, col = _column()
         col.addWidget(muted(self.tr("Follows what's on your screen: the film or video you're watching, "
                                     "or the game you're playing."), "Faint"))
-        areas = [(k, self.tr(v)) for k, v in lightfx.AREA_LABELS.items()]
+        areas = [(k, self.tr(v)) for k, v in SCREEN_AREAS]
         self._choices(col, "screen", "dpi_area", self.tr("DPI lights follow"), areas)
         self._choices(col, "screen", "logo_area", self.tr("Logo follows"), areas)
         self._choices(col, "screen", "vivid", self.tr("Style"), [(True, self.tr("Vivid")), (False, self.tr("Average"))])

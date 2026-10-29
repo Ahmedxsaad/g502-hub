@@ -8,7 +8,6 @@ from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QSpinBox, QWidge
 
 from ...onboard import SPECIAL_CODES, Special
 from .. import theme
-from ..i18n import tr
 from ..widgets import ChoiceList, heading, muted
 from . import Page
 
@@ -30,7 +29,7 @@ class DpiTrack(QWidget):
         self.levels = []  # [(slot, dpi)]
         self.default = self.shift = self.active = None
         self._drag = None
-        self.setToolTip(tr("Drag a level to change it. Click the track to add a level there.", "Sensitivity"))
+        self.setToolTip(self.tr("Drag a level to change it. Click the track to add a level there."))
 
     def _x(self, dpi):
         r = self._track()
@@ -123,23 +122,23 @@ class LevelRow(QWidget):
         self.spin.setMinimumWidth(110)
         self.spin.valueChanged.connect(lambda v: self.changed.emit(self.slot, v))
         row.addWidget(self.spin)
-        self.default_btn = QPushButton(tr("Default", "Sensitivity"))
+        self.default_btn = QPushButton(self.tr("Default"))
         self.default_btn.setCheckable(True)
         self.default_btn.clicked.connect(lambda: self.make_default.emit(self.slot))
         row.addWidget(self.default_btn)
-        self.shift_btn = QPushButton(tr("Sniper", "Sensitivity"))
+        self.shift_btn = QPushButton(self.tr("Sniper"))
         self.shift_btn.setCheckable(True)
         self.shift_btn.clicked.connect(lambda: self.make_shift.emit(self.slot))
         row.addWidget(self.shift_btn)
         self.remove_btn = QPushButton("✕")
         self.remove_btn.setObjectName("Flat")
-        self.remove_btn.setToolTip(tr("Remove this level", "Sensitivity"))
+        self.remove_btn.setToolTip(self.tr("Remove this level"))
         self.remove_btn.clicked.connect(lambda: self.remove.emit(self.slot))
         row.addWidget(self.remove_btn)
 
     def show_level(self, n, slot, dpi, rng, is_default, is_shift, active, removable):
         self.slot = slot
-        self.name.setText(tr("Level {n}", "Sensitivity").format(n=n))
+        self.name.setText(self.tr("Level {n}").format(n=n))
         self.name.setStyleSheet(f"color: {theme.ACCENT if active else theme.TEXT}; font-weight: {600 if active else 400};")
         self.spin.blockSignals(True)
         self.spin.setRange(rng[0], rng[1])

@@ -9,9 +9,8 @@ from PySide6.QtWidgets import (QCheckBox, QComboBox, QHBoxLayout, QLabel, QLineE
                                QPushButton, QVBoxLayout, QWidget)
 
 from ... import context, rules
-from ...rules import Rule
+from ...rules import LIGHTING, TRIGGERS, Rule
 from .. import theme
-from ..i18n import tr
 from ..widgets import Card, ChoiceList, ColorPicker, SliderRow, Switcher, heading, muted
 from . import Page
 
@@ -25,12 +24,12 @@ class RuleCard(Card):
         name.setStyleSheet("font-weight: 600; font-size: 14px;")
         top.addWidget(name)
         if active:
-            badge = QLabel(tr("ACTIVE", "Games"))
+            badge = QLabel(self.tr("ACTIVE"))
             badge.setStyleSheet(f"color: {theme.ACCENT}; font-size: 11px; font-weight: 600; letter-spacing: 1px;")
             top.addWidget(badge)
         top.addStretch()
         on = QCheckBox()
-        on.setToolTip(tr("Turn this rule on or off", "Games"))
+        on.setToolTip(self.tr("Turn this rule on or off"))
         on.setChecked(rule.enabled)
         on.toggled.connect(lambda v: page.engine.update(replace(rule, enabled=v)))
         top.addWidget(on)
@@ -44,18 +43,18 @@ class RuleCard(Card):
         action.addWidget(muted(rule.describe_action(), "Faint"), 1)
         self.body.addLayout(action)
         buttons = QHBoxLayout()
-        edit = QPushButton(tr("Edit", "Games"))
+        edit = QPushButton(self.tr("Edit"))
         edit.clicked.connect(lambda: page.edit(rule))
         buttons.addWidget(edit)
-        for text, step, tip in (("↑", -1, tr("Check this rule earlier", "Games")),
-                                ("↓", 1, tr("Check this rule later", "Games"))):
+        for text, step, tip in (("↑", -1, self.tr("Check this rule earlier")),
+                                ("↓", 1, self.tr("Check this rule later"))):
             b = QPushButton(text)
             b.setObjectName("Flat")
             b.setToolTip(tip)
             b.clicked.connect(lambda _=False, s=step: page.engine.move(rule.id, s))
             buttons.addWidget(b)
         buttons.addStretch()
-        delete = QPushButton(tr("Delete", "Games"))
+        delete = QPushButton(self.tr("Delete"))
         delete.setObjectName("Flat")
         delete.clicked.connect(lambda: page.engine.remove(rule.id))
         buttons.addWidget(delete)
@@ -202,12 +201,7 @@ class GamesPage(Page):
         col.addWidget(self.name)
 
         col.addWidget(heading(self.tr("When")))
-        triggers = [
-            ("game", self.tr("Steam or Proton game")),
-            ("app", self.tr("Application is in front")),
-            ("title", self.tr("Window title contains text")),
-            ("media", self.tr("Media is playing")),
-        ]
+        triggers = [(k, self.tr(v)) for k, v in TRIGGERS.items()]
         self.trigger = ChoiceList(triggers, columns=2)
         self.trigger.changed.connect(lambda _: self._show_value_inputs())
         col.addWidget(self.trigger)
@@ -222,18 +216,8 @@ class GamesPage(Page):
         col.addWidget(self.value_hint)
 
         col.addWidget(heading(self.tr("Lighting")))
-        lighting_choices = [
-            (None, self.tr("Don't change")),
-            ("art", self.tr("Game cover art")),
-            ("game", self.tr("Game-driven")),
-            ("color", self.tr("Fixed color")),
-            ("breathing", self.tr("Breathing color")),
-            ("screen", self.tr("Screen sampler")),
-            ("audio", self.tr("Audio visualizer")),
-            ("wave", self.tr("Color wave")),
-            ("dpi", self.tr("DPI colors")),
-        ]
-        self.lighting = ChoiceList(lighting_choices, columns=2)
+        lighting = [(None, self.tr("Don't change"))] + [(k, self.tr(v)) for k, v in LIGHTING.items()]
+        self.lighting = ChoiceList(lighting, columns=2)
         self.lighting.changed.connect(lambda _: self._show_lighting_inputs())
         col.addWidget(self.lighting)
         self.color = ColorPicker()

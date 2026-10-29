@@ -15,11 +15,6 @@ mkdir -p g502hub/gui/translations
 echo "Updating translation source files (.ts)..."
 "$LUPDATE" -extensions py g502hub/ -ts g502hub/gui/translations/zh_CN.ts
 
-if [ -f tools/compile_translations.py ]; then
-    echo "Syncing translation dictionaries..."
-    python3 tools/compile_translations.py
-fi
-
 echo "Compiling binary translation files (.qm)..."
 for ts in g502hub/gui/translations/*.ts; do
     qm="${ts%.ts}.qm"

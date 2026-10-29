@@ -1,11 +1,11 @@
 """ASSIGNMENTS page: what each button does, on the primary and G-Shift layers."""
 
+from PySide6.QtCore import QT_TRANSLATE_NOOP
 from PySide6.QtWidgets import QHBoxLayout, QLabel, QMessageBox, QPushButton, QStackedWidget, QVBoxLayout, QWidget
 
 from ... import keys
 from ...onboard import SPECIAL_CODES, Consumer, Disabled, Key, MouseButton, Special, Unassigned
 from .. import labels
-from ..i18n import tr
 from ..widgets import Card, ChoiceList, KeyCapture, Segmented, heading, muted
 from . import Page
 
@@ -16,13 +16,27 @@ MEDIA = ["play-pause", "next-track", "prev-track", "stop", "mute", "volume-up", 
          "file-browser", "calculator", "mail", "brightness-up", "brightness-down"]
 
 # (label, modifiers, character typed on the user's layout, or a key name)
-RAW_SHORTCUTS = [
-    ("Copy", 0x01, "c"), ("Paste", 0x01, "v"), ("Cut", 0x01, "x"), ("Undo", 0x01, "z"),
-    ("Redo", 0x03, "z"), ("Select all", 0x01, "a"), ("Save", 0x01, "s"), ("Find", 0x01, "f"),
-    ("New tab", 0x01, "t"), ("Close tab", 0x01, "w"), ("Reopen tab", 0x03, "t"),
-    ("Next tab", 0x01, "@tab"), ("Previous tab", 0x03, "@tab"), ("Switch window", 0x04, "@tab"),
-    ("Show desktop", 0x08, "d"), ("Lock screen", 0x08, "l"), ("Screenshot", 0x00, "@printscreen"),
-    ("Escape", 0x00, "@esc"), ("Enter", 0x00, "@enter"), ("Delete", 0x00, "@delete"),
+SHORTCUTS = [
+    (QT_TRANSLATE_NOOP("AssignmentsPage", "Copy"), 0x01, "c"),
+    (QT_TRANSLATE_NOOP("AssignmentsPage", "Paste"), 0x01, "v"),
+    (QT_TRANSLATE_NOOP("AssignmentsPage", "Cut"), 0x01, "x"),
+    (QT_TRANSLATE_NOOP("AssignmentsPage", "Undo"), 0x01, "z"),
+    (QT_TRANSLATE_NOOP("AssignmentsPage", "Redo"), 0x03, "z"),
+    (QT_TRANSLATE_NOOP("AssignmentsPage", "Select all"), 0x01, "a"),
+    (QT_TRANSLATE_NOOP("AssignmentsPage", "Save"), 0x01, "s"),
+    (QT_TRANSLATE_NOOP("AssignmentsPage", "Find"), 0x01, "f"),
+    (QT_TRANSLATE_NOOP("AssignmentsPage", "New tab"), 0x01, "t"),
+    (QT_TRANSLATE_NOOP("AssignmentsPage", "Close tab"), 0x01, "w"),
+    (QT_TRANSLATE_NOOP("AssignmentsPage", "Reopen tab"), 0x03, "t"),
+    (QT_TRANSLATE_NOOP("AssignmentsPage", "Next tab"), 0x01, "@tab"),
+    (QT_TRANSLATE_NOOP("AssignmentsPage", "Previous tab"), 0x03, "@tab"),
+    (QT_TRANSLATE_NOOP("AssignmentsPage", "Switch window"), 0x04, "@tab"),
+    (QT_TRANSLATE_NOOP("AssignmentsPage", "Show desktop"), 0x08, "d"),
+    (QT_TRANSLATE_NOOP("AssignmentsPage", "Lock screen"), 0x08, "l"),
+    (QT_TRANSLATE_NOOP("AssignmentsPage", "Screenshot"), 0x00, "@printscreen"),
+    (QT_TRANSLATE_NOOP("AssignmentsPage", "Escape"), 0x00, "@esc"),
+    (QT_TRANSLATE_NOOP("AssignmentsPage", "Enter"), 0x00, "@enter"),
+    (QT_TRANSLATE_NOOP("AssignmentsPage", "Delete"), 0x00, "@delete"),
 ]
 
 
@@ -134,11 +148,10 @@ class AssignmentsPage(Page):
         col.addWidget(self.capture)
         col.addWidget(heading(self.tr("Common shortcuts")))
         shortcuts = []
-        for raw_label, mods, char in RAW_SHORTCUTS:
+        for label, mods, char in SHORTCUTS:
             usage = keys.KEYS[char[1:]] if char.startswith("@") else self.keylabels.usage_for(char)
             binding = Key(mods, usage)
-            lbl = self.tr(raw_label)
-            shortcuts.append((binding, f"{lbl}   ·   {self.keylabels.combo(mods, usage)}"))
+            shortcuts.append((binding, f"{self.tr(label)}   ·   {self.keylabels.combo(mods, usage)}"))
         lst = ChoiceList(shortcuts, columns=1)
         lst.changed.connect(self._assign)
         self.choice_lists.append(lst)
@@ -209,7 +222,7 @@ class AssignmentsPage(Page):
     def _assign_macro(self, macro_id):
         def done(error):
             if error:
-                err_text = self.tr("Couldn't put the macro on {button}: {error}").format(button=labels.BUTTON_NAMES[self.slot], error=error)
+                err_text = self.tr("Couldn't put the macro on {button}: {error}").format(button=labels.button_name(self.slot), error=error)
                 self.state.status.emit("error", err_text)
             self.refresh()
         self.engine.assign(self.state.active_slot, self.layer, self.slot, macro_id, done)
@@ -239,12 +252,12 @@ class AssignmentsPage(Page):
         if profile is None:
             return
         bindings = self._bindings(profile)
-        self.view.tooltips = {i: f"{labels.BUTTON_NAMES[i]}\n{labels.binding(bindings[i], self.keylabels)}"
+        self.view.tooltips = {i: f"{labels.button_name(i)}\n{labels.binding(bindings[i], self.keylabels)}"
                               for i in range(len(labels.BUTTON_NAMES))}
         self.view.set_selected([self.slot])
         current = bindings[self.slot]
         macro = self.engine.macro_on(self.state.active_slot, self.layer, self.slot, current)
-        self.button_name.setText(labels.BUTTON_NAMES[self.slot])
+        self.button_name.setText(labels.button_name(self.slot))
         where_text = self.tr("saved on the mouse") if (macro and macro.target == "mouse") else self.tr("run by the app")
         text = (f"Macro “{macro.name}”, {where_text}"
                 if macro else labels.binding(current, self.keylabels))

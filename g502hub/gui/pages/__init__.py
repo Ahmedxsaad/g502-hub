@@ -23,7 +23,7 @@ class Page:
         self.layout.setSpacing(16)
         self.panel.setWidget(inner)
 
-    def tr(self, text: str, disambiguation: str = None, n: int = -1) -> str:
+    def tr(self, text, disambiguation=None, n=-1):
         return QCoreApplication.translate(type(self).__name__, text, disambiguation, n)
 
     def activate(self):

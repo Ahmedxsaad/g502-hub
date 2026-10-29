@@ -7,24 +7,29 @@ game, playing media); the first enabled rule that matches wins.
 import uuid
 from dataclasses import asdict, dataclass, field
 
+
+def QT_TRANSLATE_NOOP(context, text):
+    return text
+
+
 TRIGGERS = {
-    "game": "A game is running",
-    "app": "This app is in front",
-    "title": "The window title contains",
-    "media": "Playing media contains",
+    "game": QT_TRANSLATE_NOOP("GamesPage", "A game is running"),
+    "app": QT_TRANSLATE_NOOP("GamesPage", "This app is in front"),
+    "title": QT_TRANSLATE_NOOP("GamesPage", "The window title contains"),
+    "media": QT_TRANSLATE_NOOP("GamesPage", "Playing media contains"),
 }
 ANY_GAME = "any"
 
 # Lighting a rule can apply; None in a rule means "leave the lighting alone"
 LIGHTING = {
-    "color": "Color",
-    "breathing": "Breathing",
-    "art": "Cover art colors",
-    "game": "Game-driven",
-    "screen": "Screen sampler",
-    "audio": "Audio visualizer",
-    "wave": "Color wave",
-    "dpi": "DPI colors",
+    "color": QT_TRANSLATE_NOOP("GamesPage", "Color"),
+    "breathing": QT_TRANSLATE_NOOP("GamesPage", "Breathing"),
+    "art": QT_TRANSLATE_NOOP("GamesPage", "Cover art colors"),
+    "game": QT_TRANSLATE_NOOP("GamesPage", "Game-driven"),
+    "screen": QT_TRANSLATE_NOOP("GamesPage", "Screen sampler"),
+    "audio": QT_TRANSLATE_NOOP("GamesPage", "Audio visualizer"),
+    "wave": QT_TRANSLATE_NOOP("GamesPage", "Color wave"),
+    "dpi": QT_TRANSLATE_NOOP("GamesPage", "DPI colors"),
 }
 
 

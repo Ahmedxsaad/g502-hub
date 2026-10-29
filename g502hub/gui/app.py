@@ -14,8 +14,8 @@ from PySide6.QtWidgets import (QApplication, QButtonGroup, QComboBox, QHBoxLayou
 from .. import settings
 from ..keylabels import KeyLabels
 from . import system, theme
-from .i18n import setup_translation, tr
-from .live import EFFECT_NAMES, LiveLighting
+from .i18n import setup_translation
+from .live import LiveLighting, effect_name
 from .macro_engine import MacroEngine
 from .mouse_view import MouseView
 from .pages.about import AboutPage
@@ -35,17 +35,17 @@ class Placeholder(QWidget):
         super().__init__()
         col = QVBoxLayout(self)
         col.addStretch()
-        self.title = QLabel(tr("Connect your G502 HERO", "Placeholder"))
+        self.title = QLabel(self.tr("Connect your G502 HERO"))
         self.title.setObjectName("Title")
         self.title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         col.addWidget(self.title)
-        self.detail = QLabel(tr("Looking for the mouse…", "Placeholder"))
+        self.detail = QLabel(self.tr("Looking for the mouse…"))
         self.detail.setObjectName("Muted")
         self.detail.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.detail.setWordWrap(True)
         col.addWidget(self.detail)
         col.addSpacing(12)
-        self.fix = QPushButton(tr("Allow access (asks for your password)", "Placeholder"))
+        self.fix = QPushButton(self.tr("Allow access (asks for your password)"))
         self.fix.setObjectName("Primary")
         self.fix.hide()
         col.addWidget(self.fix, 0, Qt.AlignmentFlag.AlignHCenter)
@@ -337,8 +337,8 @@ class MainWindow(QMainWindow):
             self.tray_live.blockSignals(True)
             self.tray_live.setChecked(running)
             self.tray_live.blockSignals(False)
-            self.tray_live.setText(self.tr("Live lighting: {effect}").format(effect=EFFECT_NAMES[self.live.selected]))
-            self.tray.setToolTip(self.tr("G502 Hub · {effect} on").format(effect=EFFECT_NAMES[self.live.effect]) if running else "G502 Hub")
+            self.tray_live.setText(self.tr("Live lighting: {effect}").format(effect=effect_name(self.live.selected)))
+            self.tray.setToolTip(self.tr("G502 Hub · {effect} on").format(effect=effect_name(self.live.effect)) if running else "G502 Hub")
 
     def quit(self):
         self.rules.stop()

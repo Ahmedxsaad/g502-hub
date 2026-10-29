@@ -13,7 +13,6 @@ from PySide6.QtGui import QColor, QFont, QPainter, QPen, QRadialGradient, QTrans
 from PySide6.QtWidgets import QToolTip, QWidget
 
 from . import theme
-from .i18n import tr
 from .photo import PhotoFetcher, PhotoSkin, load_image
 
 BADGES = {0: "G1", 1: "G2", 2: "G3", 3: "G4", 4: "G5", 5: "G6", 6: "G7", 7: "G8",
@@ -85,16 +84,16 @@ class MouseView(QWidget):
 
     def fetch_photo(self):
         """Download Logitech's photo (first start, or to replace a damaged copy)."""
-        self.skin.message = tr("Getting the picture of your G502 HERO from logitechg.com…", "MouseView")
+        self.skin.message = self.tr("Getting the picture of your G502 HERO from logitechg.com…")
         self.update()
         self.fetcher.start()
 
     def _fetched(self, error):
         image = None if error else load_image()
         if image is None:
-            err_msg = error or tr("damaged file", "MouseView")
-            self.skin.message = (tr("Couldn't download the picture of the mouse ({error}). ", "MouseView").format(error=err_msg) +
-                                 tr("Click here to try again.", "MouseView"))
+            err_msg = error or self.tr("damaged file")
+            self.skin.message = (self.tr("Couldn't download the picture of the mouse ({error}). ").format(error=err_msg) +
+                                 self.tr("Click here to try again."))
         else:
             self.skin.set_image(image)
         self.update()

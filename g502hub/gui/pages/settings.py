@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QCheckBox, QComboBox, QHBoxLayout, QLabel, QPushBu
 
 from ... import settings
 from .. import photo, system
-from ..i18n import AVAILABLE_LANGUAGES, get_current_language, setup_translation
+from ..i18n import AVAILABLE_LANGUAGES, get_current_language
 from ..widgets import heading, muted
 from . import Page
 
@@ -36,7 +36,7 @@ class SettingsPage(Page):
             self.lang_box.setCurrentIndex(idx)
         self.lang_box.currentIndexChanged.connect(self._lang_changed)
         self.layout.addWidget(self.lang_box)
-        self.lang_hint = muted(self.tr("Language changes will take effect after restarting the application."), "Faint")
+        self.lang_hint = muted(self.tr("Restart required. Please quit G502 Hub from the tray menu and open it again to apply."), "Faint")
         self.layout.addWidget(self.lang_hint)
 
         self.layout.addWidget(heading(self.tr("Startup")))
@@ -143,7 +143,11 @@ class SettingsPage(Page):
             self.gsi_btn.hide()
             self.gsi_note.hide()
             return
-        state = ", ".join(f"{names[g]} {self.tr('✓ set up') if done.get(g) else self.tr('not set up')}" for g in games)
+        parts = []
+        for g in games:
+            status = self.tr("✓ set up") if done.get(g) else self.tr("not set up")
+            parts.append(f"{names[g]} {status}")
+        state = ", ".join(parts)
         self.gsi_status.setText(self.tr("CS2 and Dota 2 live lighting: {state}.").format(state=state))
         any_done = any(done.get(g) for g in games)
         self.gsi_btn.setText(self.tr("Remove CS2 / Dota 2 setup") if any_done else self.tr("Set up CS2 / Dota 2 lighting"))

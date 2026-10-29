@@ -3,738 +3,614 @@
 <context>
     <name />
     <message>
-        <location filename="../app.py" line="38" />
         <source>Connect your G502 HERO</source>
         <comment>Placeholder</comment>
         <translation>请连接你的 G502 HERO 鼠标</translation>
     </message>
     <message>
-        <location filename="../app.py" line="42" />
         <source>Looking for the mouse…</source>
         <comment>Placeholder</comment>
         <translation>正在寻找鼠标设备…</translation>
     </message>
     <message>
-        <location filename="../app.py" line="48" />
         <source>Allow access (asks for your password)</source>
         <comment>Placeholder</comment>
-        <translation>授予设备免 Root 访问权限（需要管理员密码）</translation>
+        <translation>授权访问权限（需要管理员密码）</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="48" />
         <source>G1 · Left click</source>
         <comment>Buttons</comment>
-        <translation>G1 · 左键单击</translation>
+        <translation type="vanished">G1 · 左键单击</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="49" />
         <source>G2 · Right click</source>
         <comment>Buttons</comment>
-        <translation>G2 · 右键单击</translation>
+        <translation type="vanished">G2 · 右键单击</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="50" />
         <source>G3 · Wheel click</source>
         <comment>Buttons</comment>
-        <translation>G3 · 滚轮点击</translation>
+        <translation type="vanished">G3 · 滚轮点击</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="51" />
         <source>G4 · Back</source>
         <comment>Buttons</comment>
-        <translation>G4 · 后退键</translation>
+        <translation type="vanished">G4 · 后退键</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="52" />
         <source>G5 · Forward</source>
         <comment>Buttons</comment>
-        <translation>G5 · 前进键</translation>
+        <translation type="vanished">G5 · 前进键</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="53" />
         <source>G6 · Sniper</source>
         <comment>Buttons</comment>
-        <translation>G6 · DPI 切换 (狙击键)</translation>
+        <translation type="vanished">G6 · DPI 切换 (狙击键)</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="54" />
         <source>G7 · Front left</source>
         <comment>Buttons</comment>
-        <translation>G7 · 左前端按键</translation>
+        <translation type="vanished">G7 · 左前端按键</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="55" />
         <source>G8 · Behind G7</source>
         <comment>Buttons</comment>
-        <translation>G8 · 左键旁后按键</translation>
+        <translation type="vanished">G8 · 左键旁后按键</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="56" />
         <source>G9 · Behind wheel</source>
         <comment>Buttons</comment>
-        <translation>G9 · 滚轮后方按键</translation>
+        <translation type="vanished">G9 · 滚轮后方按键</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="57" />
         <source>Wheel tilt right</source>
         <comment>Buttons</comment>
-        <translation>滚轮向右倾斜</translation>
+        <translation type="vanished">滚轮向右倾斜</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="58" />
         <source>Wheel tilt left</source>
         <comment>Buttons</comment>
-        <translation>滚轮向左倾斜</translation>
+        <translation type="vanished">滚轮向左倾斜</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="62" />
         <source>Left click</source>
         <comment>MouseLabels</comment>
-        <translation>左键单击</translation>
+        <translation type="vanished">左键单击</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="63" />
         <source>Right click</source>
         <comment>MouseLabels</comment>
-        <translation>右键单击</translation>
+        <translation type="vanished">右键单击</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="64" />
         <source>Middle click</source>
         <comment>MouseLabels</comment>
-        <translation>中键单击</translation>
+        <translation type="vanished">中键单击</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="65" />
         <source>Back</source>
         <comment>MouseLabels</comment>
-        <translation>后退键</translation>
+        <translation type="vanished">后退键</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="66" />
         <source>Forward</source>
         <comment>MouseLabels</comment>
-        <translation>前进键</translation>
+        <translation type="vanished">前进键</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="70" />
         <source>Nothing</source>
         <comment>SpecialLabels</comment>
-        <translation>无功能</translation>
+        <translation type="vanished">无功能</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="71" />
         <source>Scroll left</source>
         <comment>SpecialLabels</comment>
-        <translation>向左滚动</translation>
+        <translation type="vanished">向左滚动</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="72" />
         <source>Scroll right</source>
         <comment>SpecialLabels</comment>
-        <translation>向右滚动</translation>
+        <translation type="vanished">向右滚动</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="73" />
         <source>DPI up</source>
         <comment>SpecialLabels</comment>
-        <translation>DPI 增加</translation>
+        <translation type="vanished">DPI 增加</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="74" />
         <source>DPI down</source>
         <comment>SpecialLabels</comment>
-        <translation>DPI 减少</translation>
+        <translation type="vanished">DPI 减少</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="75" />
         <source>DPI cycle</source>
         <comment>SpecialLabels</comment>
-        <translation>DPI 循环</translation>
+        <translation type="vanished">DPI 循环</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="76" />
         <source>DPI default</source>
         <comment>SpecialLabels</comment>
-        <translation>默认 DPI</translation>
+        <translation type="vanished">默认 DPI</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="77" />
         <source>DPI shift (sniper)</source>
         <comment>SpecialLabels</comment>
-        <translation>DPI 切换（狙击键）</translation>
+        <translation type="vanished">DPI 切换（狙击键）</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="78" />
         <source>Next profile</source>
         <comment>SpecialLabels</comment>
-        <translation>下一个配置文件</translation>
+        <translation type="vanished">下一个配置文件</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="79" />
         <source>Previous profile</source>
         <comment>SpecialLabels</comment>
-        <translation>上一个配置文件</translation>
+        <translation type="vanished">上一个配置文件</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="80" />
         <source>Cycle profiles</source>
         <comment>SpecialLabels</comment>
-        <translation>循环切换配置文件</translation>
+        <translation type="vanished">循环切换配置文件</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="81" />
         <source>G-Shift</source>
         <comment>SpecialLabels</comment>
-        <translation>G-Shift</translation>
+        <translation type="vanished">G-Shift</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="82" />
         <source>Scroll up</source>
         <comment>SpecialLabels</comment>
-        <translation>向上滚动</translation>
+        <translation type="vanished">向上滚动</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="83" />
         <source>Scroll down</source>
         <comment>SpecialLabels</comment>
-        <translation>向下滚动</translation>
+        <translation type="vanished">向下滚动</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="84" />
         <source>Battery status</source>
         <comment>SpecialLabels</comment>
-        <translation>电量状态</translation>
+        <translation type="vanished">电量状态</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="85" />
         <source>Mode switch</source>
         <comment>SpecialLabels</comment>
-        <translation>模式切换</translation>
+        <translation type="vanished">模式切换</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="86" />
         <source>Host button</source>
         <comment>SpecialLabels</comment>
-        <translation>主机切换键</translation>
+        <translation type="vanished">主机切换键</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="90" />
         <source>Play / Pause</source>
         <comment>ConsumerLabels</comment>
-        <translation>播放 / 暂停</translation>
+        <translation type="vanished">播放 / 暂停</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="91" />
         <source>Next track</source>
         <comment>ConsumerLabels</comment>
-        <translation>下一曲</translation>
+        <translation type="vanished">下一曲</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="92" />
         <source>Previous track</source>
         <comment>ConsumerLabels</comment>
-        <translation>上一曲</translation>
+        <translation type="vanished">上一曲</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="93" />
         <source>Stop</source>
         <comment>ConsumerLabels</comment>
-        <translation>停止</translation>
+        <translation type="vanished">停止</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="94" />
         <source>Mute</source>
         <comment>ConsumerLabels</comment>
-        <translation>静音</translation>
+        <translation type="vanished">静音</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="95" />
         <source>Volume up</source>
         <comment>ConsumerLabels</comment>
-        <translation>音量增大</translation>
+        <translation type="vanished">音量增大</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="96" />
         <source>Volume down</source>
         <comment>ConsumerLabels</comment>
-        <translation>音量减小</translation>
+        <translation type="vanished">音量减小</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="97" />
         <source>Brightness up</source>
         <comment>ConsumerLabels</comment>
-        <translation>提高亮度</translation>
+        <translation type="vanished">提高亮度</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="98" />
         <source>Brightness down</source>
         <comment>ConsumerLabels</comment>
-        <translation>降低亮度</translation>
+        <translation type="vanished">降低亮度</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="99" />
         <source>Calculator</source>
         <comment>ConsumerLabels</comment>
-        <translation>计算器</translation>
+        <translation type="vanished">计算器</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="100" />
         <source>File manager</source>
         <comment>ConsumerLabels</comment>
-        <translation>文件资源管理器</translation>
+        <translation type="vanished">文件资源管理器</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="101" />
         <source>Mail</source>
         <comment>ConsumerLabels</comment>
-        <translation>邮件</translation>
+        <translation type="vanished">邮件</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="102" />
         <source>Browser home</source>
         <comment>ConsumerLabels</comment>
-        <translation>浏览器主页</translation>
+        <translation type="vanished">浏览器主页</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="103" />
         <source>Browser back</source>
         <comment>ConsumerLabels</comment>
-        <translation>浏览器后退</translation>
+        <translation type="vanished">浏览器后退</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="104" />
         <source>Browser forward</source>
         <comment>ConsumerLabels</comment>
-        <translation>浏览器前进</translation>
+        <translation type="vanished">浏览器前进</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="105" />
         <source>Browser refresh</source>
         <comment>ConsumerLabels</comment>
-        <translation>浏览器刷新</translation>
+        <translation type="vanished">浏览器刷新</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="106" />
         <source>Search</source>
         <comment>ConsumerLabels</comment>
-        <translation>搜索</translation>
+        <translation type="vanished">搜索</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="110" />
         <source>Off</source>
         <comment>EffectLabels</comment>
-        <translation>关闭</translation>
+        <translation type="vanished">关闭</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="111" />
         <source>Fixed</source>
         <comment>EffectLabels</comment>
-        <translation>常亮</translation>
+        <translation type="vanished">常亮</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="112" />
         <source>Breathing</source>
         <comment>EffectLabels</comment>
-        <translation>呼吸</translation>
+        <translation type="vanished">呼吸</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="113" />
         <source>Color cycle</source>
         <comment>EffectLabels</comment>
-        <translation>彩色循环</translation>
+        <translation type="vanished">彩色循环</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="119" />
         <source>Button </source>
         <comment>Labels</comment>
-        <translation>按键 </translation>
+        <translation type="vanished">按键 </translation>
     </message>
     <message>
-        <location filename="../labels.py" line="128" />
         <source>Switch to profile {slot}</source>
         <comment>Labels</comment>
-        <translation>切换到配置文件 {slot}</translation>
+        <translation type="vanished">切换到配置文件 {slot}</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="131" />
         <source>Macro</source>
         <comment>Labels</comment>
-        <translation>宏</translation>
+        <translation type="vanished">宏</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="133" />
         <source>Disabled</source>
         <comment>Labels</comment>
-        <translation>已禁用</translation>
+        <translation type="vanished">已禁用</translation>
     </message>
     <message>
-        <location filename="../labels.py" line="135" />
         <source>Not set</source>
         <comment>Labels</comment>
-        <translation>未设置</translation>
+        <translation type="vanished">未设置</translation>
     </message>
     <message>
-        <location filename="../live.py" line="99" />
         <source>{effect} is on</source>
         <comment>LiveLighting</comment>
-        <translation>{effect} 已开启</translation>
+        <translation type="vanished">{effect} 已开启</translation>
     </message>
     <message>
-        <location filename="../live.py" line="108" />
         <source>Live lighting off: back to the lighting saved on the mouse</source>
         <comment>LiveLighting</comment>
-        <translation>实时联动灯效已关闭：恢复为鼠标板载保存的灯效</translation>
+        <translation type="vanished">实时联动灯效已关闭：恢复为鼠标板载保存的灯效</translation>
     </message>
     <message>
-        <location filename="../live.py" line="200" />
         <source>Starting screen capture… pick a screen if asked</source>
         <comment>LiveLighting</comment>
-        <translation>正在启动屏幕捕获… 若有系统弹窗请选择要采样的显示器</translation>
+        <translation type="vanished">正在启动屏幕捕获… 若有系统弹窗请选择要采样的显示器</translation>
     </message>
     <message>
-        <location filename="../live.py" line="228" />
         <source>Screen sampler is on</source>
         <comment>LiveLighting</comment>
-        <translation>屏幕采样器已开启</translation>
+        <translation type="vanished">屏幕采样器已开启</translation>
     </message>
     <message>
-        <location filename="../live.py" line="230" />
         <source>Screen sharing was cancelled, so the screen sampler is off</source>
         <comment>LiveLighting</comment>
-        <translation>屏幕共享已取消，屏幕采样器已关闭</translation>
+        <translation type="vanished">屏幕共享已取消，屏幕采样器已关闭</translation>
     </message>
     <message>
-        <location filename="../live.py" line="232" />
         <source>Screen capture failed: {error}</source>
         <comment>LiveLighting</comment>
-        <translation>屏幕捕获失败：{error}</translation>
+        <translation type="vanished">屏幕捕获失败：{error}</translation>
     </message>
     <message>
-        <location filename="../mouse_view.py" line="88" />
         <source>Getting the picture of your G502 HERO from logitechg.com…</source>
         <comment>MouseView</comment>
-        <translation>正在从 logitechg.com 下载 G502 HERO 官方外观图…</translation>
+        <translation type="vanished">正在从 logitechg.com 下载 G502 HERO 官方外观图…</translation>
     </message>
     <message>
-        <location filename="../mouse_view.py" line="95" />
         <source>damaged file</source>
         <comment>MouseView</comment>
-        <translation>文件损坏</translation>
+        <translation type="vanished">文件损坏</translation>
     </message>
     <message>
-        <location filename="../mouse_view.py" line="96" />
         <source>Couldn't download the picture of the mouse ({error}). </source>
         <comment>MouseView</comment>
-        <translation>无法下载鼠标外观图（{error}）。</translation>
+        <translation type="vanished">无法下载鼠标外观图（{error}）。</translation>
     </message>
     <message>
-        <location filename="../mouse_view.py" line="97" />
         <source>Click here to try again.</source>
         <comment>MouseView</comment>
-        <translation>点击此处重试。</translation>
+        <translation type="vanished">点击此处重试。</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="28" />
         <source>ACTIVE</source>
         <comment>Games</comment>
-        <translation>已激活</translation>
+        <translation type="vanished">已激活</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="33" />
         <source>Turn this rule on or off</source>
         <comment>Games</comment>
-        <translation>启用或停用此规则</translation>
+        <translation type="vanished">启用或停用此规则</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="47" />
         <source>Edit</source>
         <comment>Games</comment>
-        <translation>编辑</translation>
+        <translation type="vanished">编辑</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="50" />
         <source>Check this rule earlier</source>
         <comment>Games</comment>
-        <translation>提高匹配优先级（上移）</translation>
+        <translation type="vanished">提高匹配优先级（上移）</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="51" />
         <source>Check this rule later</source>
         <comment>Games</comment>
-        <translation>降低匹配优先级（下移）</translation>
+        <translation type="vanished">降低匹配优先级（下移）</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="58" />
         <source>Delete</source>
         <comment>Games</comment>
-        <translation>删除</translation>
+        <translation type="vanished">删除</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="26" />
-        <location filename="../pages/macros.py" line="34" />
         <source>●  Record keys</source>
         <comment>Macros</comment>
-        <translation>●  录制按键</translation>
+        <translation type="vanished">●  录制按键</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="34" />
         <source>■  Stop recording (Esc)</source>
         <comment>Macros</comment>
-        <translation>■  停止录制 (Esc)</translation>
+        <translation type="vanished">■  停止录制 (Esc)</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="87" />
         <source>with G-Shift</source>
         <comment>Macros</comment>
-        <translation>（配合 G-Shift）</translation>
+        <translation type="vanished">（配合 G-Shift）</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="88" />
         <source>{button}{gshift} on slot {slot}</source>
         <comment>Macros</comment>
-        <translation>槽位 {slot} 上的 {button}{gshift}</translation>
+        <translation type="vanished">槽位 {slot} 上的 {button}{gshift}</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="90" />
         <source>On {where}</source>
         <comment>Macros</comment>
-        <translation>已分配给：{where}</translation>
+        <translation type="vanished">已分配给：{where}</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="90" />
         <source>Not on any button yet: pick it under Assignments.</source>
         <comment>Macros</comment>
-        <translation>尚未分配给任何按键：可在“按键分配”页面中指定。</translation>
+        <translation type="vanished">尚未分配给任何按键：可在“按键分配”页面中指定。</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="93" />
         <source>Edit</source>
         <comment>Macros</comment>
-        <translation>编辑</translation>
+        <translation type="vanished">编辑</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="97" />
         <source>Delete</source>
         <comment>Macros</comment>
-        <translation>删除</translation>
+        <translation type="vanished">删除</translation>
     </message>
     <message>
-        <location filename="../pages/profiles.py" line="23" />
         <source>Slot {slot}</source>
         <comment>Profiles</comment>
-        <translation>槽位 {slot}</translation>
+        <translation type="vanished">槽位 {slot}</translation>
     </message>
     <message>
-        <location filename="../pages/profiles.py" line="25" />
         <source>ACTIVE</source>
         <comment>Profiles</comment>
-        <translation>已激活</translation>
+        <translation type="vanished">已激活</translation>
     </message>
     <message>
-        <location filename="../pages/profiles.py" line="30" />
         <source>Profile {slot}</source>
         <comment>Profiles</comment>
-        <translation>配置文件 {slot}</translation>
+        <translation type="vanished">配置文件 {slot}</translation>
     </message>
     <message>
-        <location filename="../pages/profiles.py" line="41" />
         <source>DPI</source>
         <comment>Profiles</comment>
-        <translation>DPI 指示灯</translation>
+        <translation type="vanished">DPI 指示灯</translation>
     </message>
     <message>
-        <location filename="../pages/profiles.py" line="41" />
         <source>Logo</source>
         <comment>Profiles</comment>
-        <translation>LOGO 灯</translation>
+        <translation type="vanished">LOGO 灯</translation>
     </message>
     <message>
-        <location filename="../pages/profiles.py" line="52" />
         <source>Included when G9 cycles profiles</source>
         <comment>Profiles</comment>
-        <translation>使用 G9 键循环切换时包含此配置</translation>
+        <translation type="vanished">使用 G9 键循环切换时包含此配置</translation>
     </message>
     <message>
-        <location filename="../pages/profiles.py" line="56" />
         <source>Activate</source>
         <comment>Profiles</comment>
-        <translation>激活此槽位</translation>
+        <translation type="vanished">激活此槽位</translation>
     </message>
     <message>
-        <location filename="../pages/profiles.py" line="60" />
         <source>More  ▾</source>
         <comment>Profiles</comment>
-        <translation>更多选项  ▾</translation>
+        <translation type="vanished">更多选项  ▾</translation>
     </message>
     <message>
-        <location filename="../pages/profiles.py" line="62" />
         <source>Export to a file…</source>
         <comment>Profiles</comment>
-        <translation>导出到文件…</translation>
+        <translation type="vanished">导出到文件…</translation>
     </message>
     <message>
-        <location filename="../pages/profiles.py" line="63" />
         <source>Import from a file…</source>
         <comment>Profiles</comment>
-        <translation>从文件导入…</translation>
+        <translation type="vanished">从文件导入…</translation>
     </message>
     <message>
-        <location filename="../pages/profiles.py" line="65" />
         <source>Reset to factory profile</source>
         <comment>Profiles</comment>
-        <translation>恢复出厂预设配置</translation>
+        <translation type="vanished">恢复出厂预设配置</translation>
     </message>
     <message>
-        <location filename="../pages/profiles.py" line="66" />
         <source>Copy this profile to</source>
         <comment>Profiles</comment>
-        <translation>复制此配置到</translation>
+        <translation type="vanished">复制此配置到</translation>
     </message>
     <message>
-        <location filename="../pages/profiles.py" line="69" />
         <source>Slot {other}</source>
         <comment>Profiles</comment>
-        <translation>槽位 {other}</translation>
+        <translation type="vanished">槽位 {other}</translation>
     </message>
     <message>
-        <location filename="../pages/profiles.py" line="84" />
         <source>Export profile</source>
         <comment>Profiles</comment>
-        <translation>导出配置文件</translation>
+        <translation type="vanished">导出配置文件</translation>
     </message>
     <message>
-        <location filename="../pages/profiles.py" line="94" />
         <source>Couldn't save the file: {error}</source>
         <comment>Profiles</comment>
-        <translation>无法保存文件：{error}</translation>
+        <translation type="vanished">无法保存文件：{error}</translation>
     </message>
     <message>
-        <location filename="../pages/profiles.py" line="96" />
         <source>Exported slot {slot} to {path}</source>
         <comment>Profiles</comment>
-        <translation>已将槽位 {slot} 导出至 {path}</translation>
+        <translation type="vanished">已将槽位 {slot} 导出至 {path}</translation>
     </message>
     <message>
-        <location filename="../pages/profiles.py" line="99" />
         <source>Import profile</source>
         <comment>Profiles</comment>
-        <translation>导入配置文件</translation>
+        <translation type="vanished">导入配置文件</translation>
     </message>
     <message>
-        <location filename="../pages/profiles.py" line="107" />
         <source>Couldn't import {filename}: {error}</source>
         <comment>Profiles</comment>
-        <translation>无法导入 {filename}：{error}</translation>
+        <translation type="vanished">无法导入 {filename}：{error}</translation>
     </message>
     <message>
-        <location filename="../pages/profiles.py" line="110" />
         <source>Replace slot {slot} with "{name}"? Your backup keeps the current one.</source>
         <comment>Profiles</comment>
-        <translation>是否使用“{name}”覆盖槽位 {slot}？备份中仍会保留当前配置。</translation>
+        <translation type="vanished">是否使用“{name}”覆盖槽位 {slot}？备份中仍会保留当前配置。</translation>
     </message>
     <message>
-        <location filename="../pages/profiles.py" line="117" />
         <source>Replace slot {slot} with its factory profile? Your backup keeps the current one.</source>
         <comment>Profiles</comment>
-        <translation>是否将槽位 {slot} 恢复为出厂预设配置？备份中仍会保留当前配置。</translation>
+        <translation type="vanished">是否将槽位 {slot} 恢复为出厂预设配置？备份中仍会保留当前配置。</translation>
     </message>
     <message>
-        <location filename="../pages/profiles.py" line="118" />
         <source>Reset slot</source>
         <comment>Profiles</comment>
-        <translation>重置槽位</translation>
+        <translation type="vanished">重置槽位</translation>
     </message>
     <message>
-        <location filename="../pages/profiles.py" line="122" />
         <source>Overwrite slot {target} with slot {slot}?</source>
         <comment>Profiles</comment>
-        <translation>是否使用槽位 {slot} 覆盖槽位 {target}？</translation>
+        <translation type="vanished">是否使用槽位 {slot} 覆盖槽位 {target}？</translation>
     </message>
     <message>
-        <location filename="../pages/profiles.py" line="123" />
         <source>Copy profile</source>
         <comment>Profiles</comment>
-        <translation>复制配置文件</translation>
+        <translation type="vanished">复制配置文件</translation>
     </message>
     <message>
-        <location filename="../pages/sensitivity.py" line="33" />
         <source>Drag a level to change it. Click the track to add a level there.</source>
         <comment>Sensitivity</comment>
-        <translation>拖动滑块可微调 DPI。点击刻度轨道可在此处新增档位。</translation>
+        <translation type="vanished">拖动滑块可微调 DPI。点击刻度轨道可在此处新增档位。</translation>
     </message>
     <message>
-        <location filename="../pages/sensitivity.py" line="126" />
         <source>Default</source>
         <comment>Sensitivity</comment>
-        <translation>默认</translation>
+        <translation type="vanished">默认</translation>
     </message>
     <message>
-        <location filename="../pages/sensitivity.py" line="130" />
         <source>Sniper</source>
         <comment>Sensitivity</comment>
-        <translation>DPI 切换</translation>
+        <translation type="vanished">DPI 切换</translation>
     </message>
     <message>
-        <location filename="../pages/sensitivity.py" line="136" />
         <source>Remove this level</source>
         <comment>Sensitivity</comment>
-        <translation>删除此档位</translation>
+        <translation type="vanished">删除此档位</translation>
     </message>
     <message>
-        <location filename="../pages/sensitivity.py" line="142" />
         <source>Level {n}</source>
         <comment>Sensitivity</comment>
-        <translation>档位 {n}</translation>
+        <translation type="vanished">档位 {n}</translation>
     </message>
     <message>
-        <location filename="../photo.py" line="120" />
         <source>DPI LIGHTS</source>
         <comment>PhotoSkin</comment>
-        <translation>DPI 指示灯</translation>
+        <translation type="vanished">DPI 指示灯</translation>
     </message>
     <message>
-        <location filename="../photo.py" line="121" />
         <source>LOGO</source>
         <comment>PhotoSkin</comment>
-        <translation>LOGO 灯</translation>
+        <translation type="vanished">LOGO 灯</translation>
     </message>
     <message>
-        <location filename="../widgets.py" line="339" />
         <source>Hex color, e.g. #14b4ff</source>
         <comment>ColorPicker</comment>
-        <translation>十六进制颜色值，例如 #14b4ff</translation>
+        <translation type="vanished">十六进制颜色值，例如 #14b4ff</translation>
     </message>
     <message>
-        <location filename="../widgets.py" line="361" />
         <source>My colors</source>
         <comment>ColorPicker</comment>
-        <translation>自定义预设颜色</translation>
+        <translation type="vanished">自定义预设颜色</translation>
     </message>
     <message>
-        <location filename="../widgets.py" line="377" />
         <source>right-click to remove</source>
         <comment>ColorPicker</comment>
-        <translation>右键点击删除</translation>
+        <translation type="vanished">右键点击删除</translation>
     </message>
     <message>
-        <location filename="../widgets.py" line="396" />
         <source>Save the current color</source>
         <comment>ColorPicker</comment>
-        <translation>收藏当前颜色</translation>
+        <translation type="vanished">收藏当前颜色</translation>
     </message>
     <message>
-        <location filename="../widgets.py" line="471" />
-        <location filename="../widgets.py" line="481" />
         <source>Click, then press a key combination</source>
         <comment>KeyCapture</comment>
-        <translation>点击此处，然后按下键盘按键或组合键</translation>
+        <translation type="vanished">点击此处，然后按下键盘按键或组合键</translation>
     </message>
     <message>
-        <location filename="../widgets.py" line="481" />
         <source>Press keys now… (Esc to cancel)</source>
         <comment>KeyCapture</comment>
-        <translation>请按键…（按 Esc 取消）</translation>
+        <translation type="vanished">请按键…（按 Esc 取消）</translation>
     </message>
 </context>
 <context>
@@ -788,192 +664,292 @@
 <context>
     <name>AssignmentsPage</name>
     <message>
-        <location filename="../pages/assignments.py" line="41" />
+        <location filename="../pages/assignments.py" line="20" />
+        <source>Copy</source>
+        <translation>复制</translation>
+    </message>
+    <message>
+        <location filename="../pages/assignments.py" line="21" />
+        <source>Paste</source>
+        <translation>粘贴</translation>
+    </message>
+    <message>
+        <location filename="../pages/assignments.py" line="22" />
+        <source>Cut</source>
+        <translation>剪切</translation>
+    </message>
+    <message>
+        <location filename="../pages/assignments.py" line="23" />
+        <source>Undo</source>
+        <translation>撤销</translation>
+    </message>
+    <message>
+        <location filename="../pages/assignments.py" line="24" />
+        <source>Redo</source>
+        <translation>重做</translation>
+    </message>
+    <message>
+        <location filename="../pages/assignments.py" line="25" />
+        <source>Select all</source>
+        <translation>全选</translation>
+    </message>
+    <message>
+        <location filename="../pages/assignments.py" line="26" />
+        <source>Save</source>
+        <translation>保存</translation>
+    </message>
+    <message>
+        <location filename="../pages/assignments.py" line="27" />
+        <source>Find</source>
+        <translation>查找</translation>
+    </message>
+    <message>
+        <location filename="../pages/assignments.py" line="28" />
+        <source>New tab</source>
+        <translation>新建标签页</translation>
+    </message>
+    <message>
+        <location filename="../pages/assignments.py" line="29" />
+        <source>Close tab</source>
+        <translation>关闭标签页</translation>
+    </message>
+    <message>
+        <location filename="../pages/assignments.py" line="30" />
+        <source>Reopen tab</source>
+        <translation>重新打开标签页</translation>
+    </message>
+    <message>
+        <location filename="../pages/assignments.py" line="31" />
+        <source>Next tab</source>
+        <translation>下一个标签页</translation>
+    </message>
+    <message>
+        <location filename="../pages/assignments.py" line="32" />
+        <source>Previous tab</source>
+        <translation>上一个标签页</translation>
+    </message>
+    <message>
+        <location filename="../pages/assignments.py" line="33" />
+        <source>Switch window</source>
+        <translation>切换窗口</translation>
+    </message>
+    <message>
+        <location filename="../pages/assignments.py" line="34" />
+        <source>Show desktop</source>
+        <translation>显示桌面</translation>
+    </message>
+    <message>
+        <location filename="../pages/assignments.py" line="35" />
+        <source>Lock screen</source>
+        <translation>锁定屏幕</translation>
+    </message>
+    <message>
+        <location filename="../pages/assignments.py" line="36" />
+        <source>Screenshot</source>
+        <translation>截图</translation>
+    </message>
+    <message>
+        <location filename="../pages/assignments.py" line="37" />
+        <source>Escape</source>
+        <translation>Esc</translation>
+    </message>
+    <message>
+        <location filename="../pages/assignments.py" line="38" />
+        <source>Enter</source>
+        <translation>回车</translation>
+    </message>
+    <message>
+        <location filename="../pages/assignments.py" line="39" />
+        <source>Delete</source>
+        <translation>删除</translation>
+    </message>
+    <message>
+        <location filename="../pages/assignments.py" line="55" />
         <source>ASSIGNMENTS</source>
         <translation>按键分配</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="49" />
+        <location filename="../pages/assignments.py" line="63" />
         <source>Assignments</source>
         <translation>按键功能分配</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="52" />
+        <location filename="../pages/assignments.py" line="66" />
         <source>Primary</source>
         <translation>默认层</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="52" />
+        <location filename="../pages/assignments.py" line="66" />
         <source>G-Shift</source>
         <translation>G-Shift 层</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="66" />
+        <location filename="../pages/assignments.py" line="80" />
         <source>Restore default</source>
         <translation>恢复默认</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="69" />
+        <location filename="../pages/assignments.py" line="83" />
         <source>Disable</source>
         <translation>禁用此键</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="76" />
+        <location filename="../pages/assignments.py" line="90" />
         <source>Commands</source>
         <translation>常用指令</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="76" />
+        <location filename="../pages/assignments.py" line="90" />
         <source>Keys</source>
         <translation>按键输入</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="76" />
+        <location filename="../pages/assignments.py" line="90" />
         <source>Media</source>
         <translation>多媒体</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="76" />
+        <location filename="../pages/assignments.py" line="90" />
         <source>Macros</source>
         <translation>宏指令</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="83" />
+        <location filename="../pages/assignments.py" line="97" />
         <source>Mouse</source>
         <translation>鼠标动作</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="84" />
+        <location filename="../pages/assignments.py" line="98" />
         <source>Left click</source>
         <translation>左键单击</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="85" />
+        <location filename="../pages/assignments.py" line="99" />
         <source>Right click</source>
         <translation>右键单击</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="86" />
+        <location filename="../pages/assignments.py" line="100" />
         <source>Middle click</source>
         <translation>中键单击</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="87" />
+        <location filename="../pages/assignments.py" line="101" />
         <source>Back</source>
         <translation>后退键</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="88" />
+        <location filename="../pages/assignments.py" line="102" />
         <source>Forward</source>
         <translation>前进键</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="90" />
+        <location filename="../pages/assignments.py" line="104" />
         <source>Scroll</source>
         <translation>滚轮动作</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="91" />
+        <location filename="../pages/assignments.py" line="105" />
         <source>Scroll left</source>
         <translation>向左滚动</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="92" />
+        <location filename="../pages/assignments.py" line="106" />
         <source>Scroll right</source>
         <translation>向右滚动</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="93" />
+        <location filename="../pages/assignments.py" line="107" />
         <source>Scroll up</source>
         <translation>向上滚动</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="94" />
+        <location filename="../pages/assignments.py" line="108" />
         <source>Scroll down</source>
         <translation>向下滚动</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="96" />
+        <location filename="../pages/assignments.py" line="110" />
         <source>Sensitivity</source>
         <translation>灵敏度调节</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="97" />
+        <location filename="../pages/assignments.py" line="111" />
         <source>DPI up</source>
         <translation>DPI 增加</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="98" />
+        <location filename="../pages/assignments.py" line="112" />
         <source>DPI down</source>
         <translation>DPI 减少</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="99" />
+        <location filename="../pages/assignments.py" line="113" />
         <source>DPI cycle</source>
         <translation>DPI 循环切换</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="100" />
+        <location filename="../pages/assignments.py" line="114" />
         <source>DPI default</source>
         <translation>恢复默认 DPI</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="101" />
+        <location filename="../pages/assignments.py" line="115" />
         <source>DPI shift (sniper)</source>
         <translation>DPI 切换（狙击键）</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="103" />
+        <location filename="../pages/assignments.py" line="117" />
         <source>Profiles</source>
         <translation>配置文件</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="104" />
+        <location filename="../pages/assignments.py" line="118" />
         <source>Next profile</source>
         <translation>下一个配置文件</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="105" />
+        <location filename="../pages/assignments.py" line="119" />
         <source>Previous profile</source>
         <translation>上一个配置文件</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="106" />
+        <location filename="../pages/assignments.py" line="120" />
         <source>Cycle profiles</source>
         <translation>循环切换配置</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="108" />
+        <location filename="../pages/assignments.py" line="122" />
         <source>Layers</source>
         <translation>按键层切换</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="109" />
+        <location filename="../pages/assignments.py" line="123" />
         <source>G-Shift (hold)</source>
         <translation>G-Shift（按住切换）</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="131" />
+        <location filename="../pages/assignments.py" line="145" />
         <source>Press a key or combination</source>
         <translation>录入按键或快捷组合键</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="135" />
+        <location filename="../pages/assignments.py" line="149" />
         <source>Common shortcuts</source>
         <translation>系统常用快捷键</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="168" />
+        <location filename="../pages/assignments.py" line="181" />
         <source>Make a macro…</source>
         <translation>创建新宏…</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="197" />
+        <location filename="../pages/assignments.py" line="210" />
         <source>Remove left click?</source>
         <translation>是否移除左键单击功能？</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="198" />
+        <location filename="../pages/assignments.py" line="211" />
         <source>No other button is set to Left click. Without one you can only click with the keyboard or touchpad until you change it back.
 
 Continue?</source>
@@ -982,810 +958,1315 @@ Continue?</source>
 是否继续？</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="212" />
+        <location filename="../pages/assignments.py" line="225" />
         <source>Couldn't put the macro on {button}: {error}</source>
         <translation>无法将宏分配给 {button}：{error}</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="220" />
-        <location filename="../pages/assignments.py" line="248" />
+        <location filename="../pages/assignments.py" line="233" />
+        <location filename="../pages/assignments.py" line="261" />
         <source>saved on the mouse</source>
         <translation>板载内存运行</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="220" />
-        <location filename="../pages/assignments.py" line="248" />
+        <location filename="../pages/assignments.py" line="233" />
+        <location filename="../pages/assignments.py" line="261" />
         <source>run by the app</source>
         <translation>电脑应用运行</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="226" />
+        <location filename="../pages/assignments.py" line="239" />
         <source>Pick a macro for this button.</source>
         <translation>请为此按键选择要绑定的宏。</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="227" />
+        <location filename="../pages/assignments.py" line="240" />
         <source>You don't have any macros yet.</source>
         <translation>尚未创建任何宏，点击下方按钮开始创建。</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="251" />
+        <location filename="../pages/assignments.py" line="264" />
         <source>G-Shift layer: </source>
         <translation>G-Shift 层：</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="259" />
+        <location filename="../pages/assignments.py" line="272" />
         <source>No button is set to G-Shift on the primary layer yet. Set one (G6 works well) to use this layer.</source>
         <translation>默认层尚未配置 G-Shift 键。请先在默认层指定一个按键（推荐拇指 G6 键）作为 G-Shift 触发键。</translation>
     </message>
     <message>
-        <location filename="../pages/assignments.py" line="262" />
+        <location filename="../pages/assignments.py" line="275" />
         <source>While the G-Shift button is held, buttons do this instead.</source>
         <translation>在按住 G-Shift 键期间，按下各按键将触发本层的备用功能。</translation>
     </message>
 </context>
 <context>
+    <name>ColorPicker</name>
+    <message>
+        <location filename="../widgets.py" line="338" />
+        <source>Hex color, e.g. #14b4ff</source>
+        <translation>十六进制颜色值，例如 #14b4ff</translation>
+    </message>
+    <message>
+        <location filename="../widgets.py" line="360" />
+        <source>My colors</source>
+        <translation>自定义预设颜色</translation>
+    </message>
+    <message>
+        <location filename="../widgets.py" line="376" />
+        <source>right-click to remove</source>
+        <translation>右键点击删除</translation>
+    </message>
+    <message>
+        <location filename="../widgets.py" line="395" />
+        <source>Save the current color</source>
+        <translation>收藏当前颜色</translation>
+    </message>
+</context>
+<context>
+    <name>DpiTrack</name>
+    <message>
+        <location filename="../pages/sensitivity.py" line="32" />
+        <source>Drag a level to change it. Click the track to add a level there.</source>
+        <translation>拖动滑块可微调 DPI。点击刻度轨道可在此处新增档位。</translation>
+    </message>
+</context>
+<context>
     <name>GamesPage</name>
     <message>
-        <location filename="../pages/games.py" line="70" />
+        <location filename="../pages/games.py" line="69" />
         <source>GAMES &amp; APPS</source>
         <translation>游戏与应用</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="90" />
+        <location filename="../pages/games.py" line="89" />
         <source>Games &amp; apps</source>
         <translation>游戏与应用情景模式</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="93" />
+        <location filename="../pages/games.py" line="92" />
         <source>Make the mouse react to what you're doing: a game, an app, a YouTube video or an anime. The first rule that matches wins; when none does, your normal lighting and profile come back.</source>
         <translation>让鼠标智能感知当前正在进行的操作并自动切换灯效与配置（如启动游戏、打开指定软件或播放特定视频）。自上而下优先匹配首条生效规则；退出后自动恢复默认设置。</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="97" />
+        <location filename="../pages/games.py" line="96" />
         <source>Right now</source>
         <translation>当前前台状态</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="102" />
+        <location filename="../pages/games.py" line="101" />
         <source>Rules</source>
         <translation>规则列表</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="106" />
+        <location filename="../pages/games.py" line="105" />
         <source>+  Add rule</source>
         <translation>+  添加规则</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="127" />
+        <location filename="../pages/games.py" line="126" />
         <source>While {game} is running</source>
         <translation>当 {game} 正在运行时</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="131" />
+        <location filename="../pages/games.py" line="130" />
         <source>While “{short}” plays</source>
         <translation>当正在播放“{short}”时</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="134" />
+        <location filename="../pages/games.py" line="133" />
         <source>While {app} is in front</source>
         <translation>当 {app} 处于前台激活时</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="137" />
+        <location filename="../pages/games.py" line="136" />
         <source>For something you did recently</source>
         <translation>为近期运行过的游戏或应用添加规则</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="140" />
+        <location filename="../pages/games.py" line="139" />
         <source>Ready-made</source>
         <translation>推荐预设模版</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="145" />
+        <location filename="../pages/games.py" line="144" />
         <source>Blank rule</source>
         <translation>空白自定义规则</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="145" />
-        <location filename="../pages/games.py" line="268" />
+        <location filename="../pages/games.py" line="144" />
+        <location filename="../pages/games.py" line="252" />
         <source>New rule</source>
         <translation>新建规则</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="157" />
+        <location filename="../pages/games.py" line="156" />
         <source>No rules yet. Try YouTube from the ready-made ones.</source>
         <translation>暂无规则。可以先试试预设的 YouTube 或游戏模版。</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="162" />
+        <location filename="../pages/games.py" line="161" />
         <source>Not watching yet.</source>
         <translation>尚未开启前台检测。</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="167" />
+        <location filename="../pages/games.py" line="166" />
         <source>Looking…</source>
         <translation>正在检测前台应用…</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="170" />
+        <location filename="../pages/games.py" line="169" />
         <source>Game: {name}</source>
         <translation>检测到游戏：{name}</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="174" />
+        <location filename="../pages/games.py" line="173" />
         <source>In front: {app}{sub}</source>
         <translation>前台窗口：{app}{sub}</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="176" />
+        <location filename="../pages/games.py" line="175" />
         <source>(untitled)</source>
         <translation>(未命名媒体)</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="178" />
+        <location filename="../pages/games.py" line="177" />
         <source>Playing: {title} · {player}</source>
         <translation>正在播放：{title} · {player}</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="179" />
+        <location filename="../pages/games.py" line="178" />
         <source>Rule: {name}</source>
         <translation>已命中规则：{name}</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="179" />
+        <location filename="../pages/games.py" line="178" />
         <source>No rule matches</source>
         <translation>当前无匹配规则（使用默认配置）</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="196" />
-        <location filename="../pages/games.py" line="335" />
+        <location filename="../pages/games.py" line="195" />
+        <location filename="../pages/games.py" line="319" />
         <source>Rule</source>
         <translation>规则配置</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="199" />
+        <location filename="../pages/games.py" line="198" />
         <source>Name</source>
         <translation>规则名称</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="204" />
+        <location filename="../pages/games.py" line="203" />
         <source>When</source>
         <translation>触发时机</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="206" />
         <source>Steam or Proton game</source>
-        <translation>运行指定 Steam / Proton 游戏</translation>
+        <translation type="vanished">运行指定 Steam / Proton 游戏</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="207" />
         <source>Application is in front</source>
-        <translation>指定应用程序处于前台窗口</translation>
+        <translation type="vanished">指定应用程序处于前台窗口</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="208" />
         <source>Window title contains text</source>
-        <translation>窗口标题包含指定关键字</translation>
+        <translation type="vanished">窗口标题包含指定关键字</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="209" />
         <source>Media is playing</source>
-        <translation>媒体播放包含指定信息</translation>
+        <translation type="vanished">媒体播放包含指定信息</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="224" />
+        <location filename="../pages/games.py" line="218" />
         <source>Lighting</source>
         <translation>关联联动灯效</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="226" />
-        <location filename="../pages/games.py" line="249" />
+        <location filename="../pages/games.py" line="219" />
+        <location filename="../pages/games.py" line="233" />
         <source>Don't change</source>
         <translation>保持当前灯效不变</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="227" />
         <source>Game cover art</source>
-        <translation>提取游戏海报主色调</translation>
+        <translation type="vanished">提取游戏海报主色调</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="228" />
+        <location filename="../../rules.py" line="28" />
         <source>Game-driven</source>
         <translation>游戏事件原生联动驱动</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="229" />
         <source>Fixed color</source>
-        <translation>固定常亮单色</translation>
+        <translation type="vanished">固定常亮单色</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="230" />
         <source>Breathing color</source>
-        <translation>单色呼吸</translation>
+        <translation type="vanished">单色呼吸</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="231" />
+        <location filename="../../rules.py" line="16" />
+        <source>A game is running</source>
+        <translation>游戏正在运行</translation>
+    </message>
+    <message>
+        <location filename="../../rules.py" line="17" />
+        <source>This app is in front</source>
+        <translation>当前应用在前台</translation>
+    </message>
+    <message>
+        <location filename="../../rules.py" line="18" />
+        <source>The window title contains</source>
+        <translation>窗口标题包含</translation>
+    </message>
+    <message>
+        <location filename="../../rules.py" line="19" />
+        <source>Playing media contains</source>
+        <translation>播放媒体包含</translation>
+    </message>
+    <message>
+        <location filename="../../rules.py" line="25" />
+        <source>Color</source>
+        <translation>灯光颜色</translation>
+    </message>
+    <message>
+        <location filename="../../rules.py" line="26" />
+        <source>Breathing</source>
+        <translation>呼吸灯</translation>
+    </message>
+    <message>
+        <location filename="../../rules.py" line="27" />
+        <source>Cover art colors</source>
+        <translation>封面色彩</translation>
+    </message>
+    <message>
+        <location filename="../../rules.py" line="29" />
         <source>Screen sampler</source>
         <translation>屏幕采样器</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="232" />
+        <location filename="../../rules.py" line="30" />
         <source>Audio visualizer</source>
         <translation>音频律动</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="233" />
+        <location filename="../../rules.py" line="31" />
         <source>Color wave</source>
         <translation>色彩波浪</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="234" />
+        <location filename="../../rules.py" line="32" />
         <source>DPI colors</source>
         <translation>DPI 状态指示色</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="241" />
+        <location filename="../pages/games.py" line="225" />
         <source>Breathing speed</source>
         <translation>呼吸周期速率</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="246" />
+        <location filename="../pages/games.py" line="230" />
         <source>Profile slot</source>
         <translation>关联板载配置文件</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="247" />
+        <location filename="../pages/games.py" line="231" />
         <source>Switch to an onboard profile (its DPI levels, buttons and report rate) while the rule matches.</source>
         <translation>当本规则命中生效时，自动切换至该板载槽位配置（包含对应的 DPI 档位、按键映射及回报率）。</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="249" />
+        <location filename="../pages/games.py" line="233" />
         <source>Slot {n}</source>
         <translation>槽位 {n}</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="254" />
+        <location filename="../pages/games.py" line="238" />
         <source>Save rule</source>
         <translation>保存规则</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="258" />
+        <location filename="../pages/games.py" line="242" />
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="268" />
+        <location filename="../pages/games.py" line="252" />
         <source>Edit rule</source>
         <translation>编辑规则</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="272" />
+        <location filename="../pages/games.py" line="256" />
         <source>Any game</source>
         <translation>任意 Steam 游戏</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="294" />
+        <location filename="../pages/games.py" line="278" />
         <source>Window class, e.g. firefox, mpv, org.kde.dolphin</source>
         <translation>应用程序窗口类名，例如 firefox、mpv、org.kde.dolphin</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="296" />
+        <location filename="../pages/games.py" line="280" />
         <source>Matches the app exactly.</source>
         <translation>精确匹配应用程序类名（WM_CLASS）。</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="298" />
+        <location filename="../pages/games.py" line="282" />
         <source>Text in the window title, e.g. YouTube</source>
         <translation>窗口标题中的文本关键字，例如 YouTube、Bilibili</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="300" />
+        <location filename="../pages/games.py" line="284" />
         <source>Matches any window title containing this text, upper or lower case.</source>
         <translation>匹配任意包含此关键字的窗口标题（不区分大小写）。</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="302" />
+        <location filename="../pages/games.py" line="286" />
         <source>Text in the title, artist or page, e.g. youtube or One Piece</source>
         <translation>歌曲/视频标题、艺术家或网页地址，例如 youtube 或 海贼王</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="304" />
+        <location filename="../pages/games.py" line="288" />
         <source>Matches while something is playing (browsers, mpv, VLC, Spotify, anime apps…) and its title, artist or web address contains this text.</source>
         <translation>当播放器（浏览器、mpv、VLC、Spotify、网易云等）正在播放且其标题、艺术家或网址包含此内容时触发。</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="308" />
+        <location filename="../pages/games.py" line="292" />
         <source>Steam and Proton games are found automatically, including non-Steam games added to Steam.</source>
         <translation>自动识别已安装的 Steam 及 Proton 游戏（包括添加至 Steam 的非 Steam 游戏）。</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="311" />
+        <location filename="../pages/games.py" line="295" />
         <source>Recently seen…</source>
         <translation>最近检测到的选项…</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="321" />
+        <location filename="../pages/games.py" line="305" />
         <source>Takes two colors from the game's cover art in your Steam library.</source>
         <translation>自动从 Steam 游戏库中的官方封面海报提取两个代表性色调。</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="322" />
+        <location filename="../pages/games.py" line="306" />
         <source>Lets the game drive the lights: live events in CS2 and Dota 2, and Proton games with Logitech lighting once the LIGHTSYNC bridge is on (Settings). Other games get their cover art colors.</source>
-        <translation>由游戏原生事件驱动鼠标灯光：支持 CS2 和 Dota 2 游戏内击杀/血量闪烁，以及启用 LIGHTSYNC 桥接后的 Windows Proton 游戏。其它游戏默认提取封面色彩。</translation>
+        <translation>让游戏控制灯光：CS2 和 Dota 2 中的实时事件，以及开启 LIGHTSYNC 桥接（设置）后的带罗技灯效的 Proton 游戏。其它游戏将使用其封面艺术色彩。</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="325" />
+        <location filename="../pages/games.py" line="309" />
         <source>Uses your Screen sampler settings from Lightsync.</source>
         <translation>使用“LIGHTSYNC”页面中设置的屏幕采样器配置。</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="326" />
+        <location filename="../pages/games.py" line="310" />
         <source>Uses your Audio visualizer settings from Lightsync.</source>
         <translation>使用“LIGHTSYNC”页面中设置的音频律动配置。</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="327" />
+        <location filename="../pages/games.py" line="311" />
         <source>Uses your Color wave settings from Lightsync.</source>
         <translation>使用“LIGHTSYNC”页面中设置的色彩波浪配置。</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="328" />
+        <location filename="../pages/games.py" line="312" />
         <source>Uses your DPI colors from Lightsync.</source>
         <translation>使用“LIGHTSYNC”页面中设置的 DPI 档位颜色配置。</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="343" />
+        <location filename="../pages/games.py" line="327" />
         <source>Type what to look for first.</source>
         <translation>请先填写触发条件的匹配内容。</translation>
     </message>
     <message>
-        <location filename="../pages/games.py" line="370" />
+        <location filename="../pages/games.py" line="354" />
         <source>Slot {value}</source>
         <translation>槽位 {value}</translation>
     </message>
 </context>
 <context>
-    <name>LightingPage</name>
+    <name>KeyCapture</name>
     <message>
-        <location filename="../pages/lighting.py" line="29" />
-        <source>LIGHTSYNC</source>
-        <translation>LIGHTSYNC 灯效</translation>
+        <location filename="../widgets.py" line="471" />
+        <location filename="../widgets.py" line="481" />
+        <source>Click, then press a key combination</source>
+        <translation>点击此处，然后按下键盘按键或组合键</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="35" />
-        <source>Lighting</source>
-        <translation>灯光控制</translation>
+        <location filename="../widgets.py" line="481" />
+        <source>Press keys now… (Esc to cancel)</source>
+        <translation>请按键…（按 Esc 取消）</translation>
+    </message>
+</context>
+<context>
+    <name>Labels</name>
+    <message>
+        <location filename="../labels.py" line="8" />
+        <source>G1 · Left click</source>
+        <translation>G1 · 左键单击</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="38" />
-        <source>On the mouse</source>
-        <translation>鼠标板载灯效</translation>
+        <location filename="../labels.py" line="9" />
+        <source>G2 · Right click</source>
+        <translation>G2 · 右键单击</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="38" />
-        <source>Live effects</source>
-        <translation>电脑联动实时灯效</translation>
+        <location filename="../labels.py" line="10" />
+        <source>G3 · Wheel click</source>
+        <translation>G3 · 滚轮点击</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="53" />
-        <source>Saved on the mouse, so it works without this app and on any computer.</source>
-        <translation>直接保存在鼠标板载芯片中，即使没有安装或运行本软件也能即插即用。</translation>
+        <location filename="../labels.py" line="11" />
+        <source>G4 · Back</source>
+        <translation>G4 · 后退键</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="54" />
-        <source>DPI lights</source>
-        <translation>DPI 指示灯</translation>
+        <location filename="../labels.py" line="12" />
+        <source>G5 · Forward</source>
+        <translation>G5 · 前进键</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="54" />
-        <source>Logo</source>
-        <translation>LOGO 灯</translation>
+        <location filename="../labels.py" line="13" />
+        <source>G6 · Sniper</source>
+        <translation>G6 · DPI 切换 (狙击键)</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="57" />
-        <source>Same effect on both zones</source>
-        <translation>双灯区同步效果</translation>
+        <location filename="../labels.py" line="14" />
+        <source>G7 · Front left</source>
+        <translation>G7 · 左前端按键</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="63" />
-        <location filename="../pages/lighting.py" line="158" />
-        <source>Effect</source>
-        <translation>预设效果</translation>
+        <location filename="../labels.py" line="15" />
+        <source>G8 · Behind G7</source>
+        <translation>G8 · 左键旁后按键</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="65" />
+        <location filename="../labels.py" line="16" />
+        <source>G9 · Behind wheel</source>
+        <translation>G9 · 滚轮后方按键</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="17" />
+        <source>Wheel tilt right</source>
+        <translation>滚轮向右倾斜</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="18" />
+        <source>Wheel tilt left</source>
+        <translation>滚轮向左倾斜</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="22" />
+        <source>Left click</source>
+        <translation>左键单击</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="23" />
+        <source>Right click</source>
+        <translation>右键单击</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="24" />
+        <source>Middle click</source>
+        <translation>中键单击</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="25" />
+        <source>Back</source>
+        <translation>后退键</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="26" />
+        <source>Forward</source>
+        <translation>前进键</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="30" />
+        <source>Nothing</source>
+        <translation>无功能</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="31" />
+        <source>Scroll left</source>
+        <translation>向左滚动</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="32" />
+        <source>Scroll right</source>
+        <translation>向右滚动</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="33" />
+        <source>DPI up</source>
+        <translation>DPI 增加</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="34" />
+        <source>DPI down</source>
+        <translation>DPI 减少</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="35" />
+        <source>DPI cycle</source>
+        <translation>DPI 循环</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="36" />
+        <source>DPI default</source>
+        <translation>默认 DPI</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="37" />
+        <source>DPI shift (sniper)</source>
+        <translation>DPI 切换（狙击键）</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="38" />
+        <source>Next profile</source>
+        <translation>下一个配置文件</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="39" />
+        <source>Previous profile</source>
+        <translation>上一个配置文件</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="40" />
+        <source>Cycle profiles</source>
+        <translation>循环配置文件</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="41" />
+        <source>G-Shift</source>
+        <translation>G-Shift</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="42" />
+        <source>Scroll up</source>
+        <translation>向上滚动</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="43" />
+        <source>Scroll down</source>
+        <translation>向下滚动</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="44" />
+        <source>Battery status</source>
+        <translation>电量状态</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="45" />
+        <source>Mode switch</source>
+        <translation>模式切换</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="46" />
+        <source>Host button</source>
+        <translation>主机切换键</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="50" />
+        <source>Play / Pause</source>
+        <translation>播放 / 暂停</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="51" />
+        <source>Next track</source>
+        <translation>下一曲</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="52" />
+        <source>Previous track</source>
+        <translation>上一曲</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="53" />
+        <source>Stop</source>
+        <translation>停止</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="54" />
+        <source>Mute</source>
+        <translation>静音</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="55" />
+        <source>Volume up</source>
+        <translation>音量增大</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="56" />
+        <source>Volume down</source>
+        <translation>音量减小</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="57" />
+        <source>Brightness up</source>
+        <translation>提高亮度</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="58" />
+        <source>Brightness down</source>
+        <translation>降低亮度</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="59" />
+        <source>Calculator</source>
+        <translation>计算器</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="60" />
+        <source>File manager</source>
+        <translation>文件资源管理器</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="61" />
+        <source>Mail</source>
+        <translation>邮件</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="62" />
+        <source>Browser home</source>
+        <translation>浏览器主页</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="63" />
+        <source>Browser back</source>
+        <translation>浏览器后退</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="64" />
+        <source>Browser forward</source>
+        <translation>浏览器前进</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="65" />
+        <source>Browser refresh</source>
+        <translation>浏览器刷新</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="66" />
+        <source>Search</source>
+        <translation>搜索</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="70" />
+        <source>Off</source>
+        <translation>关闭</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="71" />
         <source>Fixed</source>
-        <translation>常亮单色</translation>
+        <translation>常亮</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="66" />
+        <location filename="../labels.py" line="72" />
         <source>Breathing</source>
-        <translation>呼吸循环</translation>
+        <translation>呼吸灯</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="67" />
+        <location filename="../labels.py" line="73" />
         <source>Color cycle</source>
         <translation>彩色循环</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="68" />
+        <location filename="../labels.py" line="101" />
+        <source>Switch to profile {slot}</source>
+        <translation>切换到配置文件 {slot}</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="105" />
+        <source>Macro</source>
+        <translation>宏</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="107" />
+        <source>Disabled</source>
+        <translation>已禁用</translation>
+    </message>
+    <message>
+        <location filename="../labels.py" line="109" />
+        <source>Not set</source>
+        <translation>未设置</translation>
+    </message>
+</context>
+<context>
+    <name>LevelRow</name>
+    <message>
+        <location filename="../pages/sensitivity.py" line="125" />
+        <source>Default</source>
+        <translation>默认</translation>
+    </message>
+    <message>
+        <location filename="../pages/sensitivity.py" line="129" />
+        <source>Sniper</source>
+        <translation>DPI 切换</translation>
+    </message>
+    <message>
+        <location filename="../pages/sensitivity.py" line="135" />
+        <source>Remove this level</source>
+        <translation>删除此档位</translation>
+    </message>
+    <message>
+        <location filename="../pages/sensitivity.py" line="141" />
+        <source>Level {n}</source>
+        <translation>档位 {n}</translation>
+    </message>
+</context>
+<context>
+    <name>LightingPage</name>
+    <message>
+        <location filename="../pages/lighting.py" line="14" />
+        <source>Whole screen</source>
+        <translation>全屏</translation>
+    </message>
+    <message>
+        <location filename="../pages/lighting.py" line="15" />
+        <source>Center (video)</source>
+        <translation>屏幕中央 (视频)</translation>
+    </message>
+    <message>
+        <location filename="../pages/lighting.py" line="16" />
+        <source>Left edge</source>
+        <translation>屏幕左侧</translation>
+    </message>
+    <message>
+        <location filename="../pages/lighting.py" line="17" />
+        <source>Right edge</source>
+        <translation>屏幕右侧</translation>
+    </message>
+    <message>
+        <location filename="../pages/lighting.py" line="18" />
+        <source>Top edge</source>
+        <translation>屏幕顶部</translation>
+    </message>
+    <message>
+        <location filename="../pages/lighting.py" line="19" />
+        <source>Bottom edge</source>
+        <translation>屏幕底部</translation>
+    </message>
+    <message>
+        <location filename="../pages/lighting.py" line="37" />
+        <source>LIGHTSYNC</source>
+        <translation>LIGHTSYNC 灯效</translation>
+    </message>
+    <message>
+        <location filename="../pages/lighting.py" line="43" />
+        <source>Lighting</source>
+        <translation>灯光控制</translation>
+    </message>
+    <message>
+        <location filename="../pages/lighting.py" line="46" />
+        <source>On the mouse</source>
+        <translation>鼠标板载灯效</translation>
+    </message>
+    <message>
+        <location filename="../pages/lighting.py" line="46" />
+        <source>Live effects</source>
+        <translation>电脑联动实时灯效</translation>
+    </message>
+    <message>
+        <location filename="../pages/lighting.py" line="61" />
+        <source>Saved on the mouse, so it works without this app and on any computer.</source>
+        <translation>保存在鼠标上，因此无需此应用即可在任何电脑上使用。</translation>
+    </message>
+    <message>
+        <location filename="../pages/lighting.py" line="62" />
+        <source>DPI lights</source>
+        <translation>DPI 指示灯</translation>
+    </message>
+    <message>
+        <location filename="../pages/lighting.py" line="62" />
+        <source>Logo</source>
+        <translation>LOGO 灯</translation>
+    </message>
+    <message>
+        <location filename="../pages/lighting.py" line="65" />
+        <source>Same effect on both zones</source>
+        <translation>双灯区同步效果</translation>
+    </message>
+    <message>
+        <location filename="../pages/lighting.py" line="71" />
+        <location filename="../pages/lighting.py" line="166" />
+        <source>Effect</source>
+        <translation>预设效果</translation>
+    </message>
+    <message>
+        <location filename="../pages/lighting.py" line="73" />
+        <source>Fixed</source>
+        <translation>常亮单色</translation>
+    </message>
+    <message>
+        <location filename="../pages/lighting.py" line="74" />
+        <source>Breathing</source>
+        <translation>呼吸循环</translation>
+    </message>
+    <message>
+        <location filename="../pages/lighting.py" line="75" />
+        <source>Color cycle</source>
+        <translation>彩色循环</translation>
+    </message>
+    <message>
+        <location filename="../pages/lighting.py" line="76" />
         <source>Off</source>
         <translation>关闭灯光</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="74" />
+        <location filename="../pages/lighting.py" line="82" />
         <source>Color</source>
         <translation>灯光颜色</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="80" />
+        <location filename="../pages/lighting.py" line="88" />
         <source>Rate</source>
         <translation>周期速率</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="84" />
-        <location filename="../pages/lighting.py" line="206" />
-        <location filename="../pages/lighting.py" line="223" />
-        <location filename="../pages/lighting.py" line="236" />
+        <location filename="../pages/lighting.py" line="92" />
+        <location filename="../pages/lighting.py" line="214" />
+        <location filename="../pages/lighting.py" line="231" />
+        <location filename="../pages/lighting.py" line="244" />
         <source>Brightness</source>
         <translation>灯光亮度</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="155" />
+        <location filename="../pages/lighting.py" line="163" />
         <source>Made by G502 Hub while it runs. It keeps running in the tray when you close the window. Turn it off and the mouse goes back to its saved lighting.</source>
         <translation>由 G502 Hub 在电脑后台实时计算并流送给鼠标。关闭主窗口后仍可在系统托盘常驻运行。关闭实时灯效后鼠标将立即恢复板载灯效。</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="160" />
+        <location filename="../pages/lighting.py" line="168" />
         <source>Screen sampler</source>
         <translation>屏幕采样器</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="161" />
+        <location filename="../pages/lighting.py" line="169" />
         <source>Audio visualizer</source>
         <translation>音频律动</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="162" />
+        <location filename="../pages/lighting.py" line="170" />
         <source>Color wave</source>
         <translation>色彩波浪</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="163" />
+        <location filename="../pages/lighting.py" line="171" />
         <source>DPI colors</source>
         <translation>DPI 状态指示色</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="199" />
+        <location filename="../pages/lighting.py" line="207" />
         <source>Follows what's on your screen: the film or video you're watching, or the game you're playing.</source>
         <translation>动态拾取显示屏画面色彩：与当前正在播放的电影视频或游戏画面实时同色同步发光。</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="202" />
+        <location filename="../pages/lighting.py" line="210" />
         <source>DPI lights follow</source>
         <translation>DPI 指示灯采样区域</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="203" />
+        <location filename="../pages/lighting.py" line="211" />
         <source>Logo follows</source>
         <translation>LOGO 灯采样区域</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="204" />
-        <location filename="../pages/lighting.py" line="221" />
+        <location filename="../pages/lighting.py" line="212" />
+        <location filename="../pages/lighting.py" line="229" />
         <source>Style</source>
         <translation>色彩风格</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="204" />
+        <location filename="../pages/lighting.py" line="212" />
         <source>Vivid</source>
         <translation>鲜艳明亮</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="204" />
+        <location filename="../pages/lighting.py" line="212" />
         <source>Average</source>
         <translation>柔和均值</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="205" />
-        <location filename="../pages/lighting.py" line="235" />
+        <location filename="../pages/lighting.py" line="213" />
+        <location filename="../pages/lighting.py" line="243" />
         <source>Saturation</source>
         <translation>饱和度</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="207" />
+        <location filename="../pages/lighting.py" line="215" />
         <source>Smoothing</source>
         <translation>平滑过渡</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="208" />
+        <location filename="../pages/lighting.py" line="216" />
         <source>Choose another screen…</source>
         <translation>更换采样的显示器…</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="215" />
+        <location filename="../pages/lighting.py" line="223" />
         <source>Reacts to the sound your computer is playing.</source>
         <translation>拾取系统音频输出，伴随音乐律动节拍发光。</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="217" />
+        <location filename="../pages/lighting.py" line="225" />
         <source>Pulse</source>
         <translation>节拍脉冲</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="218" />
+        <location filename="../pages/lighting.py" line="226" />
         <source>Spectrum</source>
         <translation>音频频谱</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="219" />
+        <location filename="../pages/lighting.py" line="227" />
         <source>Rainbow beats</source>
         <translation>彩虹节拍</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="222" />
+        <location filename="../pages/lighting.py" line="230" />
         <source>Sensitivity</source>
         <translation>音频灵敏度</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="224" />
+        <location filename="../pages/lighting.py" line="232" />
         <source>Pulse color</source>
         <translation>脉冲灯光颜色</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="233" />
+        <location filename="../pages/lighting.py" line="241" />
         <source>A rainbow that flows from the DPI lights to the logo.</source>
         <translation>一道动态彩虹光效在 DPI 指示灯与 LOGO 区域之间循环流转。</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="234" />
+        <location filename="../pages/lighting.py" line="242" />
         <source>Cycle time</source>
         <translation>完整流动周期</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="237" />
+        <location filename="../pages/lighting.py" line="245" />
         <source>Flow from the logo to the DPI lights</source>
         <translation>逆向流动（从 LOGO 流向 DPI 灯）</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="245" />
+        <location filename="../pages/lighting.py" line="253" />
         <source>Both zones light up in the color of the DPI level you're on, so you can see it at a glance.</source>
         <translation>双灯区均显示当前 DPI 档位专属颜色，档位一目了然。</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="247" />
+        <location filename="../pages/lighting.py" line="255" />
         <source>Color for DPI level</source>
         <translation>各 DPI 档位专属颜色</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="283" />
+        <location filename="../pages/lighting.py" line="291" />
         <source>Turn off</source>
         <translation>关闭实时灯效</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="283" />
+        <location filename="../pages/lighting.py" line="291" />
         <source>Turn on</source>
         <translation>开启实时灯效</translation>
     </message>
     <message>
-        <location filename="../pages/lighting.py" line="290" />
+        <location filename="../pages/lighting.py" line="298" />
         <source>{name} (a live effect) is showing on the mouse right now. Changing anything here turns it off.</source>
         <translation>当前鼠标正在显示实时联动灯效“{name}”。在此处修改板载设置将自动退出实时灯效。</translation>
     </message>
 </context>
 <context>
+    <name>LiveLighting</name>
+    <message>
+        <location filename="../live.py" line="25" />
+        <source>Screen sampler</source>
+        <translation>屏幕采样器</translation>
+    </message>
+    <message>
+        <location filename="../live.py" line="26" />
+        <source>Audio visualizer</source>
+        <translation>音频律动</translation>
+    </message>
+    <message>
+        <location filename="../live.py" line="27" />
+        <source>Color wave</source>
+        <translation>色彩波浪</translation>
+    </message>
+    <message>
+        <location filename="../live.py" line="28" />
+        <source>DPI colors</source>
+        <translation>DPI 状态指示色</translation>
+    </message>
+    <message>
+        <location filename="../live.py" line="107" />
+        <source>{effect} is on</source>
+        <translation>{effect} 已开启</translation>
+    </message>
+    <message>
+        <location filename="../live.py" line="116" />
+        <source>Live lighting off: back to the lighting saved on the mouse</source>
+        <translation>实时联动灯效已关闭：恢复为鼠标板载保存的灯效</translation>
+    </message>
+    <message>
+        <location filename="../live.py" line="208" />
+        <source>Starting screen capture… pick a screen if asked</source>
+        <translation>正在启动屏幕捕获… 若有系统弹窗请选择要采样的显示器</translation>
+    </message>
+    <message>
+        <location filename="../live.py" line="236" />
+        <source>Screen sampler is on</source>
+        <translation>屏幕采样器已开启</translation>
+    </message>
+    <message>
+        <location filename="../live.py" line="238" />
+        <source>Screen sharing was cancelled, so the screen sampler is off</source>
+        <translation>屏幕共享已取消，屏幕采样器已关闭</translation>
+    </message>
+    <message>
+        <location filename="../live.py" line="240" />
+        <source>Screen capture failed: {error}</source>
+        <translation>屏幕捕获失败：{error}</translation>
+    </message>
+</context>
+<context>
+    <name>MacroCard</name>
+    <message>
+        <location filename="../pages/macros.py" line="86" />
+        <source>with G-Shift</source>
+        <translation>（配合 G-Shift）</translation>
+    </message>
+    <message>
+        <location filename="../pages/macros.py" line="87" />
+        <source>{button}{gshift} on slot {slot}</source>
+        <translation>槽位 {slot} 上的 {button}{gshift}</translation>
+    </message>
+    <message>
+        <location filename="../pages/macros.py" line="89" />
+        <source>On {where}</source>
+        <translation>已分配给：{where}</translation>
+    </message>
+    <message>
+        <location filename="../pages/macros.py" line="89" />
+        <source>Not on any button yet: pick it under Assignments.</source>
+        <translation>尚未分配给任何按键：可在“按键分配”页面中指定。</translation>
+    </message>
+    <message>
+        <location filename="../pages/macros.py" line="92" />
+        <source>Edit</source>
+        <translation>编辑</translation>
+    </message>
+    <message>
+        <location filename="../pages/macros.py" line="96" />
+        <source>Delete</source>
+        <translation>删除</translation>
+    </message>
+</context>
+<context>
     <name>MacrosPage</name>
     <message>
-        <location filename="../pages/macros.py" line="109" />
+        <location filename="../pages/macros.py" line="108" />
         <source>MACROS</source>
         <translation>宏管理</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="129" />
+        <location filename="../pages/macros.py" line="128" />
         <source>Macros</source>
         <translation>宏指令管理</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="132" />
+        <location filename="../pages/macros.py" line="131" />
         <source>Saved on the mouse, a macro plays on any computer: keys, media keys, clicks, scrolling and waits. Run by G502 Hub, it can also type text and repeat while you hold the button, but needs the app running.</source>
-        <translation>保存在板载内存中的宏可在任意电脑免驱动即插即用：支持单键、组合键、多媒体键、鼠标点击、滚轮和精确延时。由电脑端应用运行的宏还可模拟长文本输入及按住循环触发（需保持应用后台运行）。</translation>
+        <translation>保存在鼠标上的宏可在任何电脑上运行：按键、多媒体键、点击、滚轮和等待。由 G502 Hub 运行的宏还可以键入文本并在按住按钮时循环，但需要应用保持运行。</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="138" />
+        <location filename="../pages/macros.py" line="137" />
         <source>+  New macro</source>
-        <translation>+  新建宏指令</translation>
+        <translation>+  新建宏</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="140" />
-        <location filename="../pages/macros.py" line="283" />
+        <location filename="../pages/macros.py" line="139" />
+        <location filename="../pages/macros.py" line="282" />
         <source>New macro</source>
-        <translation>新建宏指令</translation>
+        <translation>新建宏</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="152" />
+        <location filename="../pages/macros.py" line="151" />
         <source>No macros yet.</source>
-        <translation>暂无宏指令。</translation>
+        <translation>暂无宏。</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="161" />
-        <location filename="../pages/macros.py" line="337" />
-        <location filename="../pages/macros.py" line="347" />
+        <location filename="../pages/macros.py" line="160" />
+        <location filename="../pages/macros.py" line="336" />
+        <location filename="../pages/macros.py" line="346" />
         <source>Macro</source>
-        <translation>宏指令详情</translation>
+        <translation>宏</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="164" />
+        <location filename="../pages/macros.py" line="163" />
         <source>Name</source>
-        <translation>宏名称</translation>
+        <translation>名称</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="168" />
+        <location filename="../pages/macros.py" line="167" />
         <source>Runs</source>
         <translation>运行方式</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="169" />
+        <location filename="../pages/macros.py" line="168" />
         <source>Saved on the mouse</source>
-        <translation>保存在鼠标板载内存（免驱）</translation>
+        <translation>保存在鼠标上</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="169" />
+        <location filename="../pages/macros.py" line="168" />
         <source>Run by G502 Hub</source>
-        <translation>由 G502 Hub 在电脑端运行</translation>
+        <translation>由 G502 Hub 运行</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="173" />
+        <location filename="../pages/macros.py" line="172" />
         <source>Plays</source>
         <translation>触发模式</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="175" />
+        <location filename="../pages/macros.py" line="174" />
         <source>Once per press</source>
         <translation>单次触发（按一下执行一次）</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="176" />
+        <location filename="../pages/macros.py" line="175" />
         <source>Repeats while held</source>
         <translation>按住时循环执行</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="177" />
+        <location filename="../pages/macros.py" line="176" />
         <source>Press to start, again to stop</source>
         <translation>开关循环（按一下开始，再按一下停止）</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="183" />
+        <location filename="../pages/macros.py" line="182" />
         <source>Steps</source>
         <translation>动作步骤列表</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="189" />
+        <location filename="../pages/macros.py" line="188" />
         <source>Remove</source>
         <translation>删除此步骤</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="198" />
+        <location filename="../pages/macros.py" line="197" />
         <source>Add a step</source>
         <translation>添加动作步骤</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="199" />
+        <location filename="../pages/macros.py" line="198" />
         <source>Key</source>
         <translation>按键</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="199" />
+        <location filename="../pages/macros.py" line="198" />
         <source>Text</source>
         <translation>文本输入</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="199" />
+        <location filename="../pages/macros.py" line="198" />
         <source>Wait</source>
         <translation>延时</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="199" />
+        <location filename="../pages/macros.py" line="198" />
         <source>Mouse</source>
         <translation>鼠标动作</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="199" />
+        <location filename="../pages/macros.py" line="198" />
         <source>Media</source>
         <translation>多媒体键</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="211" />
+        <location filename="../pages/macros.py" line="210" />
         <source>Recording keeps the waits between your key presses.</source>
         <translation>录制功能将忠实记录按键之间的真实时间间隔。</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="216" />
+        <location filename="../pages/macros.py" line="215" />
         <source>Text to type, e.g. gg wp</source>
         <translation>要自动输入的文本，例如 gg wp</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="218" />
+        <location filename="../pages/macros.py" line="217" />
         <source>Add text</source>
         <translation>插入文本步骤</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="229" />
+        <location filename="../pages/macros.py" line="228" />
         <source>Add wait</source>
         <translation>插入延时步骤</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="236" />
+        <location filename="../pages/macros.py" line="235" />
         <source>Left click</source>
         <translation>左键单击</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="237" />
+        <location filename="../pages/macros.py" line="236" />
         <source>Right click</source>
         <translation>右键单击</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="238" />
+        <location filename="../pages/macros.py" line="237" />
         <source>Middle click</source>
         <translation>中键单击</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="239" />
+        <location filename="../pages/macros.py" line="238" />
         <source>Back</source>
         <translation>后退键</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="240" />
+        <location filename="../pages/macros.py" line="239" />
         <source>Forward</source>
         <translation>前进键</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="246" />
+        <location filename="../pages/macros.py" line="245" />
         <source>Scroll up</source>
         <translation>向上滚动</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="246" />
+        <location filename="../pages/macros.py" line="245" />
         <source>Scroll down</source>
         <translation>向下滚动</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="260" />
+        <location filename="../pages/macros.py" line="259" />
         <source>Save macro</source>
         <translation>保存宏指令</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="264" />
+        <location filename="../pages/macros.py" line="263" />
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="283" />
+        <location filename="../pages/macros.py" line="282" />
         <source>Edit macro</source>
         <translation>编辑宏指令</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="334" />
+        <location filename="../pages/macros.py" line="333" />
         <source>Runs from the app, so there's no size limit. Its button does nothing while G502 Hub isn't running.</source>
         <translation>由应用在电脑后台模拟运行，无动作步数和存储大小限制。但应用未运行时按键不会响应。</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="340" />
+        <location filename="../pages/macros.py" line="339" />
         <source>Uses {size} of {capacity} bytes of mouse memory.</source>
         <translation>当前动作已占用 {size} / {capacity} 字节板载内存。</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="343" />
+        <location filename="../pages/macros.py" line="342" />
         <source>Can't be saved on the mouse: {error}. Choose “Run by G502 Hub” instead.</source>
         <translation>无法保存到鼠标板载芯片：{error}。建议切换为“由 G502 Hub 在电脑端运行”。</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="351" />
+        <location filename="../pages/macros.py" line="350" />
         <source>Add at least one step.</source>
         <translation>宏指令中必须至少包含一个动作步骤。</translation>
     </message>
     <message>
-        <location filename="../pages/macros.py" line="357" />
+        <location filename="../pages/macros.py" line="356" />
         <source>Can't be saved on the mouse: {error}</source>
         <translation>无法写入板载内存：{error}</translation>
     </message>
@@ -1874,6 +2355,60 @@ Continue?</source>
     </message>
 </context>
 <context>
+    <name>MouseView</name>
+    <message>
+        <location filename="../mouse_view.py" line="87" />
+        <source>Getting the picture of your G502 HERO from logitechg.com…</source>
+        <translation>正在从 logitechg.com 下载 G502 HERO 官方外观图…</translation>
+    </message>
+    <message>
+        <location filename="../mouse_view.py" line="94" />
+        <source>damaged file</source>
+        <translation>文件损坏</translation>
+    </message>
+    <message>
+        <location filename="../mouse_view.py" line="95" />
+        <source>Couldn't download the picture of the mouse ({error}). </source>
+        <translation>无法下载鼠标外观图（{error}）。</translation>
+    </message>
+    <message>
+        <location filename="../mouse_view.py" line="96" />
+        <source>Click here to try again.</source>
+        <translation>点击此处重试。</translation>
+    </message>
+</context>
+<context>
+    <name>PhotoSkin</name>
+    <message>
+        <location filename="../photo.py" line="119" />
+        <source>DPI LIGHTS</source>
+        <translation>DPI 指示灯</translation>
+    </message>
+    <message>
+        <location filename="../photo.py" line="120" />
+        <source>LOGO</source>
+        <translation>LOGO 灯</translation>
+    </message>
+</context>
+<context>
+    <name>Placeholder</name>
+    <message>
+        <location filename="../app.py" line="38" />
+        <source>Connect your G502 HERO</source>
+        <translation>请连接你的 G502 HERO 鼠标</translation>
+    </message>
+    <message>
+        <location filename="../app.py" line="42" />
+        <source>Looking for the mouse…</source>
+        <translation>正在寻找鼠标设备…</translation>
+    </message>
+    <message>
+        <location filename="../app.py" line="48" />
+        <source>Allow access (asks for your password)</source>
+        <translation>授权访问权限（需要管理员密码）</translation>
+    </message>
+</context>
+<context>
     <name>ProfilesPage</name>
     <message>
         <location filename="../pages/profiles.py" line="147" />
@@ -1888,7 +2423,7 @@ Continue?</source>
     <message>
         <location filename="../pages/profiles.py" line="160" />
         <source>These 5 profiles live on the mouse and work on any computer. G9 switches between the included ones.</source>
-        <translation>这 5 个配置文件直接保存在鼠标芯片中，在任何电脑上都能即插即用。可通过 G9 键在已勾选的配置之间循环切换。</translation>
+        <translation>这 5 个配置文件保存在鼠标上，可在任何电脑上使用。G9 键可在包含的配置之间切换。</translation>
     </message>
     <message>
         <location filename="../pages/profiles.py" line="168" />
@@ -1972,44 +2507,91 @@ Profile format {format}, {sectors} × {size} B onboard memory</source>
     </message>
 </context>
 <context>
+    <name>Recorder</name>
+    <message>
+        <location filename="../pages/macros.py" line="25" />
+        <location filename="../pages/macros.py" line="33" />
+        <source>●  Record keys</source>
+        <translation>●  录制按键</translation>
+    </message>
+    <message>
+        <location filename="../pages/macros.py" line="33" />
+        <source>■  Stop recording (Esc)</source>
+        <translation>■  停止录制 (Esc)</translation>
+    </message>
+</context>
+<context>
+    <name>RuleCard</name>
+    <message>
+        <location filename="../pages/games.py" line="27" />
+        <source>ACTIVE</source>
+        <translation>已激活</translation>
+    </message>
+    <message>
+        <location filename="../pages/games.py" line="32" />
+        <source>Turn this rule on or off</source>
+        <translation>启用或停用此规则</translation>
+    </message>
+    <message>
+        <location filename="../pages/games.py" line="46" />
+        <source>Edit</source>
+        <translation>编辑</translation>
+    </message>
+    <message>
+        <location filename="../pages/games.py" line="49" />
+        <source>Check this rule earlier</source>
+        <translation>提高匹配优先级（上移）</translation>
+    </message>
+    <message>
+        <location filename="../pages/games.py" line="50" />
+        <source>Check this rule later</source>
+        <translation>降低匹配优先级（下移）</translation>
+    </message>
+    <message>
+        <location filename="../pages/games.py" line="57" />
+        <source>Delete</source>
+        <translation>删除</translation>
+    </message>
+</context>
+<context>
     <name>SensitivityPage</name>
     <message>
-        <location filename="../pages/sensitivity.py" line="162" />
+        <location filename="../pages/sensitivity.py" line="161" />
         <source>SENSITIVITY</source>
         <translation>灵敏度 (DPI)</translation>
     </message>
     <message>
-        <location filename="../pages/sensitivity.py" line="166" />
+        <location filename="../pages/sensitivity.py" line="165" />
         <source>Sensitivity</source>
         <translation>灵敏度设置</translation>
     </message>
     <message>
-        <location filename="../pages/sensitivity.py" line="169" />
+        <location filename="../pages/sensitivity.py" line="168" />
         <source>Up to 5 DPI levels. G7/G8 step through them by default; the sniper level applies while DPI shift is held.</source>
         <translation>最多支持 5 个 DPI 档位。默认通过 G7/G8 键逐档增减；按住 DPI 切换键（大拇指狙击键）时将临时启用该切换档位。</translation>
     </message>
     <message>
-        <location filename="../pages/sensitivity.py" line="177" />
+        <location filename="../pages/sensitivity.py" line="176" />
         <source>DPI levels</source>
         <translation>DPI 档位列表</translation>
     </message>
     <message>
-        <location filename="../pages/sensitivity.py" line="187" />
+        <location filename="../pages/sensitivity.py" line="186" />
         <source>+  Add level</source>
         <translation>+  添加 DPI 档位</translation>
     </message>
     <message>
-        <location filename="../pages/sensitivity.py" line="193" />
+        <location filename="../pages/sensitivity.py" line="192" />
         <source>Report rate</source>
         <translation>回报速率 (Hz)</translation>
     </message>
     <message>
-        <location filename="../pages/sensitivity.py" line="197" />
+        <location filename="../pages/sensitivity.py" line="196" />
         <source>1000 Hz is the most responsive. Lower rates use slightly less CPU.</source>
         <translation>1000 Hz 具有最佳的超低延迟与跟手响应。较低的回报率能略微降低 CPU 占用。</translation>
     </message>
     <message>
-        <location filename="../pages/sensitivity.py" line="257" />
+        <location filename="../pages/sensitivity.py" line="256" />
         <source>No button is set to DPI shift in this profile, so the sniper level isn't used. Assign DPI shift to G6 under Assignments.</source>
         <translation>当前配置未分配 DPI 切换键，因此该切换档位不会被触发。可在“按键分配”页面将 G6（狙击键）分配为 DPI 切换。</translation>
     </message>
@@ -2032,9 +2614,13 @@ Profile format {format}, {sectors} × {size} B onboard memory</source>
         <translation>界面语言 (Language)</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="39" />
         <source>Language changes will take effect after restarting the application.</source>
-        <translation>语言更改将在重启应用后生效。</translation>
+        <translation type="vanished">语言更改将在重启应用后生效。</translation>
+    </message>
+    <message>
+        <location filename="../pages/settings.py" line="39" />
+        <source>Restart required. Please quit G502 Hub from the tray menu and open it again to apply.</source>
+        <translation>需要重启生效。请在系统托盘菜单中选择退出 G502 Hub，然后重新打开软件以应用新语言。</translation>
     </message>
     <message>
         <location filename="../pages/settings.py" line="42" />
@@ -2080,7 +2666,7 @@ Profile format {format}, {sectors} × {size} B onboard memory</source>
         <location filename="../pages/settings.py" line="75" />
         <location filename="../pages/settings.py" line="129" />
         <source>Allow access (asks for your password)</source>
-        <translation>配置免 Root 设备权限（需要管理员密码）</translation>
+        <translation>授权访问权限（需要管理员密码）</translation>
     </message>
     <message>
         <location filename="../pages/settings.py" line="81" />
@@ -2148,49 +2734,182 @@ Profile format {format}, {sectors} × {size} B onboard memory</source>
         <translation>CS2 与 Dota 2 联动：未检测到这两款游戏的安装目录。</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="147" />
+        <location filename="../pages/settings.py" line="148" />
+        <source>✓ set up</source>
+        <translation>✓ 已配置</translation>
+    </message>
+    <message>
+        <location filename="../pages/settings.py" line="148" />
+        <source>not set up</source>
+        <translation>未配置</translation>
+    </message>
+    <message>
+        <location filename="../pages/settings.py" line="151" />
         <source>CS2 and Dota 2 live lighting: {state}.</source>
         <translation>CS2 与 Dota 2 实时联动状态：{state}。</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="149" />
+        <location filename="../pages/settings.py" line="153" />
         <source>Remove CS2 / Dota 2 setup</source>
         <translation>清除 CS2 / Dota 2 联动配置文件</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="149" />
+        <location filename="../pages/settings.py" line="153" />
         <source>Set up CS2 / Dota 2 lighting</source>
         <translation>一键配置 CS2 / Dota 2 联动</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="161" />
+        <location filename="../pages/settings.py" line="165" />
         <source>Couldn't change the game config: {error}</source>
         <translation>无法修改游戏配置文件：{error}</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="174" />
+        <location filename="../pages/settings.py" line="178" />
         <source>Not available: {error}</source>
         <translation>当前不可用：{error}</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="177" />
+        <location filename="../pages/settings.py" line="181" />
         <source>No Proton games found yet. Run a Windows game through Steam once, then come back here.</source>
         <translation>尚未检测到运行过的 Proton 游戏容器。请先通过 Steam 运行一次 Windows 游戏后再返回此处。</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="182" />
+        <location filename="../pages/settings.py" line="186" />
         <source>The bridge DLL isn't built in this copy yet: install lld (sudo pacman -S lld) and run bridge/logitechled/build.sh.</source>
-        <translation>桥接 DLL 尚未编译：请安装 lld 并执行 bridge/logitechled/build.sh 进行编译。</translation>
+        <translation>桥接 DLL 尚未在此副本中构建：请安装 lld (sudo pacman -S lld) 并运行 bridge/logitechled/build.sh。</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="189" />
+        <location filename="../pages/settings.py" line="193" />
         <source>Turn off</source>
         <translation>停用</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="189" />
+        <location filename="../pages/settings.py" line="193" />
         <source>Turn on</source>
         <translation>启用</translation>
+    </message>
+</context>
+<context>
+    <name>SlotCard</name>
+    <message>
+        <location filename="../pages/profiles.py" line="22" />
+        <source>Slot {slot}</source>
+        <translation>槽位 {slot}</translation>
+    </message>
+    <message>
+        <location filename="../pages/profiles.py" line="24" />
+        <source>ACTIVE</source>
+        <translation>已激活</translation>
+    </message>
+    <message>
+        <location filename="../pages/profiles.py" line="29" />
+        <source>Profile {slot}</source>
+        <translation>配置文件 {slot}</translation>
+    </message>
+    <message>
+        <location filename="../pages/profiles.py" line="40" />
+        <source>DPI</source>
+        <translation>DPI 指示灯</translation>
+    </message>
+    <message>
+        <location filename="../pages/profiles.py" line="40" />
+        <source>Logo</source>
+        <translation>LOGO 灯</translation>
+    </message>
+    <message>
+        <location filename="../pages/profiles.py" line="51" />
+        <source>Included when G9 cycles profiles</source>
+        <translation>使用 G9 键循环切换时包含此配置</translation>
+    </message>
+    <message>
+        <location filename="../pages/profiles.py" line="55" />
+        <source>Activate</source>
+        <translation>激活此槽位</translation>
+    </message>
+    <message>
+        <location filename="../pages/profiles.py" line="59" />
+        <source>More  ▾</source>
+        <translation>更多选项  ▾</translation>
+    </message>
+    <message>
+        <location filename="../pages/profiles.py" line="61" />
+        <source>Export to a file…</source>
+        <translation>导出到文件…</translation>
+    </message>
+    <message>
+        <location filename="../pages/profiles.py" line="62" />
+        <source>Import from a file…</source>
+        <translation>从文件导入…</translation>
+    </message>
+    <message>
+        <location filename="../pages/profiles.py" line="64" />
+        <source>Reset to factory profile</source>
+        <translation>恢复出厂预设配置</translation>
+    </message>
+    <message>
+        <location filename="../pages/profiles.py" line="65" />
+        <source>Copy this profile to</source>
+        <translation>复制此配置到</translation>
+    </message>
+    <message>
+        <location filename="../pages/profiles.py" line="68" />
+        <source>Slot {other}</source>
+        <translation>槽位 {other}</translation>
+    </message>
+    <message>
+        <location filename="../pages/profiles.py" line="83" />
+        <source>Export profile</source>
+        <translation>导出配置文件</translation>
+    </message>
+    <message>
+        <location filename="../pages/profiles.py" line="93" />
+        <source>Couldn't save the file: {error}</source>
+        <translation>无法保存文件：{error}</translation>
+    </message>
+    <message>
+        <location filename="../pages/profiles.py" line="95" />
+        <source>Exported slot {slot} to {path}</source>
+        <translation>已将槽位 {slot} 导出至 {path}</translation>
+    </message>
+    <message>
+        <location filename="../pages/profiles.py" line="98" />
+        <source>Import profile</source>
+        <translation>导入配置文件</translation>
+    </message>
+    <message>
+        <location filename="../pages/profiles.py" line="106" />
+        <source>Couldn't import {filename}: {error}</source>
+        <translation>无法导入 {filename}：{error}</translation>
+    </message>
+    <message>
+        <location filename="../pages/profiles.py" line="109" />
+        <source>Replace slot {slot} with "{name}"? Your backup keeps the current one.</source>
+        <translation>是否使用“{name}”覆盖槽位 {slot}？备份中仍会保留当前配置。</translation>
+    </message>
+    <message>
+        <location filename="../pages/profiles.py" line="116" />
+        <source>Replace slot {slot} with its factory profile? Your backup keeps the current one.</source>
+        <translation>是否将槽位 {slot} 恢复为出厂预设配置？备份中仍会保留当前配置。</translation>
+    </message>
+    <message>
+        <location filename="../pages/profiles.py" line="117" />
+        <source>Reset slot</source>
+        <translation>重置槽位</translation>
+    </message>
+    <message>
+        <location filename="../pages/profiles.py" line="121" />
+        <source>Overwrite slot {target} with slot {slot}?</source>
+        <translation>是否使用槽位 {slot} 覆盖槽位 {target}？</translation>
+    </message>
+    <message>
+        <location filename="../pages/profiles.py" line="122" />
+        <source>Copy profile</source>
+        <translation>复制配置文件</translation>
+    </message>
+    <message>
+        <location filename="../pages/profiles.py" line="137" />
+        <source>custom</source>
+        <translation>自定义</translation>
     </message>
 </context>
 </TS>
