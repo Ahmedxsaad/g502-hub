@@ -1,0 +1,26 @@
+name: AUR package
+
+# The AUR package is maintained by someone else for now. This fails (and GitHub
+# emails the repo owner) if it ever ships anything but this repository's packaging.
+on:
+  schedule:
+    - cron: "7,22,37,52 * * * *"
+  push:
+    paths:
+      - tools/check-aur.sh
+      - .github/workflows/aur.yml
+      - packaging/aur/**
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Compare the AUR package with packaging/aur
+        run: sh tools/check-aur.sh
