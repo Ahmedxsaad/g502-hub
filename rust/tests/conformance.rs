@@ -1,4 +1,4 @@
-use g502_hub_rust::{
+use g502_hub::{
     input,
     model::{self, Directory, Profile},
 };

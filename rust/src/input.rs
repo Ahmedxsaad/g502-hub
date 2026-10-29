@@ -502,7 +502,7 @@ impl Backend {
             }
         }
         let mut setup = vec![0u8; 1116];
-        let name = b"G502 Hub Rust macros";
+        let name = b"G502 Hub macros";
         setup[..name.len()].copy_from_slice(name);
         setup[80..82].copy_from_slice(&3u16.to_ne_bytes());
         setup[82..84].copy_from_slice(&0x046du16.to_ne_bytes());

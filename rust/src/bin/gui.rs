@@ -1,7 +1,7 @@
 #[path = "gui/mouse.rs"]
 mod mouse;
 use eframe::egui::{self, Color32, RichText};
-use g502_hub_rust::{config, effects, input, ipc, model::Profile, service::Snapshot};
+use g502_hub::{config, effects, input, ipc, model::Profile, service::Snapshot};
 use serde_json::{Value, json};
 use std::{
     path::PathBuf,
@@ -828,7 +828,7 @@ impl App {
                 .to_string(),
             recording: false,
             record_at: None,
-            message: "Connexion au service Rust…".into(),
+            message: "Connexion au service G502 Hub…".into(),
             failed: false,
             settings_text: String::new(),
             screenshot,
@@ -2889,12 +2889,12 @@ impl eframe::App for App {
             if self.write_failed {ui.colored_label(Color32::LIGHT_RED,&self.message);ui.horizontal(|ui|{if ui.button("Retry").clicked(){self.write_failed=false;self.apply();}if ui.button("Discard").clicked(){self.dirty=false;self.write_failed=false;self.load_draft();}});}
             egui::ScrollArea::vertical().id_salt(("side",&self.tab)).auto_shrink([false,false]).show(ui,|ui| {
                 if !self.snap.connected && self.tab!="about" {ui.label("Waiting for the G502 HERO…");}
-                else {match self.tab.as_str(){"sens"=>self.sensitivity(ui),"buttons"=>self.buttons(ui),"light"=>self.lighting(ui),"settings"=>self.settings_page(ui),"profiles"=>{section(ui,"Device");ui.label("G502 HERO");ui.label(format!("Firmware {}",self.snap.firmware.join(" / ")));section(ui,"Backups");ui.label(RichText::new("A full backup is taken automatically before the first change each session.").color(MUTED));if ui.add_sized([ui.available_width(),34.],egui::Button::new("Back up now")).clicked(){self.send("backup",json!({}));}ui.add_space(10.);if ui.add_sized([ui.available_width(),34.],egui::Button::new("Restore a backup…")).clicked(){self.choose_profile_file("restore",self.slot,ui.ctx());}if ui.add_sized([ui.available_width(),34.],egui::Button::new("Open backups folder")).clicked(){let _=std::process::Command::new("xdg-open").arg(config::data_dir().join("backups")).spawn();}},"macros"|"rules"=>{if self.editing_library {if ui.button("<  Back").clicked(){self.editing_library=false;self.recording=false;}if self.tab=="macros" {self.macros(ui);}else{self.rules(ui);}}else{self.library_panel(ui);}},"about"=>{ui.label("G502 Hub");ui.label(RichText::new("A native settings app for the Logitech G502 HERO.").color(MUTED));section(ui,"Version");ui.label("Rust · 0.1.0 · experimental");ui.hyperlink_to("Original project","https://github.com/Ahmedxsaad/g502-hub");},_=>{}}}
+                else {match self.tab.as_str(){"sens"=>self.sensitivity(ui),"buttons"=>self.buttons(ui),"light"=>self.lighting(ui),"settings"=>self.settings_page(ui),"profiles"=>{section(ui,"Device");ui.label("G502 HERO");ui.label(format!("Firmware {}",self.snap.firmware.join(" / ")));section(ui,"Backups");ui.label(RichText::new("A full backup is taken automatically before the first change each session.").color(MUTED));if ui.add_sized([ui.available_width(),34.],egui::Button::new("Back up now")).clicked(){self.send("backup",json!({}));}ui.add_space(10.);if ui.add_sized([ui.available_width(),34.],egui::Button::new("Restore a backup…")).clicked(){self.choose_profile_file("restore",self.slot,ui.ctx());}if ui.add_sized([ui.available_width(),34.],egui::Button::new("Open backups folder")).clicked(){let _=std::process::Command::new("xdg-open").arg(config::data_dir().join("backups")).spawn();}},"macros"|"rules"=>{if self.editing_library {if ui.button("<  Back").clicked(){self.editing_library=false;self.recording=false;}if self.tab=="macros" {self.macros(ui);}else{self.rules(ui);}}else{self.library_panel(ui);}},"about"=>{ui.label("G502 Hub");ui.label(RichText::new("A native settings app for the Logitech G502 HERO.").color(MUTED));section(ui,"Version");ui.label("0.1.0 · experimental");ui.hyperlink_to("Original project","https://github.com/Ahmedxsaad/g502-hub");},_=>{}}}
             });
         });
         egui::CentralPanel::default().frame(egui::Frame::new().fill(BG).inner_margin(if wide {24}else{0})).show(ctx,|ui|{
             if !self.snap.connected {ui.centered_and_justified(|ui|{ui.label("Connect your G502 HERO to get started");});return;}
-            if wide {egui::ScrollArea::vertical().id_salt(("center",&self.tab)).show(ui,|ui|{match self.tab.as_str(){"profiles"=>self.profile_cards(ui),"macros"=>{ui.heading("Macro editor");ui.add_space(18.);self.macros(ui);},"rules"=>{ui.heading("Automatic rules");ui.add_space(18.);self.rules(ui);},_=>{ui.heading("G502 Hub");ui.label("Native Rust interface and background service");ui.add_space(20.);ui.label("Based on Ahmed Saad's G502 Hub. Licensed under GPL-3.0-or-later.");}}});}
+            if wide {egui::ScrollArea::vertical().id_salt(("center",&self.tab)).show(ui,|ui|{match self.tab.as_str(){"profiles"=>self.profile_cards(ui),"macros"=>{ui.heading("Macro editor");ui.add_space(18.);self.macros(ui);},"rules"=>{ui.heading("Automatic rules");ui.add_space(18.);self.rules(ui);},_=>{ui.heading("G502 Hub");ui.label("Settings interface and background service");ui.add_space(20.);ui.label("Based on Ahmed Saad's G502 Hub. Licensed under GPL-3.0-or-later.");}}});}
             else {self.device_view(ui);}
         });
         if let Some((cmd, args, prompt)) = self.profile_action.clone() {
@@ -3049,14 +3049,14 @@ fn main() {
         let smoke = args.iter().any(|a| a == "--smoke-test");
         let options = eframe::NativeOptions {
             viewport: egui::ViewportBuilder::default()
-                .with_title("G502 Hub Rust")
-                .with_app_id("g502-hub-rust")
+                .with_title("G502 Hub")
+                .with_app_id("g502-hub")
                 .with_inner_size([1280., 800.])
                 .with_min_inner_size([1100., 700.]),
             ..Default::default()
         };
         eframe::run_native(
-            "G502 Hub Rust",
+            "G502 Hub",
             options,
             Box::new(move |cc| Ok(Box::new(App::new(cc, screenshot, smoke)))),
         )

@@ -920,7 +920,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "g502-hub-rust"
+name = "g502-hub"
 version = "0.1.0"
 dependencies = [
  "anyhow",

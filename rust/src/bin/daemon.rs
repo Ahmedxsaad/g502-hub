@@ -1,4 +1,4 @@
-use g502_hub_rust::{ipc, service};
+use g502_hub::{ipc, service};
 use serde_json::json;
 fn main() {
     let args: Vec<_> = std::env::args().collect();

@@ -1,4 +1,4 @@
-# G502 Hub Rust — experimental native rewrite
+# G502 Hub — experimental native implementation
 
 A native Rust daemon **and** native egui/eframe settings application for the wired
 Logitech G502 HERO (`046d:c08b`). Derived from
@@ -12,12 +12,12 @@ cargo test --release
 cargo build --release
 # Optional per-user installation (no root): ./install.sh
 # Launch a separate test UI; hands over from the installed Python build:
-./target/release/g502-hub-rust --take-over
+./target/release/g502-hub --take-over
 ```
 
-The daemon is `g502-hubd-rust`. Build it without GUI dependencies with
-`cargo build --release --no-default-features --bin g502-hubd-rust`.
-Use `g502-hubd-rust --status` or `--stop` for diagnostics and shutdown.
+The daemon is `g502-hubd`. Build it without GUI dependencies with
+`cargo build --release --no-default-features --bin g502-hubd`.
+Use `g502-hubd --status` or `--stop` for diagnostics and shutdown.
 Closing the graphical window leaves only the daemon. Reopen the test launcher
 to edit settings. Stop Rust before reopening the original Python application.
 
@@ -76,11 +76,17 @@ unit tests alone do not establish complete behavioral equivalence.
 
 Configuration and backups are separate, but onboard saves affect the physical
 mouse. A previous Python installation remains usable after stopping the Rust
-service. The Rust login option explicitly replaces the Python login entry and
-restores it when disabled. It is off by default for testing.
+service. The login option controls the normal G502 Hub autostart entry. Installation
+preserves an existing enabled startup entry and updates it to the installed
+service. Previous desktop launchers are backed up in the data directory.
 
 File selection uses the optional system `zenity` utility, with a path-entry
 fallback. Linux development packages include libxkbcommon, X11 and Wayland.
 
 The photo is read only from the user's existing Logitech image cache and is not
 included in this repository; see NOTICE.md.
+
+The executables and application menu use `g502-hub` and `g502-hubd`.
+The legacy `g502-hub-rust` data/config/runtime directories are retained for
+compatibility with existing native installations and to avoid overwriting
+the earlier Python configuration.

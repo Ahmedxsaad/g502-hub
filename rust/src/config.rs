@@ -89,7 +89,7 @@ pub fn lock(name: &str) -> Result<File> {
         .open(runtime()?.join(name))?;
     ensure!(
         unsafe { libc::flock(file.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB) } == 0,
-        "G502 Hub Rust is already running"
+        "G502 Hub is already running"
     );
     Ok(file)
 }
@@ -98,35 +98,25 @@ pub fn autostart_path() -> PathBuf {
     std::env::var_os("XDG_CONFIG_HOME")
         .map(PathBuf::from)
         .unwrap_or_else(|| home().join(".config"))
-        .join("autostart/g502-hub-rust.desktop")
+        .join("autostart/g502-hub.desktop")
 }
 pub fn autostart(on: bool) -> Result<()> {
     let p = autostart_path();
-    let old = p.with_file_name("g502-hub.desktop");
-    let disabled = p.with_file_name("g502-hub.desktop.rust-disabled");
     if on {
         let exe = std::env::current_exe()?;
         fs::create_dir_all(p.parent().unwrap())?;
-        if old.exists() && !disabled.exists() {
-            fs::rename(&old, &disabled)?;
-        }
         fs::write(
             p,
             format!(
-                "[Desktop Entry]\nType=Application\nName=G502 Hub Rust\nExec=\"{}\" --background --take-over\nIcon=input-mouse\nTerminal=false\nX-GNOME-Autostart-enabled=true\n",
+                "[Desktop Entry]\nType=Application\nName=G502 Hub\nExec=\"{}\" --background --take-over\nIcon=input-mouse\nTerminal=false\nX-GNOME-Autostart-enabled=true\n",
                 exe.display()
                     .to_string()
                     .replace('\\', "\\\\")
                     .replace('"', "\\\"")
             ),
         )?;
-    } else {
-        if p.exists() {
-            fs::remove_file(&p)?;
-        }
-        if disabled.exists() && !old.exists() {
-            fs::rename(disabled, old)?;
-        }
+    } else if p.exists() {
+        fs::remove_file(p)?;
     }
     Ok(())
 }

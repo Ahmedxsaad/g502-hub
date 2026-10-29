@@ -524,7 +524,7 @@ pub fn install_gsi(remove: bool) -> Result<Vec<String>> {
                         fs::write(
                             &path,
                             format!(
-                                "\"G502 Hub Rust\"\n{{\n \"uri\" \"http://127.0.0.1:41502/{game}\"\n \"timeout\" \"1.1\"\n \"buffer\" \"0.0\"\n \"throttle\" \"0.1\"\n \"heartbeat\" \"5.0\"\n \"auth\" {{ \"token\" \"g502hub\" }}\n \"data\" {{ {} }}\n}}\n",
+                                "\"G502 Hub\"\n{{\n \"uri\" \"http://127.0.0.1:41502/{game}\"\n \"timeout\" \"1.1\"\n \"buffer\" \"0.0\"\n \"throttle\" \"0.1\"\n \"heartbeat\" \"5.0\"\n \"auth\" {{ \"token\" \"g502hub\" }}\n \"data\" {{ {} }}\n}}\n",
                                 keys.iter()
                                     .map(|k| format!("\"{k}\" \"1\""))
                                     .collect::<Vec<_>>()

@@ -619,7 +619,7 @@ impl Engine {
                 let slot = a["slot"].as_u64().context("Missing slot")? as usize;
                 self.sector(slot)?;
                 let p = &self.snapshot.profiles[slot - 1];
-                let value = json!({"format":"g502-hub-profile","version":1,"device":"046d:c08b","app":"G502 Hub Rust","summary":{"name":p.name,"dpi":p.dpi},"sector":model::hex(&p.encode()?)});
+                let value = json!({"format":"g502-hub-profile","version":1,"device":"046d:c08b","app":"G502 Hub","summary":{"name":p.name,"dpi":p.dpi},"sector":model::hex(&p.encode()?)});
                 let path = a["path"].as_str().context("Missing path")?;
                 fs::write(path, serde_json::to_vec_pretty(&value)?)?;
                 Ok(json!(path))

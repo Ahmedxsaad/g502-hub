@@ -55,7 +55,7 @@ pub fn ensure_service() -> Result<()> {
         .append(true)
         .open(config::runtime()?.join("service.log"))?;
     use std::os::unix::process::CommandExt;
-    let mut command = Command::new(dir.join("g502-hubd-rust"));
+    let mut command = Command::new(dir.join("g502-hubd"));
     command
         .stdin(Stdio::null())
         .stdout(log.try_clone()?)
@@ -76,11 +76,11 @@ pub fn ensure_service() -> Result<()> {
             return Ok(());
         }
         if start.elapsed() > Duration::from_secs(1) && child.try_wait()?.is_some() {
-            bail!("Rust service exited during startup; see service.log");
+            bail!("G502 Hub service exited during startup; see service.log");
         }
         std::thread::sleep(Duration::from_millis(100));
     }
-    bail!("Rust service did not start; see service.log")
+    bail!("G502 Hub service did not start; see service.log")
 }
 /// One-time test handover uses the Python service's public JSON protocol,
 /// without loading or invoking any Python code in the Rust application.

@@ -1,5 +1,5 @@
 [package]
-name = "g502-hub-rust"
+name = "g502-hub"
 version = "0.1.0"
 edition = "2024"
 license = "GPL-3.0-or-later"
@@ -21,12 +21,12 @@ x11rb = "0.13"
 eframe = { version = "0.33", default-features = false, features = ["glow", "x11", "wayland", "default_fonts"], optional = true }
 
 [[bin]]
-name = "g502-hub-rust"
+name = "g502-hub"
 path = "src/bin/gui.rs"
 required-features = ["gui"]
 
 [[bin]]
-name = "g502-hubd-rust"
+name = "g502-hubd"
 path = "src/bin/daemon.rs"
 
 [profile.release]

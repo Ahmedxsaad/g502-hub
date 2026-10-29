@@ -50,7 +50,7 @@ fn native_service_lifecycle_and_rejected_commands() {
     fs::create_dir_all(root.join("run")).unwrap();
     fs::set_permissions(root.join("run"), fs::Permissions::from_mode(0o700)).unwrap();
     fs::create_dir_all(root.join("devices")).unwrap();
-    let bin = env!("CARGO_BIN_EXE_g502-hubd-rust");
+    let bin = env!("CARGO_BIN_EXE_g502-hubd");
     let child = Command::new(bin)
         .env("XDG_RUNTIME_DIR", root.join("run"))
         .env("XDG_CONFIG_HOME", root.join("config"))
