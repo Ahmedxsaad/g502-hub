@@ -1,0 +1,34 @@
+[package]
+name = "g502-hub-rust"
+version = "0.1.0"
+edition = "2024"
+license = "GPL-3.0-or-later"
+description = "Native Rust G502 HERO settings and background service"
+
+[features]
+default = ["gui"]
+gui = ["dep:eframe"]
+
+[dependencies]
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+libc = "0.2"
+zbus = "5"
+image = { version = "0.25", default-features = false, features = ["png", "jpeg", "webp"] }
+rustfft = "6"
+x11rb = "0.13"
+eframe = { version = "0.33", default-features = false, features = ["glow", "x11", "wayland", "default_fonts"], optional = true }
+
+[[bin]]
+name = "g502-hub-rust"
+path = "src/bin/gui.rs"
+required-features = ["gui"]
+
+[[bin]]
+name = "g502-hubd-rust"
+path = "src/bin/daemon.rs"
+
+[profile.release]
+lto = "thin"
+strip = true
