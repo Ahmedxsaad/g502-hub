@@ -49,7 +49,7 @@ def set_autostart(on):
     AUTOSTART.write_text(f"""[Desktop Entry]
 Type=Application
 Name=G502 Hub
-Comment=Keeps live lighting and game rules running for the G502 HERO
+Comment=Runs the G502 HERO background service without opening settings
 Exec={exec_line}
 Icon=input-mouse
 Terminal=false

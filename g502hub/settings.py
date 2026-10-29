@@ -1,5 +1,6 @@
 """Small persistent app settings in ~/.config/g502-hub/settings.json."""
 
+import fcntl
 import json
 import os
 from pathlib import Path
@@ -16,9 +17,12 @@ def load():
 
 
 def update(**values):
-    data = load()
-    data.update(values)
     PATH.parent.mkdir(parents=True, exist_ok=True)
-    tmp = PATH.with_suffix(".tmp")
-    tmp.write_text(json.dumps(data, indent=2))
-    tmp.replace(PATH)
+    # The settings window and service may update different keys concurrently.
+    with PATH.with_suffix(".lock").open("a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        data = load()
+        data.update(values)
+        tmp = PATH.with_suffix(".tmp")
+        tmp.write_text(json.dumps(data, indent=2))
+        tmp.replace(PATH)
