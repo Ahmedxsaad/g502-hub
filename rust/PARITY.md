@@ -40,3 +40,7 @@ La présence et les tests des fonctions ne constituent pas une preuve d’égali
 Les configurations/launchers natifs gardent les chemins historiques séparés de Python ; les informations système affichent naturellement la pile native. Le sélecteur de fichiers utilise Zenity avec saisie de chemin en secours. Les scénarios réels de portail Wayland, jeux en cours d’exécution et préfixes Proton restent à éprouver, en complément des tests numériques et du protocole.
 
 Ces limites doivent être conservées dans les annonces : les écarts identifiés ont été corrigés, mais une promesse de parité parfaite serait plus forte que les preuves disponibles.
+
+## Personnalisation du bandeau demandée après cet audit
+
+Le nom G502 Hub et les contrôles de fenêtre sont intégrés au bandeau : réduction, agrandissement/restauration, fermeture après sauvegarde, déplacement, double-clic et redimensionnement par les bords. F11 contrôle le plein écran (hors capture/enregistrement de touches). Cette présentation remplace volontairement la décoration externe de Python. Les actions ont été vérifiées avec Xfwm sur un affichage X11 isolé, y compris une fermeture pendant une écriture retardée sur faux service.

@@ -18,6 +18,10 @@ cargo build --release
 The daemon is `g502-hubd`. Build it without GUI dependencies with
 `cargo build --release --no-default-features --bin g502-hubd`.
 Use `g502-hubd --status` or `--stop` for diagnostics and shutdown.
+The integrated header contains the window controls. Drag the header to move the
+window; double-click it to maximize/restore, or use F11 for fullscreen. Resizing
+works from the edges. Closing waits for a pending profile save.
+
 Closing the graphical window leaves only the daemon. Reopen the test launcher
 to edit settings. Stop Rust before reopening the original Python application.
 

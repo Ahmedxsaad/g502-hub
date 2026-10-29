@@ -1,5 +1,7 @@
 #[path = "gui/mouse.rs"]
 mod mouse;
+#[path = "gui/window.rs"]
+mod window;
 use eframe::egui::{self, Color32, RichText};
 use g502_hub::{config, desktop, effects, input, ipc, model::Profile, parity, service::Snapshot};
 use serde_json::{Value, json};
@@ -1245,9 +1247,41 @@ impl App {
             }
         }
     }
+    fn request_close(&mut self, ctx: &egui::Context) {
+        if self.dirty || self.pending_write {
+            self.close_after_save = true;
+            if !self.pending_write && !self.write_failed {
+                self.apply();
+            }
+        } else {
+            ctx.send_viewport_cmd(egui::ViewportCommand::Close);
+        }
+    }
     fn header(&mut self, ui: &mut egui::Ui) {
         let r = ui.max_rect();
         let y = r.top();
+        // Only the empty title regions start a native drag; profile and window controls keep their own input.
+        let profile_left = r.center().x - 140.;
+        let profile_right = r.center().x + 140.;
+        window::drag_region(
+            ui,
+            egui::Rect::from_min_max(
+                egui::pos2(r.left() + 6., y + 6.),
+                egui::pos2(profile_left - 12., y + 58.),
+            ),
+            "title_drag_left",
+        );
+        window::drag_region(
+            ui,
+            egui::Rect::from_min_max(
+                egui::pos2(profile_right + 12., y + 6.),
+                egui::pos2(r.right() - window::CONTROLS_WIDTH - 34., y + 58.),
+            ),
+            "title_drag_right",
+        );
+        if window::controls(ui, r) {
+            self.request_close(ui.ctx());
+        }
         ui.painter().line_segment(
             [
                 egui::pos2(r.left(), y + 63.5),
@@ -1258,12 +1292,12 @@ impl App {
         ui.painter().text(
             egui::pos2(r.left() + 24., y + 16.),
             egui::Align2::LEFT_CENTER,
-            "G502 HERO",
-            bold(13.),
+            "G502 Hub",
+            bold(16.),
             TEXT,
         );
         let subtitle = ui.painter().layout_job(spaced(
-            &format!("ONBOARD MEMORY  ·  SLOT {}", self.snap.slot),
+            &format!("G502 HERO  ·  SLOT {}", self.snap.slot),
             11.,
             MUTED,
             1.5,
@@ -1326,7 +1360,7 @@ impl App {
             self.load_draft();
             self.send("activate", json!({"slot":self.slot}));
         }
-        let mut status_right = r.right() - 24.;
+        let mut status_right = r.right() - window::CONTROLS_WIDTH - 50.;
         if let Some(p) = self.snap.profiles.get(self.snap.slot.saturating_sub(1)) {
             let dpi = p.dpi.get(self.snap.dpi_index).copied().unwrap_or(800);
             let galley = ui.painter().layout_job(spaced(
@@ -3613,6 +3647,12 @@ impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         self.updates();
         self.desktop_jobs(ctx);
+        if !self.recording
+            && !self.capture_binding
+            && ctx.input_mut(|i| i.consume_key(egui::Modifiers::NONE, egui::Key::F11))
+        {
+            window::set_fullscreen(ctx, !window::fullscreen(ctx));
+        }
         let picked = self.picked_file.lock().unwrap().take();
         if let Some((cmd, slot, path)) = picked {
             if let Some(path) = path {
@@ -3832,6 +3872,7 @@ impl eframe::App for App {
         if self.smoke && self.started.elapsed() > Duration::from_secs(20) {
             ctx.send_viewport_cmd(egui::ViewportCommand::Close);
         }
+        window::resize_edges(ctx);
         let preview_visible = self.snap.connected
             && !matches!(self.tab.as_str(), "profiles" | "about")
             && ctx.input(|i| i.viewport().minimized != Some(true));
@@ -3873,6 +3914,7 @@ fn main() {
             viewport: egui::ViewportBuilder::default()
                 .with_title("G502 Hub")
                 .with_app_id("g502-hub")
+                .with_decorations(false)
                 .with_inner_size([1280., 800.])
                 .with_min_inner_size([1100., 700.]),
             ..Default::default()
