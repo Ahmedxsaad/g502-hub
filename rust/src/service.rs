@@ -857,6 +857,15 @@ impl Engine {
                 self.connect()?;
                 Ok(Value::Null)
             }
+            "choose_screen" => {
+                let mut s = self.snapshot.settings.clone();
+                s["screen_token"] = Value::Null;
+                s["live"]["effect"] = json!("screen");
+                s["live"]["on"] = json!(true);
+                self.settings(s)?;
+                self.live.choose_screen();
+                Ok(Value::Null)
+            }
             "lighting" => {
                 let mut s = self.snapshot.settings.clone();
                 if !s["live"].is_object() {

@@ -821,7 +821,7 @@ impl GameFx {
 pub fn defaults() -> Value {
     json!({"screen":{"dpi_area":"screen","logo_area":"center","vivid":true,"saturation":1.3,"brightness":1.0,"smoothing":0.6},"audio":{"style":"pulse","color":"#14b4ff","sensitivity":1.0,"brightness":1.0},"wave":{"period":6.0,"saturation":1.0,"brightness":1.0,"reverse":false},"dpi":{"colors":["#ff2a2a","#ffd400","#3ddc84","#14b4ff","#a040ff"]}})
 }
-fn sample(frame: &[u8], area: &str) -> Rgb {
+fn sample(frame: &[u8], area: &str, vivid: bool) -> Rgb {
     let mut colors = vec![];
     for y in 0..36 {
         for x in 0..64 {
@@ -849,12 +849,33 @@ fn sample(frame: &[u8], area: &str) -> Rgb {
         return [0.; 3];
     }
     let mut sum = [0.; 3];
+    let mut weights = 0.;
+    let mut scene = 0.;
     for c in &colors {
+        let max = c.iter().copied().fold(0f32, f32::max);
+        let min = c.iter().copied().fold(1f32, f32::min);
+        let saturation = (max - min) / max.max(1e-6);
+        let weight = if vivid {
+            saturation.powi(2) * max.powi(2) + 1e-4
+        } else {
+            1.
+        };
+        weights += weight;
+        scene += max.powi(2);
         for i in 0..3 {
-            sum[i] += c[i];
+            sum[i] += c[i] * weight;
         }
     }
-    sum.map(|c| c / colors.len() as f32)
+    let color = sum.map(|c| c / weights);
+    if !vivid {
+        return color;
+    }
+    let peak = color.iter().copied().fold(0f32, f32::max);
+    if peak < 1e-4 {
+        return [0.; 3];
+    }
+    let level = (0.15 + (scene / colors.len() as f32).sqrt() * 1.6).min(1.);
+    color.map(|c| c / peak * level)
 }
 pub struct Live {
     pub kind: String,
@@ -932,6 +953,12 @@ impl Live {
         let c = [second, first];
         self.art.insert(key, c);
         Some(c)
+    }
+    pub fn choose_screen(&mut self) {
+        self.capture = None;
+        self.kind.clear();
+        self.restore_token = None;
+        self.error = None;
     }
     pub fn frame(
         &mut self,
@@ -1045,6 +1072,7 @@ impl Live {
                             options[if z == 0 { "dpi_area" } else { "logo_area" }]
                                 .as_str()
                                 .unwrap_or("screen"),
+                            options["vivid"].as_bool().unwrap_or(true),
                         )
                     });
                     for c in &mut colors {
@@ -1103,6 +1131,18 @@ impl Live {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn vivid_screen_sampling_emphasizes_colored_highlights() {
+        let mut frame = vec![64; 64 * 36 * 3];
+        for pixel in frame.chunks_exact_mut(3).take(64 * 9) {
+            pixel.copy_from_slice(&[255, 0, 0]);
+        }
+        let average = sample(&frame, "screen", false);
+        let vivid = sample(&frame, "screen", true);
+        assert!((average[0] - (0.25 + 0.75 * 64. / 255.)).abs() < 1e-4);
+        assert!(vivid[0] > average[0] && vivid[1] < average[1]);
+        assert_eq!(sample(&vec![0; 64 * 36 * 3], "screen", true), [0.; 3]);
+    }
     #[test]
     fn sdk_routing_and_staleness() {
         let mut sdk = Sdk::default();

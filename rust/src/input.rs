@@ -579,7 +579,9 @@ impl Default for Player {
     }
 }
 fn wait(cancel: &AtomicBool, ms: u64) {
-    let end = Instant::now() + Duration::from_millis(ms);
+    wait_until(cancel, Instant::now() + Duration::from_millis(ms));
+}
+fn wait_until(cancel: &AtomicBool, end: Instant) {
     while !cancel.load(Ordering::Relaxed) && Instant::now() < end {
         thread::sleep(
             end.saturating_duration_since(Instant::now())
@@ -640,9 +642,8 @@ impl Player {
                     if once || c.load(Ordering::Relaxed) {
                         break;
                     }
-                    if start.elapsed() < Duration::from_millis(10) {
-                        wait(&c, 10);
-                    }
+                    // The 10 ms floor includes the key events and their pacing.
+                    wait_until(&c, start + Duration::from_millis(10));
                 }
                 Ok(())
             })();
@@ -810,6 +811,44 @@ mod playback_tests {
             assert!(start.elapsed() < Duration::from_secs(2));
             thread::sleep(Duration::from_millis(1));
         }
+    }
+    #[test]
+    fn repeated_clicks_keep_the_ten_millisecond_cycle() {
+        use std::io::Read;
+        let (mut p, mut reader) = player();
+        reader
+            .set_read_timeout(Some(Duration::from_secs(2)))
+            .unwrap();
+        p.press(
+            "click".into(),
+            vec![Event::Key(0x110, true), Event::Key(0x110, false)],
+            "while-held",
+        )
+        .unwrap();
+        let mut starts = Vec::new();
+        while starts.len() < 40 {
+            let mut bytes = vec![0; std::mem::size_of::<libc::input_event>()];
+            reader.read_exact(&mut bytes).unwrap();
+            let event =
+                unsafe { std::ptr::read_unaligned(bytes.as_ptr().cast::<libc::input_event>()) };
+            if event.type_ == 1 && event.code == 0x110 && event.value == 1 {
+                starts.push(Instant::now());
+            }
+        }
+        p.stop_all();
+        let cycle = starts.last().unwrap().duration_since(starts[0]) / 39;
+        eprintln!(
+            "Mean click cycle: {cycle:?} ({:.1} CPS)",
+            1. / cycle.as_secs_f64()
+        );
+        assert!(
+            cycle >= Duration::from_millis(9),
+            "repeat floor was lost: {cycle:?}"
+        );
+        assert!(
+            cycle < Duration::from_millis(15),
+            "event pacing was added to the repeat floor: {cycle:?}"
+        );
     }
     #[test]
     fn held_and_toggle_cancel_release_keys() {

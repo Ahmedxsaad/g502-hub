@@ -90,3 +90,7 @@ The executables and application menu use `g502-hub` and `g502-hubd`.
 The legacy `g502-hub-rust` data/config/runtime directories are retained for
 compatibility with existing native installations and to avoid overwriting
 the earlier Python configuration.
+
+## Parity audit
+
+The implementation is not yet feature-for-feature or pixel-for-pixel equivalent to the Python application. See [the parity audit](PARITY.md) for verified behavior and known differences.

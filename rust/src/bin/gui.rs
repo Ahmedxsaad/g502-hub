@@ -179,6 +179,8 @@ impl ThemedCheckbox for egui::Ui {
 fn choices(ui: &mut egui::Ui, id: &str, value: &mut Value, items: &[(&str, &str)], cols: usize) {
     let width = (ui.available_width() - 6. * (cols - 1) as f32) / cols as f32;
     egui::Grid::new(id)
+        .min_col_width(width)
+        .max_col_width(width)
         .num_columns(cols)
         .spacing([6., 6.])
         .show(ui, |ui| {
@@ -191,6 +193,75 @@ fn choices(ui: &mut egui::Ui, id: &str, value: &mut Value, items: &[(&str, &str)
                 }
             }
         });
+}
+fn live_slider(
+    ui: &mut egui::Ui,
+    options: &mut Value,
+    key: &str,
+    label: &str,
+    lo: u16,
+    hi: u16,
+    factor: f64,
+) {
+    let mut value = (options[key].as_f64().unwrap_or(1.) * factor).round() as u16;
+    ui.scope(|ui| {
+        ui.spacing_mut().item_spacing.y = 6.;
+        ui.horizontal(|ui| {
+            ui.label(spaced(&label.to_uppercase(), 11., MUTED, 1.5));
+            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                ui.label(
+                    RichText::new(if key == "period" {
+                        format!("{:.1} s", value as f64 / factor)
+                    } else {
+                        format!("{value} %")
+                    })
+                    .color(MUTED),
+                );
+            });
+        });
+        ui.push_id(key, |ui| {
+            if thin_slider(ui, &mut value, lo, hi) {
+                options[key] = json!(value as f64 / factor);
+            }
+        });
+    });
+}
+fn live_color(ui: &mut egui::Ui, color: &mut Value, saved: &mut Vec<String>) {
+    let n = u32::from_str_radix(
+        color.as_str().unwrap_or("#14b4ff").trim_start_matches('#'),
+        16,
+    )
+    .unwrap_or(0x14b4ff);
+    let mut rgb = [(n >> 16) as u8, (n >> 8) as u8, n as u8];
+    if color_picker(ui, &mut rgb, saved) {
+        *color = json!(format!("#{:02x}{:02x}{:02x}", rgb[0], rgb[1], rgb[2]));
+    }
+}
+fn mouse_halo(p: &egui::Painter, center: egui::Pos2, radius: f32) {
+    // Match the Python skin's QRadialGradient before painting the photo.
+    let mut mesh = egui::Mesh::default();
+    for (fraction, color) in [
+        (0., Color32::from_rgba_unmultiplied(24, 46, 64, 130)),
+        (0.6, Color32::from_rgba_unmultiplied(14, 22, 30, 60)),
+        (1., Color32::TRANSPARENT),
+    ] {
+        for i in 0..96 {
+            let a = i as f32 * std::f32::consts::TAU / 96.;
+            mesh.colored_vertex(
+                center + egui::vec2(a.cos(), a.sin()) * radius * fraction,
+                color,
+            );
+        }
+    }
+    for ring in 0..2u32 {
+        for i in 0..96u32 {
+            let a = ring * 96 + i;
+            let b = ring * 96 + (i + 1) % 96;
+            mesh.add_triangle(a, b, a + 96);
+            mesh.add_triangle(b, b + 96, a + 96);
+        }
+    }
+    p.add(egui::Shape::mesh(mesh));
 }
 fn glow(p: &egui::Painter, center: egui::Pos2, radius: f32, rgb: [u8; 3]) {
     let mut mesh = egui::Mesh::default();
@@ -230,7 +301,11 @@ fn color_picker(ui: &mut egui::Ui, rgb: &mut [u8; 3], saved: &mut Vec<String>) -
     let c = rect.center();
     let radius = 109.;
     let response = ui.interact(rect, ui.id().with("wheel"), egui::Sense::click_and_drag());
-    if response.clicked() || response.dragged() {
+    if (response.clicked() || response.dragged())
+        && response
+            .interact_pointer_pos()
+            .is_some_and(|pos| pos.distance(c) <= radius)
+    {
         picked = true;
         if let Some(pos) = response.interact_pointer_pos() {
             let d = pos - c;
@@ -340,7 +415,7 @@ fn color_picker(ui: &mut egui::Ui, rgb: &mut [u8; 3], saved: &mut Vec<String>) -
             11.5,
             egui::Stroke::new(1.0f32, if response.hovered() { TEXT } else { BORDER }),
         );
-        response
+        response.on_hover_text(format!("#{:02x}{:02x}{:02x}", color[0], color[1], color[2]))
     };
     ui.horizontal(|ui| {
         for color in [
@@ -366,7 +441,7 @@ fn color_picker(ui: &mut egui::Ui, rgb: &mut [u8; 3], saved: &mut Vec<String>) -
         for (i, hex) in saved.iter().enumerate() {
             if let Ok(n) = u32::from_str_radix(hex.trim_start_matches('#'), 16) {
                 let color = [(n >> 16) as u8, (n >> 8) as u8, n as u8];
-                let response = swatch(ui, color);
+                let response = swatch(ui, color).on_hover_text("Right-click to remove");
                 if response.clicked() {
                     *rgb = color;
                 }
@@ -375,8 +450,38 @@ fn color_picker(ui: &mut egui::Ui, rgb: &mut [u8; 3], saved: &mut Vec<String>) -
                 }
             }
         }
-        if saved.len() < 10 && ui.small_button("+").clicked() {
-            saved.push(format!("#{:02x}{:02x}{:02x}", rgb[0], rgb[1], rgb[2]));
+        if saved.len() < 10 {
+            let (r, response) = ui.allocate_exact_size(egui::vec2(24., 24.), egui::Sense::click());
+            let border = if response.hovered() {
+                ACCENT
+            } else {
+                Color32::from_rgb(107, 112, 122)
+            };
+            // A round, dashed outline like the original saved-color button.
+            for i in 0..12 {
+                let a = i as f32 * std::f32::consts::TAU / 12.;
+                let points: Vec<_> = (0..=4)
+                    .map(|j| {
+                        let angle = a + j as f32 * std::f32::consts::TAU / 96.;
+                        r.center() + egui::vec2(angle.cos(), angle.sin()) * 11.5
+                    })
+                    .collect();
+                ui.painter()
+                    .add(egui::Shape::line(points, egui::Stroke::new(1.0f32, border)));
+            }
+            ui.painter().text(
+                r.center(),
+                egui::Align2::CENTER_CENTER,
+                "+",
+                egui::FontId::proportional(15.),
+                if response.hovered() { TEXT } else { MUTED },
+            );
+            if response.on_hover_text("Save the current color").clicked() {
+                let color = format!("#{:02x}{:02x}{:02x}", rgb[0], rgb[1], rgb[2]);
+                if !saved.iter().any(|c| c.eq_ignore_ascii_case(&color)) {
+                    saved.push(color);
+                }
+            }
         }
     });
     if let Some(i) = remove {
@@ -564,6 +669,7 @@ struct App {
     layer: usize,
     light_mode: usize,
     light_zone: usize,
+    live_dpi_level: usize,
     same_zones: bool,
     selected_button: usize,
     button_category: usize,
@@ -607,40 +713,6 @@ fn string(ui: &mut egui::Ui, v: &mut Value) -> bool {
         *v = s.into();
     }
     r.changed()
-}
-fn combo(
-    ui: &mut egui::Ui,
-    id: impl std::hash::Hash,
-    v: &mut Value,
-    values: &[(&str, &str)],
-) -> bool {
-    let before = v.clone();
-    let mut selected = v.as_str().unwrap_or("").to_owned();
-    egui::ComboBox::from_id_salt(id)
-        .selected_text(
-            values
-                .iter()
-                .find(|(k, _)| *k == selected)
-                .map(|(_, label)| *label)
-                .unwrap_or(&selected),
-        )
-        .show_ui(ui, |ui| {
-            for (k, label) in values {
-                ui.selectable_value(&mut selected, k.to_string(), *label);
-            }
-        });
-    *v = selected.into();
-    *v != before
-}
-fn number(ui: &mut egui::Ui, v: &mut Value, range: std::ops::RangeInclusive<f64>) -> bool {
-    let mut n = v.as_f64().unwrap_or(*range.start());
-    let changed = ui
-        .add(egui::DragValue::new(&mut n).range(range).speed(0.05))
-        .changed();
-    if changed {
-        *v = json!(n);
-    }
-    changed
 }
 impl App {
     fn new(cc: &eframe::CreationContext<'_>, screenshot: Option<PathBuf>, smoke: bool) -> Self {
@@ -813,6 +885,7 @@ impl App {
             layer: 0,
             light_mode: 0,
             light_zone: 0,
+            live_dpi_level: 0,
             same_zones: false,
             selected_button: 5,
             button_category: 0,
@@ -1171,7 +1244,9 @@ impl App {
                 status,
                 egui::FontId::proportional(12.),
                 if self.failed {
-                    Color32::LIGHT_RED
+                    Color32::from_rgb(255, 90, 95)
+                } else if self.snap.connected && !self.pending_write {
+                    Color32::from_rgb(61, 220, 132)
                 } else {
                     MUTED
                 },
@@ -1189,6 +1264,7 @@ impl App {
         } else {
             None
         };
+        mouse_halo(ui.painter(), at(300., 560.), 620. * scale);
         if let Some(photo) = &self.photo {
             ui.painter().image(
                 photo.id(),
@@ -1862,127 +1938,150 @@ impl App {
             }
             return;
         }
-        ui.label(
-            RichText::new("Live effects run in the background while the service is active.")
-                .size(12.)
-                .color(MUTED),
-        );
+        ui.label(RichText::new("Made by G502 Hub while it runs. It keeps running in the background when you close the window. Turn it off and the mouse goes back to its saved lighting.").size(12.).color(MUTED));
         section(ui, "Effect");
-        let effect = self.settings["live"]["effect"]
+        let previous = self.settings["live"]["effect"].clone();
+        choices(
+            ui,
+            "live_effect_choices",
+            &mut self.settings["live"]["effect"],
+            &[
+                ("screen", "Screen sampler"),
+                ("audio", "Audio visualizer"),
+                ("wave", "Color wave"),
+                ("dpi", "DPI colors"),
+            ],
+            2,
+        );
+        let kind = self.settings["live"]["effect"]
             .as_str()
             .unwrap_or("wave")
-            .to_string();
-        let mut next = self.settings["live"]["effect"].clone();
-        let width = (ui.available_width() - 6.) / 2.;
-        egui::Grid::new("live_effect_choices")
-            .num_columns(2)
-            .show(ui, |ui| {
-                for (i, (key, label)) in [
-                    ("screen", "Screen sampler"),
-                    ("audio", "Audio visualizer"),
-                    ("wave", "Color wave"),
-                    ("dpi", "DPI colors"),
-                ]
-                .iter()
-                .enumerate()
-                {
-                    if choice(ui, label, next.as_str() == Some(*key), width).clicked() {
-                        next = (*key).into();
-                    }
-                    if i % 2 == 1 {
-                        ui.end_row();
-                    }
-                }
-            });
+            .to_owned();
         let on = self.settings["live"]["on"].as_bool().unwrap_or(false);
-        if next.as_str() != Some(&effect) {
-            self.settings["live"]["effect"] = next.clone();
-            self.send("lighting", json!({"on":on,"effect":next}));
+        if self.settings["live"]["effect"] != previous {
+            self.send("lighting", json!({"on": on, "effect": kind}));
         }
-        if ui.button(if on { "Turn off" } else { "Turn on" }).clicked() {
-            self.send("lighting", json!({"on":!on,"effect":next}));
+        let mut button = egui::Button::new(if on { "Turn off" } else { "Turn on" });
+        if !on {
+            button = button.fill(ACCENT);
         }
-        let kind = next.as_str().unwrap_or("wave").to_string();
-        let mut changed = false;
+        if ui.add_sized([ui.available_width(), 36.], button).clicked() {
+            self.settings["live"]["on"] = json!(!on);
+            self.send("lighting", json!({"on": !on, "effect": kind}));
+        }
+        if let Some(error) = &self.snap.error {
+            ui.label(RichText::new(error).size(12.).color(MUTED));
+        } else if on {
+            ui.label(RichText::new("Live effect is on").size(12.).color(MUTED));
+        }
+        let before = self.settings["live"]["options"].clone();
+        let mut choose_screen = false;
         if let Some(o) = self.settings["live"]["options"].get_mut(&kind) {
+            let description = match kind.as_str() {
+                "screen" => {
+                    "Follows what's on your screen: the film or video you're watching, or the game you're playing."
+                }
+                "audio" => "Reacts to the sound your computer is playing.",
+                "wave" => "A rainbow that flows from the DPI lights to the logo.",
+                _ => {
+                    "Both zones light up in the color of the DPI level you're on, so you can see it at a glance."
+                }
+            };
+            ui.label(RichText::new(description).size(12.).color(MUTED));
             match kind.as_str() {
                 "wave" => {
-                    ui.horizontal(|ui| {
-                        ui.label("Period (s)");
-                        changed |= number(ui, &mut o["period"], 0.5..=30.);
-                    });
+                    live_slider(ui, o, "period", "Cycle time", 10, 200, 10.);
+                    live_slider(ui, o, "saturation", "Saturation", 0, 100, 100.);
+                    live_slider(ui, o, "brightness", "Brightness", 10, 100, 100.);
                     let mut reverse = o["reverse"].as_bool().unwrap_or(false);
                     if ui
-                        .themed_checkbox(&mut reverse, "Reverse direction")
+                        .themed_checkbox(&mut reverse, "Flow from the logo to the DPI lights")
                         .changed()
                     {
-                        o["reverse"] = reverse.into();
-                        changed = true;
+                        o["reverse"] = json!(reverse);
                     }
                 }
                 "audio" => {
-                    changed |= combo(
+                    section(ui, "Style");
+                    choices(
                         ui,
                         "audio_style",
                         &mut o["style"],
                         &[
                             ("pulse", "Pulse"),
                             ("spectrum", "Spectrum"),
-                            ("rainbow", "Rainbow beat"),
+                            ("rainbow", "Rainbow beats"),
                         ],
+                        2,
                     );
-                    ui.horizontal(|ui| {
-                        ui.label("Sensitivity");
-                        changed |= number(ui, &mut o["sensitivity"], 0.1..=5.);
-                        ui.label("Color");
-                        changed |= string(ui, &mut o["color"]);
-                    });
+                    live_slider(ui, o, "sensitivity", "Sensitivity", 50, 300, 100.);
+                    live_slider(ui, o, "brightness", "Brightness", 10, 100, 100.);
+                    section(ui, "Pulse color");
+                    live_color(ui, &mut o["color"], &mut saved);
                 }
                 "screen" => {
-                    for (key, label) in [("dpi_area", "DPI lights"), ("logo_area", "Logo")] {
-                        ui.horizontal(|ui| {
-                            ui.label(label);
-                            changed |= combo(
-                                ui,
-                                key,
-                                &mut o[key],
-                                &[
-                                    ("screen", "Entire screen"),
-                                    ("center", "Center"),
-                                    ("left", "Left"),
-                                    ("right", "Right"),
-                                    ("top", "Top"),
-                                    ("bottom", "Bottom"),
-                                ],
-                            );
-                        });
+                    for (key, label) in [
+                        ("dpi_area", "DPI lights follow"),
+                        ("logo_area", "Logo follows"),
+                    ] {
+                        section(ui, label);
+                        choices(
+                            ui,
+                            key,
+                            &mut o[key],
+                            &[
+                                ("screen", "Whole screen"),
+                                ("center", "Center (video)"),
+                                ("left", "Left edge"),
+                                ("right", "Right edge"),
+                                ("top", "Top edge"),
+                                ("bottom", "Bottom edge"),
+                            ],
+                            2,
+                        );
                     }
-                    ui.horizontal(|ui| {
-                        ui.label("Smoothing");
-                        changed |= number(ui, &mut o["smoothing"], 0.0..=1.0);
+                    section(ui, "Style");
+                    let mut vivid = json!(if o["vivid"].as_bool().unwrap_or(true) {
+                        "vivid"
+                    } else {
+                        "average"
                     });
+                    choices(
+                        ui,
+                        "screen_style",
+                        &mut vivid,
+                        &[("vivid", "Vivid"), ("average", "Average")],
+                        2,
+                    );
+                    o["vivid"] = json!(vivid == "vivid");
+                    live_slider(ui, o, "saturation", "Saturation", 50, 200, 100.);
+                    live_slider(ui, o, "brightness", "Brightness", 10, 150, 100.);
+                    live_slider(ui, o, "smoothing", "Smoothing", 0, 100, 100.);
+                    choose_screen = ui
+                        .add_sized(
+                            [ui.available_width(), 36.],
+                            egui::Button::new("Choose another screen…"),
+                        )
+                        .clicked();
                 }
                 "dpi" => {
-                    if let Some(colors) = o["colors"].as_array_mut() {
-                        for (i, c) in colors.iter_mut().enumerate() {
-                            ui.horizontal(|ui| {
-                                ui.label(format!("Niveau {}", i + 1));
-                                changed |= string(ui, c);
-                            });
-                        }
+                    section(ui, "Color for DPI level");
+                    segments(ui, &mut self.live_dpi_level, &["1", "2", "3", "4", "5"]);
+                    if let Some(color) = o["colors"].get_mut(self.live_dpi_level) {
+                        ui.push_id(self.live_dpi_level, |ui| live_color(ui, color, &mut saved));
                     }
                 }
                 _ => {}
             }
-            if kind != "dpi" {
-                ui.horizontal(|ui| {
-                    ui.label("Brightness");
-                    changed |= number(ui, &mut o["brightness"], 0.0..=1.0);
-                });
-            }
         }
-        if changed {
+        if old_saved != saved {
+            self.settings["colors"] = json!(saved.clone());
+        }
+        if before != self.settings["live"]["options"] || old_saved != saved {
             self.send("settings", self.settings.clone());
+        }
+        if choose_screen {
+            self.send("choose_screen", json!({}));
         }
     }
     fn library_panel(&mut self, ui: &mut egui::Ui) {
