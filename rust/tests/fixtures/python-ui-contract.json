@@ -1,0 +1,171 @@
+{
+  "source": "g502hub/gui/pages/assignments.py and g502hub/rules.py at 7bee0d9",
+  "media": [
+    "play-pause",
+    "next-track",
+    "prev-track",
+    "stop",
+    "mute",
+    "volume-up",
+    "volume-down",
+    "browser-back",
+    "browser-forward",
+    "browser-refresh",
+    "browser-home",
+    "browser-search",
+    "file-browser",
+    "calculator",
+    "mail",
+    "brightness-up",
+    "brightness-down"
+  ],
+  "shortcuts": [
+    [
+      "Copy",
+      1,
+      "c"
+    ],
+    [
+      "Paste",
+      1,
+      "v"
+    ],
+    [
+      "Cut",
+      1,
+      "x"
+    ],
+    [
+      "Undo",
+      1,
+      "z"
+    ],
+    [
+      "Redo",
+      3,
+      "z"
+    ],
+    [
+      "Select all",
+      1,
+      "a"
+    ],
+    [
+      "Save",
+      1,
+      "s"
+    ],
+    [
+      "Find",
+      1,
+      "f"
+    ],
+    [
+      "New tab",
+      1,
+      "t"
+    ],
+    [
+      "Close tab",
+      1,
+      "w"
+    ],
+    [
+      "Reopen tab",
+      3,
+      "t"
+    ],
+    [
+      "Next tab",
+      1,
+      "@tab"
+    ],
+    [
+      "Previous tab",
+      3,
+      "@tab"
+    ],
+    [
+      "Switch window",
+      4,
+      "@tab"
+    ],
+    [
+      "Show desktop",
+      8,
+      "d"
+    ],
+    [
+      "Lock screen",
+      8,
+      "l"
+    ],
+    [
+      "Screenshot",
+      0,
+      "@printscreen"
+    ],
+    [
+      "Escape",
+      0,
+      "@esc"
+    ],
+    [
+      "Enter",
+      0,
+      "@enter"
+    ],
+    [
+      "Delete",
+      0,
+      "@delete"
+    ]
+  ],
+  "templates": [
+    {
+      "name": "YouTube",
+      "trigger": "media",
+      "value": "youtube",
+      "lighting": "color",
+      "color": "#ff0000"
+    },
+    {
+      "name": "Netflix",
+      "trigger": "media",
+      "value": "netflix",
+      "lighting": "color",
+      "color": "#e50914"
+    },
+    {
+      "name": "Twitch",
+      "trigger": "media",
+      "value": "twitch",
+      "lighting": "color",
+      "color": "#9146ff"
+    },
+    {
+      "name": "Spotify",
+      "trigger": "media",
+      "value": "spotify",
+      "lighting": "audio"
+    },
+    {
+      "name": "Any Steam game",
+      "trigger": "game",
+      "value": "any",
+      "lighting": "art"
+    },
+    {
+      "name": "Counter-Strike 2",
+      "trigger": "game",
+      "value": "730",
+      "lighting": "game"
+    },
+    {
+      "name": "Dota 2",
+      "trigger": "game",
+      "value": "570",
+      "lighting": "game"
+    }
+  ]
+}

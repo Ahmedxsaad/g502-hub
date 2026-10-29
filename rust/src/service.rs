@@ -26,10 +26,18 @@ pub struct Snapshot {
     pub info: Option<Info>,
     pub directory: Option<Directory>,
     pub profiles: Vec<Profile>,
+    #[serde(default)]
+    pub factory: Vec<Profile>,
+    #[serde(default = "default_dpi_range")]
+    pub dpi_range: [u16; 3],
     pub slot: usize,
     pub dpi_index: usize,
     pub settings: Value,
     pub context: Context,
+    #[serde(default)]
+    pub seen_apps: Vec<String>,
+    #[serde(default)]
+    pub seen_media: Vec<String>,
     pub active_rule: Option<Value>,
     pub colors: Option<[[u8; 3]; 2]>,
     pub status: String,
@@ -37,10 +45,14 @@ pub struct Snapshot {
     pub macro_error: Option<String>,
     pub pid: u32,
 }
+fn default_dpi_range() -> [u16; 3] {
+    [100, 25600, 50]
+}
 struct Engine {
     device: Option<Device>,
     snapshot: Snapshot,
     watcher: Option<Watcher>,
+    context_until: Option<Instant>,
     live: Live,
     player: Player,
     typing: HashMap<char, (u8, u16)>,
@@ -49,6 +61,7 @@ struct Engine {
     backup_done: bool,
     slot_before: Option<usize>,
     rule_id: Option<String>,
+    blocked_rule: Option<String>,
     last_colors: Option<[[u8; 3]; 2]>,
     last_send: Instant,
 }
@@ -69,6 +82,7 @@ impl Engine {
                 ..Default::default()
             },
             watcher: None,
+            context_until: None,
             live: Live::default(),
             player: Player::default(),
             typing,
@@ -77,6 +91,7 @@ impl Engine {
             backup_done: false,
             slot_before: None,
             rule_id: None,
+            blocked_rule: None,
             last_colors: None,
             last_send: Instant::now(),
         };
@@ -84,9 +99,12 @@ impl Engine {
         Ok(e)
     }
     fn update_watcher(&mut self) {
-        let want = self.snapshot.settings["rules"]
-            .as_array()
-            .is_some_and(|r| r.iter().any(|r| r["enabled"].as_bool().unwrap_or(true)));
+        let want = self
+            .context_until
+            .is_some_and(|until| until > Instant::now())
+            || self.snapshot.settings["rules"]
+                .as_array()
+                .is_some_and(|r| r.iter().any(|r| r["enabled"].as_bool().unwrap_or(true)));
         if want && self.watcher.is_none() {
             self.watcher = Some(Watcher::new());
         } else if !want {
@@ -108,6 +126,14 @@ impl Engine {
         for e in &directory.entries {
             profiles.push(d.profile(e.sector)?);
         }
+        self.snapshot.dpi_range = d.dpi_range()?;
+        let raw = d.read_sector(256)?;
+        let factory_dir = Directory::decode(&raw)?.context("No factory profiles")?;
+        let mut factory = vec![];
+        for entry in factory_dir.entries {
+            factory.push(d.profile(entry.sector)?);
+        }
+        self.snapshot.factory = factory;
         let (sector, dpi) = d.current()?;
         self.snapshot.name = d.name.clone();
         self.snapshot.firmware = d.firmware.clone();
@@ -191,6 +217,7 @@ impl Engine {
                 })
                 .cloned();
             if let Some(m) = m {
+                self.snapshot.macro_error = None;
                 let result = input::expand(&m, &self.typing).and_then(|events| {
                     self.player
                         .press(key, events, m["mode"].as_str().unwrap_or("once"))
@@ -262,8 +289,15 @@ impl Engine {
         Ok(())
     }
     fn rules(&mut self) -> Result<()> {
+        self.update_watcher();
         if let Some(w) = &self.watcher {
             self.snapshot.context = w.snapshot();
+        }
+        crate::parity::remember(&mut self.snapshot.seen_apps, &self.snapshot.context.app);
+        for media in &self.snapshot.context.media {
+            if media.status == "Playing" {
+                crate::parity::remember(&mut self.snapshot.seen_media, &media.title);
+            }
         }
         let rule = self.snapshot.settings["rules"]
             .as_array()
@@ -277,6 +311,7 @@ impl Engine {
             .and_then(|r| r["id"].as_str())
             .map(str::to_owned);
         if id != self.rule_id {
+            self.blocked_rule = None;
             let old = self.snapshot.active_rule.clone();
             if let Some(slot) = rule
                 .as_ref()
@@ -306,7 +341,10 @@ impl Engine {
         let previous = self.live.kind.clone();
         let colors = self.live.frame(
             &self.snapshot.settings,
-            self.snapshot.active_rule.as_ref(),
+            self.snapshot
+                .active_rule
+                .as_ref()
+                .filter(|rule| rule["id"].as_str() != self.blocked_rule.as_deref()),
             &self.snapshot.context,
             profile.as_ref(),
             self.snapshot.dpi_index,
@@ -335,8 +373,20 @@ impl Engine {
                 config::save(&self.snapshot.settings)?;
             }
         }
-        if let Some(error) = &self.live.error {
-            self.snapshot.error = Some(error.clone());
+        if let Some(error) = self.live.error.clone() {
+            self.snapshot.error = Some(error);
+            if ["screen", "audio"].contains(&self.live.kind.as_str()) {
+                if let Some(rule) = &self.snapshot.active_rule {
+                    self.blocked_rule = rule["id"].as_str().map(str::to_owned);
+                } else {
+                    self.snapshot.settings["live"]["on"] = json!(false);
+                    config::save(&self.snapshot.settings)?;
+                }
+                self.live.choose_screen();
+                self.restore_lighting()?;
+                self.last_colors = None;
+                self.snapshot.colors = None;
+            }
         }
         Ok(())
     }
@@ -467,11 +517,18 @@ impl Engine {
             .as_str()
             .map(input::typing_table)
             .transpose()?;
-        self.player.stop_all();
+        if ["macros", "app_macros", "macro_pages", "keyboard_layout"]
+            .iter()
+            .any(|key| value[*key] != self.snapshot.settings[*key])
+        {
+            self.player.stop_all();
+        }
         config::save(&value)?;
         if let Some(typing) = typing {
             self.typing = typing;
         }
+        self.blocked_rule = None;
+        self.snapshot.error = None;
         self.snapshot.settings = value;
         self.update_watcher();
         self.sync_spy()?;
@@ -582,7 +639,13 @@ impl Engine {
             "ping" => {
                 Ok(json!({"version":ipc::VERSION,"pid":std::process::id(),"implementation":"Rust"}))
             }
-            "snapshot" => Ok(serde_json::to_value(&self.snapshot)?),
+            "snapshot" => {
+                if a["watch_context"].as_bool().unwrap_or(false) {
+                    self.context_until = Some(Instant::now() + Duration::from_secs(2));
+                    self.update_watcher();
+                }
+                Ok(serde_json::to_value(&self.snapshot)?)
+            }
             "settings" => {
                 self.settings(a)?;
                 Ok(json!("Réglages enregistrés"))
@@ -594,7 +657,19 @@ impl Engine {
             "write_profile" => {
                 let slot = a["slot"].as_u64().context("Missing slot")? as usize;
                 let p: Profile = serde_json::from_value(a["profile"].clone())?;
+                if let Some(index) = a["dpi_index"].as_u64() {
+                    ensure!(
+                        index < 5 && p.dpi[index as usize] > 0 && p.dpi[index as usize] < 65535,
+                        "Invalid active DPI level"
+                    );
+                }
                 self.write_profile(slot, p)?;
+                if slot == self.snapshot.slot {
+                    if let Some(index) = a["dpi_index"].as_u64() {
+                        self.d()?.dpi_index(index as u8)?;
+                        self.snapshot.dpi_index = index as usize;
+                    }
+                }
                 Ok(json!("Profil enregistré"))
             }
             "preview_dpi" => {
@@ -729,7 +804,7 @@ impl Engine {
             }
             "save_macro" => {
                 let id = a["id"].as_str().context("Macro id missing")?.to_owned();
-                input::expand(&a, &self.typing)?;
+                crate::parity::macro_size(&a, &self.typing)?;
                 let old_page = self.snapshot.settings["macro_pages"][&id].as_u64();
                 let to_mouse = a["target"] == "mouse";
                 let app_used = self.snapshot.settings["app_macros"]
@@ -848,6 +923,7 @@ impl Engine {
                 ))?;
                 Ok(json!("Intégration LIGHTSYNC retirée"))
             }
+            "gsi_status" => Ok(context::gsi_status()),
             "games" => Ok(serde_json::to_value(context::installed_games())?),
             "install_gsi" => Ok(json!(context::install_gsi(false)?)),
             "remove_gsi" => Ok(json!(context::install_gsi(true)?)),

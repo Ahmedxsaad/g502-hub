@@ -475,6 +475,22 @@ struct Backend {
     file: File,
     pressed: HashMap<u16, u32>,
 }
+pub fn device_keys() -> Vec<u16> {
+    let mut codes: Vec<_> = keys::HID_EVDEV
+        .iter()
+        .map(|(_, code)| *code)
+        .chain(keys::MODS.iter().map(|(_, code)| *code))
+        .chain(
+            keys::CONSUMER
+                .iter()
+                .filter_map(|(_, usage)| media_evdev(*usage).ok()),
+        )
+        .chain(0x110..=0x114)
+        .collect();
+    codes.sort_unstable();
+    codes.dedup();
+    codes
+}
 impl Backend {
     fn new() -> Result<Self> {
         let mut file = OpenOptions::new()
@@ -488,9 +504,13 @@ impl Backend {
                     "uinput event setup failed"
                 );
             }
-            for code in (1..=255).chain(0x110..=0x114) {
+            for code in device_keys() {
                 ensure!(
-                    libc::ioctl(file.as_raw_fd(), 0x40045565 as libc::c_ulong, code) == 0,
+                    libc::ioctl(
+                        file.as_raw_fd(),
+                        0x40045565 as libc::c_ulong,
+                        code as libc::c_uint
+                    ) == 0,
                     "uinput key setup failed"
                 );
             }
@@ -505,7 +525,9 @@ impl Backend {
         let name = b"G502 Hub macros";
         setup[..name.len()].copy_from_slice(name);
         setup[80..82].copy_from_slice(&3u16.to_ne_bytes());
-        setup[82..84].copy_from_slice(&0x046du16.to_ne_bytes());
+        setup[82..84].copy_from_slice(&1u16.to_ne_bytes());
+        setup[84..86].copy_from_slice(&1u16.to_ne_bytes());
+        setup[86..88].copy_from_slice(&1u16.to_ne_bytes());
         file.write_all(&setup)?;
         ensure!(
             unsafe { libc::ioctl(file.as_raw_fd(), 0x5501 as libc::c_ulong) } == 0,
@@ -600,7 +622,10 @@ impl Player {
         }
         if self.backend.is_none() {
             self.backend = Some(Arc::new(Mutex::new(Backend::new()?)));
+            // Give udev/the compositor time to attach the first virtual keyboard.
+            thread::sleep(Duration::from_millis(200));
         }
+        *self.error.lock().unwrap() = None;
         let backend = self.backend.as_ref().unwrap().clone();
         let cancel = Arc::new(AtomicBool::new(false));
         let finished = Arc::new(AtomicBool::new(false));

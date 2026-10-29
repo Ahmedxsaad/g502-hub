@@ -61,16 +61,17 @@ are optional existing upstream Windows binaries, not part of this Rust rewrite.
 
 The native UI follows the original Qt layout, with matching mouse hit regions,
 LED previews, profile cards and editors. It is not verified pixel-for-pixel.
-GSI visual effects and audio analysis have been reimplemented and may differ
-visually. Wayland screen sharing still requires the desktop's permission;
+GSI visual effects, cover-art palettes and audio analysis use the Python formulas,
+with numeric reference tests extracted from the original implementation. Wayland screen sharing still requires the desktop's permission;
 active-window rules on Wayland require KDE, as in the original implementation.
 
 ## Experimental status
 
 Protocol/codec tests use the upstream public real-device dump. Destructive
 writes, errors and retries are exercised against a simulated HID transport.
-Native macro cancellation tests use an isolated virtual event sink and do not
-inject input into the user's desktop. The complete feature set still needs
+Native macro cancellation tests use an isolated virtual event sink. An opt-in
+`cargo test --locked --release --test text_device -- --ignored --nocapture` check
+reads its own grabbed uinput device; it requires local input permissions. The complete feature set still needs
 hands-on validation on real games, portals and Wine prefixes; compilation and
 unit tests alone do not establish complete behavioral equivalence.
 
@@ -83,8 +84,9 @@ service. Previous desktop launchers are backed up in the data directory.
 File selection uses the optional system `zenity` utility, with a path-entry
 fallback. Linux development packages include libxkbcommon, X11 and Wayland.
 
-The photo is read only from the user's existing Logitech image cache and is not
-included in this repository; see NOTICE.md.
+The Logitech photo is not included in this repository. The UI reads its existing
+XDG cache, downloads it on first use when absent, and offers a new-download button
+in Settings. Downloading uses the optional system `curl` utility; see NOTICE.md.
 
 The executables and application menu use `g502-hub` and `g502-hubd`.
 The legacy `g502-hub-rust` data/config/runtime directories are retained for
@@ -93,4 +95,4 @@ the earlier Python configuration.
 
 ## Parity audit
 
-The implementation is not yet feature-for-feature or pixel-for-pixel equivalent to the Python application. See [the parity audit](PARITY.md) for verified behavior and known differences.
+The functional gaps listed in the initial audit have been ported, including DPI track insertion, factory assignments, macro labels/storage validation, rule templates/recent context, photo/access/GSI settings and the About page. See [the parity audit](PARITY.md) for test evidence and remaining platform/rendering limitations.

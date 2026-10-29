@@ -1,7 +1,7 @@
 #[path = "gui/mouse.rs"]
 mod mouse;
 use eframe::egui::{self, Color32, RichText};
-use g502_hub::{config, effects, input, ipc, model::Profile, service::Snapshot};
+use g502_hub::{config, desktop, effects, input, ipc, model::Profile, parity, service::Snapshot};
 use serde_json::{Value, json};
 use std::{
     path::PathBuf,
@@ -635,12 +635,13 @@ struct Updates {
     write_done: Option<bool>,
     prefixes: Option<Vec<Value>>,
     games: Option<Vec<Value>>,
+    gsi: Option<Value>,
     message: Option<(bool, String)>,
 }
 struct App {
     prefixes: Vec<Value>,
     games: Vec<Value>,
-    bridge_path: String,
+    gsi: Value,
     tab: String,
     slot: usize,
     draft: Option<Profile>,
@@ -652,6 +653,20 @@ struct App {
     edit_since: Instant,
     profile_names: Vec<String>,
     profile_action: Option<(String, Value, String)>,
+    binding_confirmation: Option<(usize, usize, String)>,
+    capture_binding: bool,
+    dpi_after_write: Option<usize>,
+    last_dpi_preview: Instant,
+    last_led_preview: Instant,
+    seen_apps: Vec<String>,
+    seen_media: Vec<String>,
+    photo_job: Option<std::sync::mpsc::Receiver<anyhow::Result<String>>>,
+    access_job: Option<std::sync::mpsc::Receiver<anyhow::Result<String>>>,
+    photo_message: String,
+    access_message: String,
+    copied: bool,
+    typing: std::collections::HashMap<char, (u8, u16)>,
+
     profile_file_dialog: bool,
     file_operation: String,
     picked_file: Arc<Mutex<Option<(String, usize, Option<String>)>>>,
@@ -682,6 +697,7 @@ struct App {
     path: String,
     recording: bool,
     record_at: Option<Instant>,
+    record_keys: std::collections::HashMap<egui::Key, String>,
     message: String,
     failed: bool,
     settings_text: String,
@@ -821,21 +837,39 @@ impl App {
                         if cmd == "write_profile" {
                             write_done = Some(result.is_ok());
                         }
+                        if result.is_ok() && ["install_gsi", "remove_gsi"].contains(&cmd.as_str()) {
+                            if let Ok(v) = ipc::request("gsi_status", json!({})) {
+                                shared.lock().unwrap().gsi = Some(v);
+                            }
+                        }
+                        if result.is_ok()
+                            && ["bridge_install", "bridge_remove"].contains(&cmd.as_str())
+                        {
+                            if let Ok(v) = ipc::request("bridge_prefixes", json!({})) {
+                                shared.lock().unwrap().prefixes = v.as_array().cloned();
+                            }
+                        }
                         match result {
                             Ok(v) if cmd == "bridge_prefixes" => {
                                 shared.lock().unwrap().prefixes = v.as_array().cloned()
                             }
+                            Ok(v) if cmd == "gsi_status" => {
+                                shared.lock().unwrap().gsi = Some(v);
+                            }
                             Ok(v) if cmd == "games" => {
                                 shared.lock().unwrap().games = v.as_array().cloned()
                             }
-                            Ok(_) => shared.lock().unwrap().message = Some((false, "Ready".into())),
+                            Ok(v) => {
+                                shared.lock().unwrap().message =
+                                    Some((false, v.as_str().unwrap_or("Ready").to_owned()))
+                            }
                             Err(e) => shared.lock().unwrap().message = Some((true, e.to_string())),
                         }
                     }
                     Err(mpsc::RecvTimeoutError::Disconnected) => break,
                     Err(_) => {}
                 }
-                let snapshot = ipc::request("snapshot", json!({}))
+                let snapshot = ipc::request("snapshot", json!({"watch_context":true}))
                     .and_then(|v| Ok(serde_json::from_value::<Snapshot>(v)?));
                 {
                     let mut update = shared.lock().unwrap();
@@ -853,7 +887,7 @@ impl App {
         let mut app = Self {
             prefixes: vec![],
             games: vec![],
-            bridge_path: String::new(),
+            gsi: json!({}),
             tab: std::env::args()
                 .position(|a| a == "--page")
                 .and_then(|i| std::env::args().nth(i + 1))
@@ -868,6 +902,19 @@ impl App {
             edit_since: Instant::now(),
             profile_names: vec![],
             profile_action: None,
+            binding_confirmation: None,
+            capture_binding: false,
+            dpi_after_write: None,
+            last_dpi_preview: Instant::now(),
+            last_led_preview: Instant::now(),
+            seen_apps: vec![],
+            seen_media: vec![],
+            photo_job: None,
+            access_job: None,
+            photo_message: String::new(),
+            access_message: String::new(),
+            copied: false,
+            typing: input::typing_table(&input::layout()).unwrap_or_default(),
             profile_file_dialog: false,
             file_operation: "import_profile".into(),
             picked_file: Arc::new(Mutex::new(None)),
@@ -901,6 +948,7 @@ impl App {
                 .to_string(),
             recording: false,
             record_at: None,
+            record_keys: Default::default(),
             message: "Connexion au service G502 Hub…".into(),
             failed: false,
             settings_text: String::new(),
@@ -910,7 +958,18 @@ impl App {
             smoke,
             smoke_done: false,
         };
-        let photo = config::home().join(".local/share/g502-hub/g502-hero.png");
+        app.reload_photo(&cc.egui_ctx);
+        if app.photo.is_none() && !app.smoke {
+            app.start_photo_download();
+        }
+        let _ = app.tx.send(("bridge_prefixes".into(), json!({})));
+        let _ = app.tx.send(("games".into(), json!({})));
+        let _ = app.tx.send(("gsi_status".into(), json!({})));
+        app
+    }
+    fn reload_photo(&mut self, ctx: &egui::Context) {
+        self.led_masks.clear();
+        let photo = desktop::photo_path();
         if let Ok(image) = image::open(photo) {
             let mut image = image.to_rgba8();
             // Reproduce the original photo skin: smoked LEDs plus tintable masks.
@@ -956,22 +1015,54 @@ impl App {
                         );
                     }
                 }
-                app.led_masks.push(cc.egui_ctx.load_texture(
+                self.led_masks.push(ctx.load_texture(
                     format!("LED {z}"),
                     egui::ColorImage::from_rgba_unmultiplied([w as usize, h as usize], &mask),
                     egui::TextureOptions::LINEAR,
                 ));
             }
             let size = [image.width() as usize, image.height() as usize];
-            app.photo = Some(cc.egui_ctx.load_texture(
+            self.photo = Some(ctx.load_texture(
                 "G502 HERO",
                 egui::ColorImage::from_rgba_unmultiplied(size, &image),
                 egui::TextureOptions::LINEAR,
             ));
         }
-        let _ = app.tx.send(("bridge_prefixes".into(), json!({})));
-        let _ = app.tx.send(("games".into(), json!({})));
-        app
+    }
+    fn start_photo_download(&mut self) {
+        if self.photo_job.is_some() {
+            return;
+        }
+        let (tx, rx) = mpsc::channel();
+        self.photo_job = Some(rx);
+        std::thread::spawn(move || {
+            let _ = tx.send(desktop::download_photo());
+        });
+    }
+    fn desktop_jobs(&mut self, ctx: &egui::Context) {
+        if let Some(result) = self.photo_job.as_ref().and_then(|rx| rx.try_recv().ok()) {
+            self.photo_job = None;
+            match result {
+                Ok(message) => {
+                    self.photo_message = message;
+                    self.reload_photo(ctx);
+                }
+                Err(e) => self.photo_message = e.to_string(),
+            }
+        }
+        if let Some(result) = self.access_job.as_ref().and_then(|rx| rx.try_recv().ok()) {
+            self.access_job = None;
+            match result {
+                Ok(message) => {
+                    self.access_message = message;
+                    self.send("refresh", json!({}));
+                }
+                Err(e) => self.access_message = e.to_string(),
+            }
+        }
+        if self.photo_job.is_some() || self.access_job.is_some() {
+            ctx.request_repaint_after(Duration::from_millis(100));
+        }
     }
     fn send(&mut self, cmd: &str, args: Value) {
         let _ = self.tx.send((cmd.into(), args));
@@ -979,7 +1070,7 @@ impl App {
         self.failed = false;
     }
     fn updates(&mut self) {
-        let (snapshot, message, prefixes, games, write_done) = {
+        let (snapshot, message, prefixes, games, write_done, gsi) = {
             let mut u = self.updates.lock().unwrap();
             (
                 u.snapshot.take(),
@@ -987,17 +1078,24 @@ impl App {
                 u.prefixes.take(),
                 u.games.take(),
                 u.write_done.take(),
+                u.gsi.take(),
             )
         };
         if let Some(ok) = write_done {
             self.pending_write = false;
             self.write_failed = !ok;
+            if ok && !self.dirty {
+                self.dpi_after_write = None;
+            }
             if !ok {
                 self.dirty = true;
             }
         }
         if let Some(prefixes) = prefixes {
             self.prefixes = prefixes;
+        }
+        if let Some(gsi) = gsi {
+            self.gsi = gsi;
         }
         if let Some(games) = games {
             self.games = games;
@@ -1015,6 +1113,34 @@ impl App {
             if !self.dirty && !self.pending_write && !self.write_failed && self.snap.slot != s.slot
             {
                 self.slot = s.slot;
+            }
+            for value in s.seen_apps.iter().rev() {
+                parity::remember(&mut self.seen_apps, value);
+            }
+            for value in s.seen_media.iter().rev() {
+                parity::remember(&mut self.seen_media, value);
+            }
+            parity::remember(&mut self.seen_apps, &s.context.app);
+            for media in &s.context.media {
+                if media.status == "Playing" {
+                    parity::remember(&mut self.seen_media, &media.title);
+                }
+            }
+            if initial && s.settings["live"]["on"].as_bool().unwrap_or(false) {
+                self.light_mode = 1;
+            }
+            if s.settings["keyboard_layout"] != self.snap.settings["keyboard_layout"] {
+                let layout = s.settings["keyboard_layout"]
+                    .as_str()
+                    .map(str::to_owned)
+                    .unwrap_or_else(input::layout);
+                if let Ok(typing) = input::typing_table(&layout) {
+                    self.typing = typing;
+                }
+            }
+            if let Some(error) = &s.macro_error {
+                self.failed = true;
+                self.message = format!("Macro: {error}");
             }
             self.snap = s;
             if initial || config_changed {
@@ -1103,7 +1229,11 @@ impl App {
         }
         match p.encode() {
             Ok(_) => {
-                self.send("write_profile", json!({"slot":self.slot,"profile":p}));
+                let dpi_index = self.dpi_after_write;
+                self.send(
+                    "write_profile",
+                    json!({"slot":self.slot,"profile":p,"dpi_index":dpi_index}),
+                );
                 self.pending_write = true;
                 self.write_failed = false;
                 self.dirty = false;
@@ -1281,6 +1411,24 @@ impl App {
                 MUTED,
             );
         }
+        if self.photo.is_none() {
+            if response.clicked() {
+                self.start_photo_download();
+            }
+            ui.painter().text(
+                rect.center() + egui::vec2(0., 45.),
+                egui::Align2::CENTER_CENTER,
+                if self.photo_job.is_some() {
+                    "Downloading mouse picture…"
+                } else if self.photo_message.is_empty() {
+                    "Click to download the mouse picture"
+                } else {
+                    &self.photo_message
+                },
+                egui::FontId::proportional(12.),
+                MUTED,
+            );
+        }
         for (zone, (x, y, w, h)) in [(112., 529., 41., 116.), (202., 704., 98., 100.)]
             .into_iter()
             .enumerate()
@@ -1386,12 +1534,20 @@ impl App {
                 if response.clicked() {
                     self.selected_button = index;
                 }
-                response.clone().on_hover_text_at_pointer(
-                    self.bindings[self.layer]
+                let raw = self.bindings[self.layer]
+                    .get(index)
+                    .map(String::as_str)
+                    .unwrap_or("");
+                let action =
+                    parity::assignment_label(&self.settings, self.slot, self.layer, index, raw);
+                response.clone().on_hover_text_at_pointer(format!(
+                    "{}\n{}",
+                    parity::BUTTON_NAMES
                         .get(index)
-                        .cloned()
-                        .unwrap_or_default(),
-                );
+                        .copied()
+                        .unwrap_or("Mouse button"),
+                    action
+                ));
             }
             for button in &buttons {
                 let selected = button.index == self.selected_button;
@@ -1493,24 +1649,50 @@ impl App {
         let Some(p) = self.draft.as_mut() else {
             return;
         };
-        let (r, _) =
-            ui.allocate_exact_size(egui::vec2(ui.available_width(), 96.), egui::Sense::hover());
+        let range = if self.snap.dpi_range[0] > 0 {
+            self.snap.dpi_range
+        } else {
+            [100, 25600, 50]
+        };
+        let [lo, hi, step] = range;
+        let active = self.dpi_after_write.unwrap_or(self.snap.dpi_index);
+        let mut values: Vec<_> = p
+            .dpi
+            .iter()
+            .copied()
+            .enumerate()
+            .filter(|(_, d)| *d > 0 && *d < 65535)
+            .collect();
+        let before = values.clone();
+        let (r, track) =
+            ui.allocate_exact_size(egui::vec2(ui.available_width(), 96.), egui::Sense::click());
         let left = r.left() + 14.;
         let width = r.width() - 28.;
         let y = r.top() + 40.;
-        let x = |dpi: u16| left + width * ((dpi.max(100) as f32 / 100.).ln() / (256f32).ln());
+        let fraction = |d: u16| {
+            ((d.max(lo) as f32 / lo as f32).ln() / (hi as f32 / lo as f32).ln()).clamp(0., 1.)
+        };
+        let dpi_at = |x: f32| {
+            parity::quantize(
+                lo as f32 * (hi as f32 / lo as f32).powf(((x - left) / width).clamp(0., 1.)),
+                range,
+            )
+        };
         ui.painter().line_segment(
             [egui::pos2(left, y), egui::pos2(left + width, y)],
             egui::Stroke::new(4.0f32, BORDER),
         );
-        for tick in [100, 400, 800, 1600, 3200, 6400, 12800, 25600] {
-            let tx = x(tick);
+        for tick in [100, 400, 800, 1600, 3200, 6400, 12800, 25600]
+            .into_iter()
+            .filter(|v| *v >= lo && *v <= hi)
+        {
+            let x = left + width * fraction(tick);
             ui.painter().line_segment(
-                [egui::pos2(tx, y + 6.), egui::pos2(tx, y + 10.)],
+                [egui::pos2(x, y + 6.), egui::pos2(x, y + 10.)],
                 egui::Stroke::new(1.0f32, MUTED),
             );
             ui.painter().text(
-                egui::pos2(tx, y + 20.),
+                egui::pos2(x, y + 20.),
                 egui::Align2::CENTER_CENTER,
                 if tick >= 10000 {
                     format!("{}k", tick / 1000)
@@ -1521,37 +1703,32 @@ impl App {
                 MUTED,
             );
         }
-        let levels: Vec<_> = p
-            .dpi
-            .iter()
-            .enumerate()
-            .filter(|(_, v)| **v > 0 && **v < 65535)
-            .map(|(i, v)| (i, *v))
-            .collect();
-        for (n, (i, dpi)) in levels.iter().enumerate() {
-            let c = egui::pos2(x(*dpi), y);
+        for (n, (slot, dpi)) in values.iter_mut().enumerate() {
+            let c = egui::pos2(left + width * fraction(*dpi), y);
             let response = ui.interact(
                 egui::Rect::from_center_size(c, egui::vec2(24., 30.)),
-                ui.id().with(("dpi", i)),
+                ui.id().with(("dpi", *slot)),
                 egui::Sense::drag(),
             );
             if response.dragged() {
                 if let Some(pos) = response.interact_pointer_pos() {
-                    p.dpi[*i] = ((100. * 256f32.powf(((pos.x - left) / width).clamp(0., 1.)) / 50.)
-                        .round()
-                        * 50.)
-                        .clamp(100., 25600.) as u16;
-                    self.dirty = true;
+                    *dpi = dpi_at(pos.x);
+                    if *slot == active
+                        && self.last_dpi_preview.elapsed() > Duration::from_millis(50)
+                    {
+                        let _ = self.tx.send(("preview_dpi".into(), json!({"dpi":dpi})));
+                        self.last_dpi_preview = Instant::now();
+                    }
                 }
             }
-            if p.shift_dpi as usize == *i {
+            if p.shift_dpi as usize == *slot {
                 ui.painter().circle_stroke(
                     c,
                     13.,
                     egui::Stroke::new(2.0f32, Color32::from_rgb(255, 90, 95)),
                 );
             }
-            let default = p.default_dpi as usize == *i;
+            let default = p.default_dpi as usize == *slot;
             ui.painter()
                 .circle_filled(c, 9., if default { ACCENT } else { RAISED });
             ui.painter().circle_stroke(
@@ -1566,94 +1743,104 @@ impl App {
                 egui::FontId::proportional(10.),
                 if default { BG } else { TEXT },
             );
-            if *i == self.snap.dpi_index {
+            if *slot == active {
                 ui.painter().text(
-                    c - egui::vec2(0., 25.),
+                    c - egui::vec2(0., 27.),
                     egui::Align2::CENTER_CENTER,
-                    format!("{}", p.dpi[*i]),
+                    format!("{dpi}\n▼"),
                     egui::FontId::proportional(10.),
                     ACCENT,
                 );
             }
         }
+        if track.clicked() && values.len() < 5 {
+            if let Some(pos) = track.interact_pointer_pos() {
+                if (pos.y - y).abs() < 16.
+                    && values
+                        .iter()
+                        .all(|(_, d)| (left + width * fraction(*d) - pos.x).abs() >= 14.)
+                {
+                    let dpi = dpi_at(pos.x);
+                    let at = values
+                        .iter()
+                        .position(|(_, d)| *d > dpi)
+                        .unwrap_or(values.len());
+                    values.insert(at, (10, dpi));
+                }
+            }
+        }
         section(ui, "DPI levels");
-        for (n, (i, _)) in levels.iter().enumerate() {
+        let mut remove = None;
+        let count = values.len();
+        for (n, (slot, dpi)) in values.iter_mut().enumerate() {
             ui.horizontal(|ui| {
                 ui.add_sized(
                     [48., 30.],
-                    egui::Label::new(RichText::new(format!("Level {}", n + 1)).color(
-                        if *i == self.snap.dpi_index {
+                    egui::Label::new(
+                        RichText::new(format!("Level {}", n + 1)).color(if *slot == active {
                             ACCENT
                         } else {
                             TEXT
-                        },
-                    )),
+                        }),
+                    ),
                 );
-                self.dirty |= ui
+                if ui
                     .add_sized(
                         [94., 30.],
-                        egui::DragValue::new(&mut p.dpi[*i])
-                            .range(100..=25600)
-                            .speed(50.)
+                        egui::DragValue::new(dpi)
+                            .range(lo..=hi)
+                            .speed(step as f64)
                             .suffix(" DPI"),
                     )
-                    .changed();
+                    .changed()
+                {
+                    *dpi = parity::quantize(*dpi as f32, range);
+                }
                 if ui
-                    .add(egui::Button::new(RichText::new("Default").color(
-                        if p.default_dpi as usize == *i {
-                            ACCENT
-                        } else {
-                            TEXT
-                        },
-                    )))
+                    .add(egui::Button::new("Default").selected(p.default_dpi as usize == *slot))
                     .clicked()
                 {
-                    p.default_dpi = *i as u8;
+                    p.default_dpi = *slot as u8;
                     self.dirty = true;
                 }
                 if ui
-                    .add(egui::Button::new(RichText::new("Sniper").color(
-                        if p.shift_dpi as usize == *i {
-                            Color32::from_rgb(255, 90, 95)
-                        } else {
-                            TEXT
-                        },
-                    )))
+                    .add(egui::Button::new("Sniper").selected(p.shift_dpi as usize == *slot))
                     .clicked()
                 {
-                    p.shift_dpi = *i as u8;
+                    p.shift_dpi = *slot as u8;
                     self.dirty = true;
                 }
                 if ui
-                    .add_enabled(levels.len() > 1, egui::Button::new("×").frame(false))
+                    .add_enabled(count > 1, egui::Button::new("×").frame(false))
+                    .on_hover_text("Remove this level")
                     .clicked()
                 {
-                    p.dpi[*i] = 0;
-                    let first = levels.iter().find(|(s, _)| s != i).unwrap().0 as u8;
-                    if p.default_dpi as usize == *i {
-                        p.default_dpi = first;
-                    }
-                    if p.shift_dpi as usize == *i {
-                        p.shift_dpi = first;
-                    }
-                    self.dirty = true;
+                    remove = Some(*slot);
                 }
             });
         }
+        if let Some(slot) = remove {
+            values.retain(|(s, _)| *s != slot);
+        }
         if ui
             .add_enabled(
-                levels.len() < 5,
+                values.len() < 5,
                 egui::Button::new("+  Add level").min_size(egui::vec2(ui.available_width(), 32.)),
             )
             .clicked()
         {
-            if let Some(i) = p.dpi.iter().position(|v| *v == 0 || *v == 65535) {
-                p.dpi[i] = levels
-                    .last()
-                    .map(|(_, v)| v.saturating_mul(2).min(25600))
-                    .unwrap_or(800);
-                self.dirty = true;
-            }
+            let dpi = parity::quantize(
+                values.last().map(|(_, v)| *v as f32 * 2.).unwrap_or(800.),
+                range,
+            );
+            values.push((10, dpi));
+        }
+        if values != before {
+            self.dpi_after_write = Some(parity::relevel(p, &values, active));
+            self.dirty = true;
+        }
+        if !p.buttons.iter().any(|b| b[0] == 144 && b[1] == 7) {
+            ui.label(RichText::new("No button is set to DPI shift in this profile, so the sniper level isn't used. Assign DPI shift to G6 under Assignments.").size(12.).color(MUTED));
         }
         section(ui, "Report rate");
         ui.horizontal(|ui| {
@@ -1672,12 +1859,44 @@ impl App {
         );
     }
     fn buttons(&mut self, ui: &mut egui::Ui) {
+        let before = self.bindings.clone();
+        let dirty = self.dirty;
+        self.buttons_content(ui);
+        if self.layer == 0
+            && before[0].first() == Some(&"left".into())
+            && self.bindings[0].first() != before[0].first()
+            && !self.bindings[0].iter().skip(1).any(|b| b == "left")
+        {
+            self.binding_confirmation = Some((0, 0, self.bindings[0][0].clone()));
+            self.bindings[0][0] = before[0][0].clone();
+            self.dirty = dirty;
+        } else if self.bindings[self.layer].get(self.selected_button)
+            != before[self.layer].get(self.selected_button)
+            || (!dirty && self.dirty)
+        {
+            self.unassign_app_macro();
+        }
+    }
+    fn unassign_app_macro(&mut self) {
+        let key = format!("{}:{}:{}", self.slot, self.layer, self.selected_button);
+        if self.settings["app_macros"]
+            .as_object_mut()
+            .is_some_and(|map| map.remove(&key).is_some())
+        {
+            self.send("settings", self.settings.clone());
+        }
+    }
+
+    fn buttons_content(&mut self, ui: &mut egui::Ui) {
         segments(ui, &mut self.layer, &["Primary", "G-Shift"]);
         ui.label(
             RichText::new("Click a button on the mouse to change its assignment.")
                 .size(12.)
                 .color(MUTED),
         );
+        if self.layer == 1 {
+            ui.label(RichText::new(if self.bindings[0].iter().any(|b| b=="gshift") {"While the G-Shift button is held, buttons do this instead."}else{"No button is set to G-Shift on the primary layer yet. Set one (G6 works well) to use this layer."}).size(12.).color(MUTED));
+        }
         if self.bindings[self.layer].len() <= self.selected_button {
             return;
         }
@@ -1689,32 +1908,43 @@ impl App {
             .show(ui, |ui| {
                 ui.set_min_width(ui.available_width());
                 ui.label(
-                    RichText::new(format!("G{}", self.selected_button + 1))
-                        .size(16.)
-                        .family(egui::FontFamily::Name("bold".into())),
+                    RichText::new(
+                        parity::BUTTON_NAMES
+                            .get(self.selected_button)
+                            .copied()
+                            .unwrap_or("Mouse button"),
+                    )
+                    .size(16.)
+                    .family(egui::FontFamily::Name("bold".into())),
                 );
-                ui.label(&self.bindings[self.layer][self.selected_button]);
+                ui.label(parity::assignment_label(
+                    &self.settings,
+                    self.slot,
+                    self.layer,
+                    self.selected_button,
+                    &self.bindings[self.layer][self.selected_button],
+                ));
                 ui.horizontal(|ui| {
                     if ui.button("Restore default").clicked() {
-                        let defaults = [
-                            "left",
-                            "right",
-                            "middle",
-                            "back",
-                            "forward",
-                            "dpi-shift",
-                            "dpi-down",
-                            "dpi-up",
-                            "profile-cycle",
-                            "tilt-right",
-                            "tilt-left",
-                        ];
-                        self.bindings[self.layer][self.selected_button] =
-                            defaults[self.selected_button].into();
+                        if self.layer == 1 {
+                            self.bindings[1][self.selected_button] = "unassigned".into();
+                        } else if let Some(factory) = self
+                            .snap
+                            .factory
+                            .get((self.slot - 1) % self.snap.factory.len().max(1))
+                        {
+                            self.bindings[0][self.selected_button] =
+                                input::describe_binding(factory.buttons[self.selected_button]);
+                        }
                         self.dirty = true;
                     }
                     if ui.button("Disable").clicked() {
-                        self.bindings[self.layer][self.selected_button] = "disabled".into();
+                        self.bindings[self.layer][self.selected_button] = if self.layer == 1 {
+                            "unassigned"
+                        } else {
+                            "disabled"
+                        }
+                        .into();
                         self.dirty = true;
                     }
                 });
@@ -1764,6 +1994,13 @@ impl App {
             ),
             ("Layers", &[("gshift", "G-Shift (hold)")]),
         ];
+        let macro_selected = parity::macro_on(
+            &self.settings,
+            self.slot,
+            self.layer,
+            self.selected_button,
+            self.bindings[self.layer][self.selected_button].as_str(),
+        );
         let selected = &mut self.bindings[self.layer][self.selected_button];
         if self.button_category == 0 {
             for (title, items) in groups {
@@ -1782,39 +2019,58 @@ impl App {
                 });
             }
         } else if self.button_category == 1 {
-            section(ui, "Shortcut");
-            ui.label("Enter a key or combination, e.g. key:ctrl+c");
-            self.dirty |= ui.text_edit_singleline(selected).changed();
-            for (key, label) in [
-                ("key:ctrl+c", "Copy"),
-                ("key:ctrl+v", "Paste"),
-                ("key:ctrl+z", "Undo"),
-                ("key:ctrl+s", "Save"),
-            ] {
-                if choice(ui, label, selected == key, ui.available_width()).clicked() {
-                    *selected = key.into();
-                    self.dirty = true;
-                }
+            section(ui, "Press a key or combination");
+            if ui
+                .add_sized(
+                    [ui.available_width(), 36.],
+                    egui::Button::new(if self.capture_binding {
+                        "Press a key… (Esc cancels)"
+                    } else {
+                        "Click, then press a key or combination"
+                    }),
+                )
+                .clicked()
+            {
+                self.capture_binding = true;
             }
-        } else if self.button_category == 2 {
-            for key in [
-                "play-pause",
-                "next-track",
-                "prev-track",
-                "stop",
-                "mute",
-                "volume-up",
-                "volume-down",
-                "browser-back",
-                "browser-forward",
-                "calculator",
-            ] {
-                let value = format!("media:{key}");
-                if choice(ui, key, *selected == value, ui.available_width()).clicked() {
+            ui.label(
+                RichText::new("Or enter a key binding, e.g. key:ctrl+c")
+                    .small()
+                    .color(MUTED),
+            );
+            self.dirty |= ui.text_edit_singleline(selected).changed();
+            section(ui, "Common shortcuts");
+            for (label, key) in parity::SHORTCUTS {
+                let value = parity::shortcut_binding(key, &self.typing);
+                if choice(
+                    ui,
+                    &format!("{label}   ·   {key}"),
+                    *selected == value,
+                    ui.available_width(),
+                )
+                .clicked()
+                {
                     *selected = value;
                     self.dirty = true;
                 }
             }
+        } else if self.button_category == 2 {
+            let w = (ui.available_width() - 6.) / 2.;
+            egui::Grid::new("assignment_media")
+                .spacing([6., 6.])
+                .num_columns(2)
+                .show(ui, |ui| {
+                    for (i, (key, label)) in parity::MEDIA.iter().enumerate() {
+                        let value = format!("media:{key}");
+                        if choice(ui, label, *selected == value, w).clicked() {
+                            *selected = value;
+                            self.dirty = true;
+                        }
+                        if i % 2 == 1 {
+                            ui.end_row();
+                        }
+                    }
+                });
         } else {
             let items = self.settings["macros"]
                 .as_array()
@@ -1823,13 +2079,34 @@ impl App {
             for m in items {
                 if choice(
                     ui,
-                    m["name"].as_str().unwrap_or("Macro"),
-                    false,
+                    &format!(
+                        "{}   ·   {}",
+                        m["name"].as_str().unwrap_or("Macro"),
+                        if m["target"] == "mouse" {
+                            "saved on the mouse"
+                        } else {
+                            "run by the app"
+                        }
+                    ),
+                    macro_selected.as_deref() == m["id"].as_str(),
                     ui.available_width(),
                 )
                 .clicked()
                 {
-                    self.send("assign_macro",json!({"id":m["id"],"slot":self.slot,"layer":self.layer,"button":self.selected_button}));
+                    let args = json!({"id":m["id"],"slot":self.slot,"layer":self.layer,"button":self.selected_button});
+                    if self.layer == 0
+                        && self.selected_button == 0
+                        && self.bindings[0].iter().skip(1).all(|b| b != "left")
+                    {
+                        self.profile_action = Some((
+                            "assign_macro".into(),
+                            args,
+                            "No other button is set to Left click. Assign this macro anyway?"
+                                .into(),
+                        ));
+                    } else {
+                        self.send("assign_macro", args);
+                    }
                 }
             }
             if ui.button("Create a macro").clicked() {
@@ -1860,6 +2137,9 @@ impl App {
                 .color(MUTED),
             );
             segments(ui, &mut self.light_zone, &["DPI lights", "Logo"]);
+            if self.settings["live"]["on"].as_bool().unwrap_or(false) {
+                ui.label(RichText::new("A live effect is showing on the mouse right now. Changing anything here turns it off.").size(12.).color(MUTED));
+            }
             let link_changed = ui
                 .themed_checkbox(&mut self.same_zones, "Same effect on both zones")
                 .changed();
@@ -1902,7 +2182,7 @@ impl App {
                         });
                     });
                     ui.spacing_mut().slider_width = ui.available_width();
-                    thin_slider(ui, &mut led.period_ms, 100, 20000);
+                    thin_slider(ui, &mut led.period_ms, 1000, 20000);
                     let mut brightness = if led.intensity == 0 {
                         100
                     } else {
@@ -1927,8 +2207,35 @@ impl App {
                     || (link_changed && self.same_zones)
                 {
                     self.dirty = true;
+                    if self.settings["live"]["on"].as_bool().unwrap_or(false) {
+                        self.settings["live"]["on"] = json!(false);
+                        let _ = self.tx.send(("lighting".into(), json!({"on":false})));
+                    }
+                    if serde_json::to_value(&before).ok()
+                        != serde_json::to_value(&p.leds[self.light_zone]).ok()
+                    {
+                        p.alt_leds[self.light_zone] = p.leds[self.light_zone].clone();
+                    }
                     if self.same_zones {
+                        if serde_json::to_value(&p.leds[1 - self.light_zone]).ok()
+                            != serde_json::to_value(&p.leds[self.light_zone]).ok()
+                        {
+                            p.alt_leds[1 - self.light_zone] = p.leds[self.light_zone].clone();
+                        }
                         p.leds[1 - self.light_zone] = p.leds[self.light_zone].clone();
+                    }
+                    if self.last_led_preview.elapsed() > Duration::from_millis(50)
+                        || ui.input(|i| i.pointer.any_released())
+                    {
+                        for zone in 0..2 {
+                            if zone == self.light_zone || self.same_zones {
+                                let _ = self.tx.send((
+                                    "preview_led".into(),
+                                    json!({"zone":zone,"led":p.leds[zone]}),
+                                ));
+                            }
+                        }
+                        self.last_led_preview = Instant::now();
                     }
                 }
             }
@@ -2126,6 +2433,17 @@ impl App {
         section(ui, if macros { "Your macros" } else { "Rules" });
         let key = if macros { "macros" } else { "rules" };
         let items = self.settings[key].as_array().cloned().unwrap_or_default();
+        if items.is_empty() {
+            ui.label(
+                RichText::new(if macros {
+                    "No macros yet."
+                } else {
+                    "No rules yet. Try YouTube from the ready-made ones."
+                })
+                .size(12.)
+                .color(MUTED),
+            );
+        }
         for (index, item) in items.iter().enumerate() {
             let id = item["id"].as_str().unwrap_or("").to_string();
             let name = item["name"].as_str().unwrap_or("Untitled");
@@ -2169,14 +2487,61 @@ impl App {
                             ))
                             .color(MUTED),
                         );
+                        ui.label(
+                            RichText::new(match item["mode"].as_str().unwrap_or("once") {
+                                "while-held" => "Repeats while held",
+                                "toggle" => "Press to start, again to stop",
+                                _ => "Plays once per press",
+                            })
+                            .size(12.)
+                            .color(MUTED),
+                        );
+                        let mut uses = vec![];
+                        for (i, p) in self.snap.profiles.iter().enumerate() {
+                            for (layer, bindings) in [&p.buttons, &p.gshift].into_iter().enumerate()
+                            {
+                                for (button, raw) in bindings.iter().enumerate() {
+                                    if parity::macro_on(
+                                        &self.settings,
+                                        i + 1,
+                                        layer,
+                                        button,
+                                        &input::describe_binding(*raw),
+                                    )
+                                    .as_deref()
+                                        == item["id"].as_str()
+                                    {
+                                        uses.push(format!(
+                                            "{}{} on slot {}",
+                                            parity::BUTTON_NAMES
+                                                .get(button)
+                                                .copied()
+                                                .unwrap_or("Button"),
+                                            if layer == 1 { " with G-Shift" } else { "" },
+                                            i + 1
+                                        ));
+                                    }
+                                }
+                            }
+                        }
+                        ui.label(
+                            RichText::new(if uses.is_empty() {
+                                "Not on any button yet: pick it under Assignments.".into()
+                            } else {
+                                format!("On {}", uses.join(", "))
+                            })
+                            .size(12.)
+                            .color(MUTED),
+                        );
                     } else {
                         ui.label(
-                            RichText::new(format!(
-                                "While {} matches “{}”",
-                                item["trigger"].as_str().unwrap_or("app"),
-                                item["value"].as_str().unwrap_or("")
-                            ))
-                            .color(MUTED),
+                            RichText::new(parity::trigger_description(&item, &self.games))
+                                .color(MUTED),
+                        );
+                        ui.label(
+                            RichText::new(parity::action_description(&item))
+                                .size(12.)
+                                .color(MUTED),
                         );
                         let mut enabled = item["enabled"].as_bool().unwrap_or(true);
                         if ui.themed_checkbox(&mut enabled, "Enabled").changed() {
@@ -2227,29 +2592,93 @@ impl App {
                     });
                 });
         }
-        if ui
-            .add_sized(
-                [ui.available_width(), 34.],
-                egui::Button::new(
-                    RichText::new(if macros {
-                        "+  New macro"
-                    } else {
-                        "+  Add rule"
-                    })
-                    .color(BG),
+        if macros {
+            if ui
+                .add_sized(
+                    [ui.available_width(), 34.],
+                    egui::Button::new(RichText::new("+  New macro").color(BG)).fill(ACCENT),
                 )
-                .fill(ACCENT),
-            )
-            .clicked()
-        {
-            self.editing_library = true;
-            if macros {
+                .clicked()
+            {
+                self.editing_library = true;
                 self.macro_id.clear();
                 self.macro_draft = new_macro();
-            } else {
-                self.rule_id.clear();
-                self.rule_draft = new_rule();
             }
+        } else {
+            let add_rule = ui.add_sized(
+                [ui.available_width(), 34.],
+                egui::Button::new(RichText::new("+  Add rule").color(BG)).fill(ACCENT),
+            );
+            egui::Popup::menu(&add_rule).show(|ui| {
+                ui.set_min_width(250.);
+                if self.snap.context.game.is_some()
+                    || !self.seen_apps.is_empty()
+                    || !self.seen_media.is_empty()
+                {
+                    ui.menu_button("For something you did recently", |ui| {
+                        let mut recent = vec![];
+                        if let Some(game) = &self.snap.context.game {
+                            let mut r = new_rule();
+                            r["name"] = json!(game.name);
+                            r["trigger"] = json!("game");
+                            r["value"] = json!(game.appid.to_string());
+                            r["lighting"] = json!("art");
+                            recent.push(r);
+                        }
+                        for title in self.seen_media.iter().take(5) {
+                            let mut r = new_rule();
+                            r["name"] = json!(title);
+                            r["trigger"] = json!("media");
+                            r["value"] = json!(title);
+                            recent.push(r);
+                        }
+                        for app in self.seen_apps.iter().take(5) {
+                            let mut r = new_rule();
+                            r["name"] = json!(app);
+                            r["trigger"] = json!("app");
+                            r["value"] = json!(app);
+                            recent.push(r);
+                        }
+                        for r in recent {
+                            if ui
+                                .button(parity::trigger_description(&r, &self.games))
+                                .clicked()
+                            {
+                                self.rule_draft = r;
+                                self.rule_id.clear();
+                                self.editing_library = true;
+                                ui.close();
+                            }
+                        }
+                    });
+                }
+                ui.label(RichText::new("Ready-made").color(MUTED));
+                for mut rule in parity::templates() {
+                    if ui
+                        .button(format!(
+                            "{}  ·  {}",
+                            rule["name"].as_str().unwrap(),
+                            parity::action_description(&rule)
+                        ))
+                        .clicked()
+                    {
+                        rule["id"] = json!(id());
+                        self.rule_draft = rule;
+                        self.rule_id.clear();
+                        self.editing_library = true;
+                        ui.close();
+                    }
+                }
+                ui.separator();
+                if ui.button("Blank rule").clicked() {
+                    self.rule_draft = new_rule();
+                    self.rule_draft["trigger"] = json!("media");
+                    self.rule_draft["value"] = json!("");
+                    self.rule_id.clear();
+                    self.editing_library = true;
+                    ui.close();
+                }
+            });
         }
     }
     fn choose_profile_file(&mut self, operation: &str, slot: usize, ctx: &egui::Context) {
@@ -2325,7 +2754,7 @@ impl App {
         });
     }
     fn record(&mut self, ctx: &egui::Context) {
-        if !self.recording {
+        if !self.recording && !self.capture_binding {
             return;
         }
         let events = ctx.input(|i| i.events.clone());
@@ -2341,6 +2770,7 @@ impl App {
             {
                 if key == egui::Key::Escape {
                     self.recording = false;
+                    self.capture_binding = false;
                     break;
                 }
                 if repeat {
@@ -2359,6 +2789,15 @@ impl App {
                     "enter" => "enter",
                     "pageup" => "pageup",
                     "pagedown" => "pagedown",
+                    "openbracket" | "opencurlybracket" => "leftbrace",
+                    "closebracket" | "closecurlybracket" => "rightbrace",
+                    "backtick" => "grave",
+                    "period" => "dot",
+                    "quote" => "apostrophe",
+                    "equals" | "plus" => "equal",
+                    "colon" => "semicolon",
+                    "pipe" => "backslash",
+                    "questionmark" => "slash",
                     n if n.starts_with("num") => &n[3..],
                     n => n,
                 }
@@ -2379,6 +2818,30 @@ impl App {
                 combo.push_str(&name);
                 if input::combo(&combo).is_err() {
                     continue;
+                }
+                if self.capture_binding {
+                    if pressed {
+                        let value = format!("key:{combo}");
+                        if self.layer == 0
+                            && self.selected_button == 0
+                            && !self.bindings[0].iter().skip(1).any(|b| b == "left")
+                        {
+                            self.binding_confirmation = Some((0, 0, value));
+                        } else {
+                            self.bindings[self.layer][self.selected_button] = value;
+                            self.dirty = true;
+                        }
+                        self.capture_binding = false;
+                        if self.binding_confirmation.is_none() {
+                            self.unassign_app_macro();
+                        }
+                    }
+                    continue;
+                }
+                if pressed {
+                    self.record_keys.insert(key, combo.clone());
+                } else if let Some(original) = self.record_keys.remove(&key) {
+                    combo = original;
                 }
                 let now = Instant::now();
                 if let Some(last) = self.record_at {
@@ -2408,18 +2871,29 @@ impl App {
             &[("mouse", "Saved on the mouse"), ("app", "Run by G502 Hub")],
             2,
         );
+        let on_mouse = self.macro_draft["target"] == "mouse";
+        if on_mouse {
+            self.macro_draft["mode"] = json!("once");
+        }
         section(ui, "Plays");
-        choices(
-            ui,
-            "mode",
-            &mut self.macro_draft["mode"],
-            &[
-                ("once", "Once per press"),
-                ("while-held", "Repeats while held"),
-                ("toggle", "Press to start, again to stop"),
-            ],
-            1,
-        );
+        for (mode, label) in [
+            ("once", "Once per press"),
+            ("while-held", "Repeats while held"),
+            ("toggle", "Press to start, again to stop"),
+        ] {
+            ui.add_enabled_ui(!on_mouse || mode == "once", |ui| {
+                if choice(
+                    ui,
+                    label,
+                    self.macro_draft["mode"] == mode,
+                    ui.available_width(),
+                )
+                .clicked()
+                {
+                    self.macro_draft["mode"] = json!(mode);
+                }
+            });
+        }
         section(ui, "Steps");
         let steps = self.macro_draft["steps"]
             .as_array()
@@ -2504,6 +2978,12 @@ impl App {
                 self.step_selected = self.step_selected.saturating_sub(1);
             }
         });
+        let validation = parity::macro_size(&self.macro_draft, &self.typing);
+        ui.label(RichText::new(match &validation {
+            Ok(Some(n))=>format!("Uses {n} of 253 bytes of mouse memory."),
+            Ok(None)=>"Runs from the app, so there's no size limit. Its button does nothing while G502 Hub isn't running.".into(),
+            Err(e)=>if on_mouse{format!("Can't be saved on the mouse: {e}. Choose “Run by G502 Hub” instead.")}else{e.to_string()},
+        }).size(12.).color(MUTED));
         section(ui, "Add a step");
         segments(
             ui,
@@ -2537,6 +3017,7 @@ impl App {
                 {
                     self.recording = !self.recording;
                     self.record_at = None;
+                    self.record_keys.clear();
                 }
                 ui.label(
                     RichText::new("Recording keeps the waits between your key presses.")
@@ -2560,7 +3041,7 @@ impl App {
             2 => {
                 ui.add(
                     egui::DragValue::new(&mut self.step_wait)
-                        .range(1..=60000)
+                        .range(1..=600000)
                         .suffix(" ms"),
                 );
                 if ui.button("Add wait").clicked() {
@@ -2599,16 +3080,8 @@ impl App {
                 });
             }
             _ => {
-                for key in [
-                    "play-pause",
-                    "next",
-                    "previous",
-                    "stop",
-                    "volume-up",
-                    "volume-down",
-                    "mute",
-                ] {
-                    if choice(ui, key, false, ui.available_width()).clicked() {
+                for (key, label) in parity::MEDIA {
+                    if choice(ui, label, false, ui.available_width()).clicked() {
                         add = Some(json!({"kind":"media","args":{"key":key}}));
                     }
                 }
@@ -2623,7 +3096,20 @@ impl App {
                 .add(egui::Button::new(RichText::new("Save macro").color(BG)).fill(ACCENT))
                 .clicked()
             {
+                if let Err(e) = parity::macro_size(&self.macro_draft, &self.typing) {
+                    self.failed = true;
+                    self.message = e.to_string();
+                    return;
+                }
                 self.recording = false;
+                if self.macro_draft["name"]
+                    .as_str()
+                    .unwrap_or("")
+                    .trim()
+                    .is_empty()
+                {
+                    self.macro_draft["name"] = json!("Macro");
+                }
                 self.macro_id = self.macro_draft["id"].as_str().unwrap_or("").into();
                 self.send("save_macro", self.macro_draft.clone());
                 self.editing_library = false;
@@ -2687,16 +3173,46 @@ impl App {
                     }
                 });
         } else {
-            string(ui, &mut self.rule_draft["value"]);
-            ui.label(
-                RichText::new(if self.rule_draft["trigger"] == "app" {
-                    "Matches the app exactly."
-                } else {
-                    "Matches text in the title, ignoring case."
-                })
-                .size(12.)
-                .color(MUTED),
-            );
+            let trigger = self.rule_draft["trigger"].as_str().unwrap_or("").to_owned();
+            let hint = match trigger.as_str() {
+                "app" => "Window class, e.g. firefox, mpv, org.kde.dolphin",
+                "title" => "Text in the window title, e.g. YouTube",
+                _ => "Text in the title, artist or page, e.g. youtube or One Piece",
+            };
+            let mut value = self.rule_draft["value"].as_str().unwrap_or("").to_owned();
+            if ui
+                .add(
+                    egui::TextEdit::singleline(&mut value)
+                        .hint_text(hint)
+                        .desired_width(f32::INFINITY),
+                )
+                .changed()
+            {
+                self.rule_draft["value"] = json!(value);
+            }
+            ui.label(RichText::new(match trigger.as_str() {
+                "app"=>"Matches the app exactly.","title"=>"Matches any window title containing this text, upper or lower case.",
+                _=>"Matches while something is playing (browsers, mpv, VLC, Spotify, anime apps…) and its title, artist or web address contains this text.",
+            }).size(12.).color(MUTED));
+        }
+        let trigger = self.rule_draft["trigger"].as_str().unwrap_or("");
+        let recent = if trigger == "app" {
+            self.seen_apps.clone()
+        } else if trigger == "media" {
+            self.seen_media.clone()
+        } else {
+            vec![]
+        };
+        if !recent.is_empty() {
+            egui::ComboBox::from_id_salt("recent_value")
+                .selected_text("Recently seen…")
+                .show_ui(ui, |ui| {
+                    for value in recent {
+                        if ui.selectable_label(false, &value).clicked() {
+                            self.rule_draft["value"] = json!(value);
+                        }
+                    }
+                });
         }
         section(ui, "Lighting");
         if self.rule_draft["lighting"].is_null() {
@@ -2752,6 +3268,19 @@ impl App {
                 self.rule_draft["period_ms"] = n.into();
             }
         }
+        if let Some(hint) = match self.rule_draft["lighting"].as_str().unwrap_or("") {
+            "art" => Some("Takes two colors from the game's cover art in your Steam library."),
+            "game" => Some(
+                "Lets the game drive the lights: live events in CS2 and Dota 2, and Proton games with Logitech lighting once the LIGHTSYNC bridge is on (Settings). Other games get their cover art colors.",
+            ),
+            "screen" => Some("Uses your Screen sampler settings from Lightsync."),
+            "audio" => Some("Uses your Audio visualizer settings from Lightsync."),
+            "wave" => Some("Uses your Color wave settings from Lightsync."),
+            "dpi" => Some("Uses your DPI colors from Lightsync."),
+            _ => None,
+        } {
+            ui.label(RichText::new(hint).size(12.).color(MUTED));
+        }
         section(ui, "Profile slot");
         ui.label(RichText::new("Switch to an onboard profile (its DPI levels, buttons and report rate) while the rule matches.").size(12.).color(MUTED));
         let width = (ui.available_width() - 12.) / 3.;
@@ -2783,6 +3312,24 @@ impl App {
                 .add(egui::Button::new(RichText::new("Save rule").color(BG)).fill(ACCENT))
                 .clicked()
             {
+                if self.rule_draft["value"]
+                    .as_str()
+                    .unwrap_or("")
+                    .trim()
+                    .is_empty()
+                {
+                    self.failed = true;
+                    self.message = "Type what to look for first.".into();
+                    return;
+                }
+                if self.rule_draft["name"]
+                    .as_str()
+                    .unwrap_or("")
+                    .trim()
+                    .is_empty()
+                {
+                    self.rule_draft["name"] = json!("Rule");
+                }
                 if !self.settings["rules"].is_array() {
                     self.settings["rules"] = json!([]);
                 }
@@ -2817,115 +3364,255 @@ impl App {
                 self.message = e.to_string();
             }
         }
-
-        ui.label(format!(
-            "PID : {} · {}",
-            self.snap.pid,
-            if self.snap.connected {
-                "Souris connectée"
-            } else {
-                "En attente de la souris"
-            }
-        ));
-        for f in &self.snap.firmware {
-            ui.label(f);
+        ui.label(RichText::new("Closing this window frees the settings interface. Macros, game rules, live lighting and the DPI popup continue in the background.").size(12.).color(MUTED));
+        if ui
+            .add_sized(
+                [ui.available_width(), 34.],
+                egui::Button::new("Quit G502 Hub completely"),
+            )
+            .clicked()
+        {
+            let _ = ipc::request("stop", json!({}));
+            ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
         }
-        ui.separator();
+        section(ui, "On-screen popup");
         let mut osd = self.settings["osd"].as_bool().unwrap_or(true);
         if ui
             .themed_checkbox(&mut osd, "Show DPI and profile changes on screen")
             .changed()
         {
-            self.settings["osd"] = osd.into();
+            self.settings["osd"] = json!(osd);
             self.send("settings", self.settings.clone());
         }
-        ui.horizontal_wrapped(|ui| {
-            ui.label("Keyboard layout");
+        section(ui, "Mouse picture");
+        ui.label(RichText::new(if self.photo.is_some(){format!("Logitech's product photo of the G502 HERO. It's their image, so G502 Hub doesn't include it. It is kept in {}.",desktop::photo_path().parent().unwrap().display())}else{"The mouse picture has not been downloaded yet.".into()}).size(12.).color(MUTED));
+        if ui
+            .add_enabled(
+                self.photo_job.is_none(),
+                egui::Button::new(if self.photo_job.is_some() {
+                    "Downloading…"
+                } else {
+                    "Download it again"
+                }),
+            )
+            .clicked()
+        {
+            self.start_photo_download();
+        }
+        if !self.photo_message.is_empty() {
+            ui.label(RichText::new(&self.photo_message).size(12.).color(MUTED));
+        }
+        section(ui, "Device access");
+        let status = desktop::access_status();
+        ui.label(RichText::new(match status{"current"=>"Your user can configure the mouse without root.","old"=>"The permission rule is from an older version. Update it so macros run by the app can always type.",_=>"The permission rule isn't installed, so the app can't open the mouse."}).size(12.).color(MUTED));
+        if status != "current"
+            && ui
+                .add_enabled(
+                    self.access_job.is_none(),
+                    egui::Button::new(if status == "old" {
+                        "Update the rule (asks for your password)"
+                    } else {
+                        "Allow access (asks for your password)"
+                    }),
+                )
+                .clicked()
+        {
+            let (tx, rx) = mpsc::channel();
+            self.access_job = Some(rx);
+            std::thread::spawn(move || {
+                let _ = tx.send(desktop::fix_access());
+            });
+        }
+        if !self.access_message.is_empty() {
+            ui.label(RichText::new(&self.access_message).size(12.).color(MUTED));
+        }
+        section(ui, "Game integrations");
+        ui.label(
+            RichText::new("Used by rules with “Game-driven” lighting (Games & apps).")
+                .size(12.)
+                .color(MUTED),
+        );
+        let gsi = self.gsi.as_object().cloned().unwrap_or_default();
+        if gsi.is_empty() {
+            ui.label(
+                RichText::new("CS2 and Dota 2 live lighting: neither game is installed.")
+                    .size(12.)
+                    .color(MUTED),
+            );
+        } else {
+            let parts: Vec<_> = gsi
+                .iter()
+                .map(|(key, on)| {
+                    format!(
+                        "{} {}",
+                        if key == "cs2" {
+                            "Counter-Strike 2"
+                        } else {
+                            "Dota 2"
+                        },
+                        if on.as_bool() == Some(true) {
+                            "✓ set up"
+                        } else {
+                            "not set up"
+                        }
+                    )
+                })
+                .collect();
+            ui.label(
+                RichText::new(format!(
+                    "CS2 and Dota 2 live lighting: {}.",
+                    parts.join(", ")
+                ))
+                .size(12.)
+                .color(MUTED),
+            );
+            let any = gsi.values().any(|v| v == true);
+            if ui
+                .button(if any {
+                    "Remove CS2 / Dota 2 setup"
+                } else {
+                    "Set up CS2 / Dota 2 lighting"
+                })
+                .clicked()
+            {
+                self.send(if any { "remove_gsi" } else { "install_gsi" }, json!({}));
+            }
+            if gsi.contains_key("dota2") || !any {
+                ui.label(RichText::new("Restart the game after setting this up. Dota 2 also needs -gamestateintegration in its Steam launch options.").size(12.).color(MUTED));
+            }
+        }
+        section(ui, "LIGHTSYNC bridge for Proton games");
+        ui.label(RichText::new("Windows games with Logitech lighting can drive the mouse through Proton. Turn it on per game; it adds a small LogitechLed.dll to that game's Proton prefix. Close the game before changing its setup.").size(12.).color(MUTED));
+        let built = ["x64", "x86"].iter().all(|arch| {
+            g502_hub::bridge::bin_dir()
+                .join(arch)
+                .join("LogitechLed.dll")
+                .is_file()
+        });
+        if self.prefixes.is_empty() {
+            ui.label(RichText::new("No Proton games found yet. Run a Windows game through Steam once, then come back here.").size(12.).color(MUTED));
+        } else {
+            if !built {
+                ui.label(RichText::new("The bridge DLL isn't built in this copy yet. Build bridge/logitechled/build.sh from the source checkout.").size(12.).color(MUTED));
+            }
+            for p in self.prefixes.clone() {
+                ui.horizontal(|ui| {
+                    ui.label(p["name"].as_str().unwrap_or("Game"));
+                    let on = p["installed"].as_bool().unwrap_or(false);
+                    if ui
+                        .add_enabled(
+                            on || built,
+                            egui::Button::new(if on { "Turn off" } else { "Turn on" }),
+                        )
+                        .clicked()
+                    {
+                        self.send(
+                            if on {
+                                "bridge_remove"
+                            } else {
+                                "bridge_install"
+                            },
+                            json!({"path":p["path"]}),
+                        );
+                    }
+                });
+            }
+        }
+        if ui.button("Refresh integrations").clicked() {
+            self.send("bridge_prefixes", json!({}));
+            self.send("gsi_status", json!({}));
+        }
+        ui.collapsing("Advanced settings", |ui| {
+            ui.label("Keyboard layout used for text macros (e.g. fr, us, be).");
             let mut layout = self.settings["keyboard_layout"]
                 .as_str()
                 .map(str::to_owned)
                 .unwrap_or_else(input::layout);
             let response = ui.text_edit_singleline(&mut layout);
             if response.changed() {
-                self.settings["keyboard_layout"] = layout.clone().into();
+                self.settings["keyboard_layout"] = json!(layout);
             }
             if response.lost_focus()
                 && self.settings["keyboard_layout"] != self.snap.settings["keyboard_layout"]
             {
-                self.settings["keyboard_layout"] = layout.into();
                 self.send("settings", self.settings.clone());
             }
-        });
-        ui.label(
-            RichText::new("Keyboard layout used for text macros (e.g. fr, us, be).")
-                .small()
-                .color(Color32::GRAY),
-        );
-        if ui.button("Refresh mouse").clicked() {
-            self.send("refresh", json!({}));
-            self.dirty = false;
-        }
-        ui.label(format!("Réglages : {}", config::config_dir().display()));
-        ui.label(format!(
-            "Sauvegardes : {}",
-            config::data_dir().join("backups").display()
-        ));
-        ui.label("Closing this window frees the settings interface. Macros, rules and live lighting continue in the background.");
-        if ui.button("Quit G502 Hub completely").clicked() {
-            let _ = ipc::request("stop", json!({}));
-            ui.ctx().send_viewport_cmd(egui::ViewportCommand::Close);
-        }
-        ui.separator();
-        ui.collapsing("LIGHTSYNC bridge for Proton games", |ui| {
-            ui.label("Close the game before changing its Wine prefix.");
-            egui::ComboBox::from_id_salt("proton_prefix")
-                .selected_text("Choose a Steam prefix…")
-                .show_ui(ui, |ui| {
-                    for p in &self.prefixes {
-                        if ui
-                            .selectable_label(false, p["name"].as_str().unwrap_or("Jeu"))
-                            .clicked()
-                        {
-                            self.bridge_path = p["path"].as_str().unwrap_or("").into();
-                        }
-                    }
-                });
-            ui.text_edit_singleline(&mut self.bridge_path);
-            ui.horizontal_wrapped(|ui| {
-                if ui.button("Install LIGHTSYNC").clicked() {
-                    self.send("bridge_install", json!({"path":self.bridge_path}));
-                }
-                if ui.button("Remove LIGHTSYNC").clicked() {
-                    self.send("bridge_remove", json!({"path":self.bridge_path}));
-                }
-                if ui.button("Refresh").clicked() {
-                    self.send("bridge_prefixes", json!({}));
-                }
-            });
-        });
-        ui.separator();
-        ui.collapsing("Advanced settings (import / export)", |ui| {
+            if ui.button("Refresh mouse").clicked() {
+                self.send("refresh", json!({}));
+            }
+            ui.label(format!("Settings: {}", config::config_dir().display()));
+            ui.label(format!(
+                "Backups: {}",
+                config::data_dir().join("backups").display()
+            ));
             ui.add(
                 egui::TextEdit::multiline(&mut self.settings_text)
                     .code_editor()
-                    .desired_rows(15)
+                    .desired_rows(10)
                     .desired_width(f32::INFINITY),
             );
             if ui.button("Apply advanced settings").clicked() {
                 match serde_json::from_str::<Value>(&self.settings_text) {
                     Ok(v) => self.send("settings", v),
                     Err(e) => {
-                        self.message = e.to_string();
                         self.failed = true;
+                        self.message = e.to_string();
                     }
                 }
             }
+        });
+    }
+    fn about_info(&mut self, ui: &mut egui::Ui) {
+        section(ui, "This computer");
+        let mut lines = desktop::session_info();
+        if self.snap.connected {
+            lines.push(format!(
+                "{}, firmware {}",
+                self.snap.name,
+                self.snap.firmware.join(", ")
+            ));
+            if let Some(info) = &self.snap.info {
+                lines.push(format!(
+                    "Profile format {}, {} × {} B onboard memory",
+                    info.profile_format, info.sector_count, info.sector_size
+                ));
+            }
+        } else {
+            lines.push("Mouse not connected".into());
+        }
+        let info = lines.join("\n");
+        ui.label(RichText::new(&info).size(12.).color(MUTED));
+        if ui.button("Copy for a bug report").clicked() {
+            ui.ctx().copy_text(info);
+            self.copied = true;
+        }
+        if self.copied {
+            ui.label(
+                RichText::new("Copied. Paste it into your bug report.")
+                    .size(12.)
+                    .color(MUTED),
+            );
+        }
+    }
+    fn about_center(&mut self, ui: &mut egui::Ui) {
+        ui.add_space(56.);
+        ui.vertical_centered(|ui|{
+            ui.label(spaced("G502 HUB",34.,TEXT,6.));
+            ui.label(RichText::new("An unofficial G HUB alternative for the Logitech G502 HERO, on Linux").size(14.).color(MUTED));
+            ui.add_space(18.);ui.label(spaced("MADE BY",11.,MUTED,1.5));ui.label(RichText::new("Ahmed Saad").font(bold(22.)).color(ACCENT));
+            ui.with_layout(egui::Layout::left_to_right(egui::Align::Center).with_main_wrap(true).with_main_align(egui::Align::Center),|ui|{ui.hyperlink_to("ahmedxsaad.me","https://ahmedxsaad.me");ui.hyperlink_to("GitHub","https://github.com/Ahmedxsaad");ui.hyperlink_to("LinkedIn","https://www.linkedin.com/in/ahmedsaad0/");});
+            ui.add_space(14.);ui.with_layout(egui::Layout::left_to_right(egui::Align::Center).with_main_wrap(true).with_main_align(egui::Align::Center),|ui|{ui.hyperlink_to("Website","https://g502hub.ahmedxsaad.me");ui.hyperlink_to("Source code","https://github.com/Ahmedxsaad/g502-hub");ui.hyperlink_to("Report a bug","https://github.com/Ahmedxsaad/g502-hub/issues");});
+            ui.add_space(18.);ui.label(RichText::new(format!("Version {} · Free software under the GNU GPL v3 or later",env!("CARGO_PKG_VERSION"))).color(MUTED));
+            ui.add_space(24.);ui.label(spaced("BUILT ON THE WORK OF",11.,MUTED,1.5));
+            ui.with_layout(egui::Layout::left_to_right(egui::Align::Center).with_main_wrap(true).with_main_align(egui::Align::Center),|ui|{for(name,url)in[("libratbag","https://github.com/libratbag/libratbag"),("Solaar","https://github.com/pwr-Solaar/Solaar"),("cvuchener/hidpp","https://github.com/cvuchener/hidpp"),("OpenRGB","https://gitlab.com/CalcProgrammer1/OpenRGB"),("Linux hid-logitech-hidpp","https://github.com/torvalds/linux")]{ui.hyperlink_to(name,url);}});
+            ui.add_space(24.);ui.label(RichText::new("An unofficial, independent project. Not affiliated with, endorsed or supported by Logitech. Logitech, Logitech G, G HUB, LIGHTSYNC, HERO and G502 are trademarks of Logitech Europe S.A.; Counter-Strike 2, Dota 2 and Steam are trademarks of Valve Corporation. The mouse photo is Logitech's, downloaded from logitechg.com on first start.").size(12.).color(MUTED));
         });
     }
 }
 impl eframe::App for App {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         self.updates();
+        self.desktop_jobs(ctx);
         let picked = self.picked_file.lock().unwrap().take();
         if let Some((cmd, slot, path)) = picked {
             if let Some(path) = path {
@@ -2985,17 +3672,53 @@ impl eframe::App for App {
         egui::SidePanel::left("settings_panel").exact_width(410.).resizable(false).frame(egui::Frame::new().fill(PANEL).stroke(egui::Stroke::new(1.0f32,BORDER)).inner_margin(egui::Margin::symmetric(22,22))).show(ctx,|ui| {
             if self.tab!="profiles" {ui.heading(match self.tab.as_str(){"light"=>"Lighting","sens"=>"Sensitivity","buttons"=>"Assignments","profiles"=>"Onboard profiles","macros"=>if self.editing_library{"Macro"}else{"Macros"},"rules"=>if self.editing_library{"Rule"}else{"Games & apps"},"about"=>"About",_=>"Settings"});ui.add_space(12.);}
 
+            if self.failed && !self.write_failed {ui.label(RichText::new(&self.message).color(Color32::from_rgb(255,90,95)));}
             if self.write_failed {ui.colored_label(Color32::LIGHT_RED,&self.message);ui.horizontal(|ui|{if ui.button("Retry").clicked(){self.write_failed=false;self.apply();}if ui.button("Discard").clicked(){self.dirty=false;self.write_failed=false;self.load_draft();}});}
             egui::ScrollArea::vertical().id_salt(("side",&self.tab)).auto_shrink([false,false]).show(ui,|ui| {
-                if !self.snap.connected && self.tab!="about" {ui.label("Waiting for the G502 HERO…");}
-                else {match self.tab.as_str(){"sens"=>self.sensitivity(ui),"buttons"=>self.buttons(ui),"light"=>self.lighting(ui),"settings"=>self.settings_page(ui),"profiles"=>{section(ui,"Device");ui.label("G502 HERO");ui.label(format!("Firmware {}",self.snap.firmware.join(" / ")));section(ui,"Backups");ui.label(RichText::new("A full backup is taken automatically before the first change each session.").color(MUTED));if ui.add_sized([ui.available_width(),34.],egui::Button::new("Back up now")).clicked(){self.send("backup",json!({}));}ui.add_space(10.);if ui.add_sized([ui.available_width(),34.],egui::Button::new("Restore a backup…")).clicked(){self.choose_profile_file("restore",self.slot,ui.ctx());}if ui.add_sized([ui.available_width(),34.],egui::Button::new("Open backups folder")).clicked(){let _=std::process::Command::new("xdg-open").arg(config::data_dir().join("backups")).spawn();}},"macros"|"rules"=>{if self.editing_library {if ui.button("<  Back").clicked(){self.editing_library=false;self.recording=false;}if self.tab=="macros" {self.macros(ui);}else{self.rules(ui);}}else{self.library_panel(ui);}},"about"=>{ui.label("G502 Hub");ui.label(RichText::new("A native settings app for the Logitech G502 HERO.").color(MUTED));section(ui,"Version");ui.label("0.1.0 · experimental");ui.hyperlink_to("Original project","https://github.com/Ahmedxsaad/g502-hub");},_=>{}}}
+                if !self.snap.connected && !matches!(self.tab.as_str(),"about"|"settings") {ui.label("Waiting for the G502 HERO…");}
+                else {match self.tab.as_str(){"sens"=>self.sensitivity(ui),"buttons"=>self.buttons(ui),"light"=>self.lighting(ui),"settings"=>self.settings_page(ui),"profiles"=>{section(ui,"Device");ui.label("G502 HERO");ui.label(format!("Firmware {}",self.snap.firmware.join(" / ")));section(ui,"Backups");if !self.failed && self.message!="Ready" && !self.message.starts_with("Connexion") {ui.label(RichText::new(&self.message).size(12.).color(MUTED));}ui.label(RichText::new("A full backup is taken automatically before the first change each session.").color(MUTED));if ui.add_sized([ui.available_width(),34.],egui::Button::new("Back up now")).clicked(){self.send("backup",json!({}));}ui.add_space(10.);if ui.add_sized([ui.available_width(),34.],egui::Button::new("Restore a backup…")).clicked(){self.choose_profile_file("restore",self.slot,ui.ctx());}if ui.add_sized([ui.available_width(),34.],egui::Button::new("Open backups folder")).clicked(){let _=std::process::Command::new("xdg-open").arg(config::data_dir().join("backups")).spawn();}},"macros"|"rules"=>{if self.editing_library {if ui.button("<  Back").clicked(){self.editing_library=false;self.recording=false;}if self.tab=="macros" {self.macros(ui);}else{self.rules(ui);}}else{self.library_panel(ui);}},"about"=>self.about_info(ui),_=>{}}}
             });
         });
-        egui::CentralPanel::default().frame(egui::Frame::new().fill(BG).inner_margin(if wide {24}else{0})).show(ctx,|ui|{
-            if !self.snap.connected {ui.centered_and_justified(|ui|{ui.label("Connect your G502 HERO to get started");});return;}
-            if wide {egui::ScrollArea::vertical().id_salt(("center",&self.tab)).show(ui,|ui|{match self.tab.as_str(){"profiles"=>self.profile_cards(ui),"macros"=>{ui.heading("Macro editor");ui.add_space(18.);self.macros(ui);},"rules"=>{ui.heading("Automatic rules");ui.add_space(18.);self.rules(ui);},_=>{ui.heading("G502 Hub");ui.label("Settings interface and background service");ui.add_space(20.);ui.label("Based on Ahmed Saad's G502 Hub. Licensed under GPL-3.0-or-later.");}}});}
-            else {self.device_view(ui);}
-        });
+        egui::CentralPanel::default()
+            .frame(
+                egui::Frame::new()
+                    .fill(BG)
+                    .inner_margin(if wide { 24 } else { 0 }),
+            )
+            .show(ctx, |ui| {
+                if !self.snap.connected && self.tab != "about" {
+                    ui.centered_and_justified(|ui| {
+                        ui.label("Connect your G502 HERO to get started");
+                    });
+                    return;
+                }
+                if wide {
+                    egui::ScrollArea::vertical()
+                        .id_salt(("center", &self.tab))
+                        .show(ui, |ui| match self.tab.as_str() {
+                            "profiles" => self.profile_cards(ui),
+                            "macros" => {
+                                ui.heading("Macro editor");
+                                ui.add_space(18.);
+                                self.macros(ui);
+                            }
+                            "rules" => {
+                                ui.heading("Automatic rules");
+                                ui.add_space(18.);
+                                self.rules(ui);
+                            }
+                            _ => self.about_center(ui),
+                        });
+                } else {
+                    self.device_view(ui);
+                }
+            });
+        if let Some((layer, button, value)) = self.binding_confirmation.clone() {
+            egui::Window::new("Remove left click?").collapsible(false).resizable(false).show(ctx,|ui| {
+                ui.label("No other button is set to Left click. Without one you can only click with the keyboard or touchpad until you change it back. Continue?");
+                ui.horizontal(|ui| {if ui.button("Continue").clicked(){self.bindings[layer][button]=value;self.dirty=true;self.binding_confirmation=None;}if ui.button("Cancel").clicked(){self.binding_confirmation=None;}});
+            });
+        }
         if let Some((cmd, args, prompt)) = self.profile_action.clone() {
             egui::Window::new("Confirm profile change")
                 .collapsible(false)

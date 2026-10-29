@@ -481,6 +481,33 @@ pub fn matches(rule: &Value, ctx: &Context) -> bool {
         _ => false,
     }
 }
+pub fn gsi_status() -> Value {
+    let mut result = serde_json::Map::new();
+    for lib in libraries() {
+        for (game, id, suffix) in [
+            ("cs2", 730, "game/csgo/cfg"),
+            ("dota2", 570, "game/dota/cfg/gamestate_integration"),
+        ] {
+            if let Ok(text) =
+                fs::read_to_string(lib.join(format!("steamapps/appmanifest_{id}.acf")))
+            {
+                if let Some((_, dir)) = vdf_pairs(&text)
+                    .into_iter()
+                    .find(|(k, _)| k == "installdir")
+                {
+                    let installed = lib
+                        .join("steamapps/common")
+                        .join(dir)
+                        .join(suffix)
+                        .join("gamestate_integration_g502hub.cfg")
+                        .is_file();
+                    result.insert(game.into(), Value::Bool(installed));
+                }
+            }
+        }
+    }
+    Value::Object(result)
+}
 pub fn install_gsi(remove: bool) -> Result<Vec<String>> {
     let mut list = vec![];
     for lib in libraries() {

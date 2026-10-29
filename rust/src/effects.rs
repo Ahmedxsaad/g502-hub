@@ -3,7 +3,6 @@ use crate::{
     model::Profile,
 };
 use anyhow::{Context as _, Result, bail, ensure};
-use rustfft::{FftPlanner, num_complex::Complex};
 use serde_json::{Value, json};
 use std::{
     collections::HashMap,
@@ -55,6 +54,138 @@ pub fn rgb_hex(s: &str) -> Rgb {
         [0., 0.5, 1.]
     }
 }
+pub fn adjust(rgb: Rgb, saturation: f32, brightness: f32) -> Rgb {
+    let max = rgb.into_iter().fold(0f32, f32::max);
+    let min = rgb.into_iter().fold(1f32, f32::min);
+    let delta = max - min;
+    let h = if delta < 1e-8 {
+        0.
+    } else if max == rgb[0] {
+        ((rgb[1] - rgb[2]) / delta).rem_euclid(6.) / 6.
+    } else if max == rgb[1] {
+        ((rgb[2] - rgb[0]) / delta + 2.) / 6.
+    } else {
+        ((rgb[0] - rgb[1]) / delta + 4.) / 6.
+    };
+    hsv(
+        h,
+        if max == 0. {
+            0.
+        } else {
+            ((delta / max) * saturation).min(1.)
+        },
+        (max * brightness).min(1.),
+    )
+}
+pub fn wave(
+    t: f32,
+    period: f32,
+    zone: usize,
+    saturation: f32,
+    brightness: f32,
+    reverse: bool,
+) -> Rgb {
+    let lag = 0.18
+        * if reverse {
+            1. - zone as f32
+        } else {
+            zone as f32
+        };
+    hsv(t / period.max(0.1) - lag, saturation, brightness)
+}
+pub fn audio_colors(
+    style: &str,
+    data: &CaptureData,
+    color: Rgb,
+    sensitivity: f32,
+    hue: &mut f32,
+) -> Colors {
+    match style {
+        "spectrum" => {
+            let h = 0.66 - 0.66 * data.centroid;
+            let bass = (data.bass * sensitivity).min(1.).powf(1.5);
+            let treble = (data.treble.max(data.mid * 0.7) * sensitivity)
+                .min(1.)
+                .powf(1.5);
+            [hsv(h + 0.12, 1., treble), hsv(h, 1., bass)]
+        }
+        "rainbow" => {
+            if data.beat {
+                *hue = (*hue + 0.17) % 1.;
+            }
+            let amount = (data.bass.max(data.level) * sensitivity).min(1.).powf(1.3);
+            [hsv(*hue + 0.5, 1., amount), hsv(*hue, 1., amount)]
+        }
+        _ => {
+            let amount = (data.bass.max(data.level * 0.6) * sensitivity)
+                .min(1.)
+                .powf(1.6);
+            [scale(color, (amount * 1.1).min(1.)), scale(color, amount)]
+        }
+    }
+}
+pub fn palette(pixels: &[[u8; 3]]) -> Colors {
+    let mut data = vec![];
+    let mut hist = [0f32; 36];
+    let mut total = 0.;
+    for pixel in pixels {
+        let c = pixel.map(|v| v as f32 / 255.);
+        let max = c.into_iter().fold(0f32, f32::max);
+        let min = c.into_iter().fold(1f32, f32::min);
+        let delta = max - min;
+        let sat = if max > 0. { delta / max } else { 0. };
+        let hue = if delta <= 1e-6 {
+            0.
+        } else if max == c[0] {
+            ((c[1] - c[2]) / delta).rem_euclid(6.) / 6.
+        } else if max == c[1] {
+            ((c[2] - c[0]) / delta + 2.) / 6.
+        } else {
+            ((c[0] - c[1]) / delta + 4.) / 6.
+        };
+        let bin = ((hue * 36.) as usize).min(35);
+        let weight = sat * sat * max;
+        hist[bin] += weight;
+        total += weight;
+        data.push((c, bin, weight));
+    }
+    if pixels.is_empty() || total < 1e-3 * pixels.len() as f32 {
+        return [[1.; 3]; 2];
+    }
+    let old = hist;
+    for i in 0..36 {
+        hist[i] = old[i] + 0.5 * (old[(i + 35) % 36] + old[(i + 1) % 36]);
+    }
+    let mut out = vec![];
+    for _ in 0..2 {
+        let peak = (0..36).fold(0, |best, i| if hist[i] > hist[best] { i } else { best });
+        if hist[peak] <= 0. {
+            break;
+        }
+        let mut sum = [0.; 3];
+        let mut weights = 0.;
+        for (c, bin, w) in &data {
+            let distance = ((*bin as i32 - peak as i32 + 18).rem_euclid(36) - 18).abs();
+            if distance <= 1 {
+                weights += w;
+                for i in 0..3 {
+                    sum[i] += c[i] * w;
+                }
+            }
+        }
+        let color = sum.map(|v| v / weights.max(1e-6));
+        let max = color.into_iter().fold(0f32, f32::max).max(1e-6);
+        out.push(color.map(|v| v / max));
+        for d in -3i32..=3 {
+            hist[(peak as i32 + d).rem_euclid(36) as usize] = 0.;
+        }
+    }
+    if out.is_empty() {
+        [[1.; 3]; 2]
+    } else {
+        [out[0], out.get(1).copied().unwrap_or(out[0])]
+    }
+}
 pub fn pulse(t: f32, period: f32) -> f32 {
     (1. - (std::f32::consts::TAU * t / period.max(0.02)).cos()) * 0.5
 }
@@ -67,6 +198,7 @@ pub struct CaptureData {
     pub level: f32,
     pub beat: bool,
     pub centroid: f32,
+    pub updated: Option<Instant>,
     pub error: Option<String>,
     pub restore_token: Option<String>,
 }
@@ -237,62 +369,20 @@ impl Capture {
                         "--latency-msec=30",
                     ]);
                     let mut pipe = spawn_capture(&mut cmd, &ch)?;
-                    let mut planner = FftPlanner::<f32>::new();
-                    let fft = planner.plan_fft_forward(2048);
-                    let mut bytes = vec![0; 4096];
-                    let mut peak = 0.01f32;
-                    let mut previous = 0f32;
+                    let mut analyzer = crate::audio::Analyzer::default();
+                    let mut bytes = [0u8; 1024];
                     while !s.load(Ordering::Relaxed) {
                         pipe.read_exact(&mut bytes)?;
-                        let mut buf: Vec<_> = bytes
+                        let samples: Vec<_> = bytes
                             .chunks_exact(2)
-                            .enumerate()
-                            .map(|(i, p)| {
-                                Complex::new(
-                                    i16::from_le_bytes([p[0], p[1]]) as f32 / 32768.
-                                        * (0.5
-                                            - 0.5
-                                                * (std::f32::consts::TAU * i as f32 / 2047.).cos()),
-                                    0.,
-                                )
-                            })
+                            .map(|p| i16::from_le_bytes([p[0], p[1]]))
                             .collect();
-                        let rms = (buf.iter().map(|x| x.re * x.re).sum::<f32>() / 2048.).sqrt();
-                        fft.process(&mut buf);
-                        let mut bands = [0.; 3];
-                        let mut counts = [0.; 3];
-                        let mut weight = 0.;
-                        let mut sum = 0.;
-                        for (i, v) in buf.iter().enumerate().take(1024).skip(1) {
-                            let f = i as f32 * 44100. / 2048.;
-                            let n = v.norm_sqr();
-                            let band = if f < 250. {
-                                0
-                            } else if f < 4000. {
-                                1
-                            } else {
-                                2
-                            };
-                            bands[band] += n;
-                            counts[band] += 1.;
-                            weight += f * n;
-                            sum += n;
+                        if let Some(levels) = analyzer.feed(&samples) {
+                            let mut shared = d.lock().unwrap();
+                            let mut levels = levels;
+                            levels.beat |= shared.beat;
+                            *shared = levels;
                         }
-                        let mut levels = bands.map(|n| (n / 2048.).sqrt());
-                        peak = (peak * 0.995)
-                            .max(levels.iter().copied().fold(0., f32::max))
-                            .max(0.01);
-                        for n in &mut levels {
-                            *n = (*n / peak).clamp(0., 1.);
-                        }
-                        let mut data = d.lock().unwrap();
-                        data.bass = if rms > 0.002 { levels[0] } else { 0. };
-                        data.mid = if rms > 0.002 { levels[1] } else { 0. };
-                        data.treble = if rms > 0.002 { levels[2] } else { 0. };
-                        data.level = (rms * 8.).clamp(0., 1.);
-                        data.beat = levels[0] > previous * 1.3 && levels[0] > 0.4;
-                        data.centroid = if sum > 0. { weight / sum / 22050. } else { 0. };
-                        previous = previous * 0.7 + levels[0] * 0.3;
                     }
                 } else {
                     let mut cmd = Command::new("gst-launch-1.0");
@@ -635,10 +725,15 @@ impl GameInputs {
             start,
         })
     }
-    fn colors(&self, t: f32, state: &mut GameFx) -> Option<Colors> {
+    fn colors(&self, t: f32, state: &mut GameStates) -> Option<Colors> {
         if let Some((at, game, data)) = &*self.gsi.lock().unwrap() {
             if at.elapsed() < Duration::from_secs(10) {
-                if let Some(c) = state.colors(game, data, t) {
+                let fx = if game == "cs2" {
+                    &mut state.cs2
+                } else {
+                    &mut state.dota2
+                };
+                if let Some(c) = fx.colors(game, data, t) {
                     return Some(c);
                 }
             }
@@ -655,8 +750,13 @@ impl Drop for GameInputs {
     }
 }
 #[derive(Default)]
-struct GameFx {
-    last_t: f32,
+struct GameStates {
+    cs2: GameFx,
+    dota2: GameFx,
+}
+#[derive(Default)]
+pub struct GameFx {
+    last_t: Option<f32>,
     bomb: String,
     bomb_at: f32,
     bomb_phase: f32,
@@ -664,14 +764,16 @@ struct GameFx {
     kill_at: Option<f32>,
 }
 impl GameFx {
-    fn colors(&mut self, game: &str, d: &Value, t: f32) -> Option<Colors> {
-        let dt = (t - self.last_t).max(0.);
-        self.last_t = t;
+    pub fn colors(&mut self, game: &str, d: &Value, t: f32) -> Option<Colors> {
+        let dt = self.last_t.map(|last| (t - last).max(0.)).unwrap_or(0.);
+        self.last_t = Some(t);
         let health = |n: f32| hsv(0.33 * n.clamp(0., 1.), 1., 1.);
         let mut out;
         if game == "cs2" {
             let p = &d["player"];
             if d["map"].is_null() || p["activity"] == "menu" || p["state"].is_null() {
+                self.bomb.clear();
+                self.kills = None;
                 return None;
             }
             let s = &p["state"];
@@ -693,7 +795,7 @@ impl GameFx {
                     scale(team, 0.45),
                     scale(
                         health(h / 100.),
-                        if h <= 20. {
+                        if h > 0. && h <= 20. {
                             0.5 + 0.5 * pulse(t, 0.8)
                         } else {
                             1.
@@ -709,10 +811,19 @@ impl GameFx {
             }
             match bomb {
                 "planted" => {
-                    let remain = d["phase_countdowns"]["phase_ends_in"]
-                        .as_str()
-                        .and_then(|s| s.parse::<f32>().ok())
-                        .unwrap_or(40. - (t - self.bomb_at));
+                    let remain = if d["phase_countdowns"]["phase"] == "bomb" {
+                        d["phase_countdowns"]["phase_ends_in"]
+                            .as_f64()
+                            .map(|n| n as f32)
+                            .or_else(|| {
+                                d["phase_countdowns"]["phase_ends_in"]
+                                    .as_str()
+                                    .and_then(|s| s.parse().ok())
+                            })
+                    } else {
+                        None
+                    }
+                    .unwrap_or(40. - (t - self.bomb_at));
                     let period = 0.12 + 0.9 * (remain / 40.).clamp(0., 1.).powf(1.5);
                     self.bomb_phase += dt / period;
                     let beep = (-(self.bomb_phase.fract() * 6.)).exp();
@@ -737,13 +848,17 @@ impl GameFx {
                     ),
                     burn,
                 );
-                self.kill(s["round_kills"].as_u64(), t);
+                self.kill(Some(s["round_kills"].as_u64().unwrap_or(0)), t);
                 if let Some(at) = self.kill_at {
                     let f = (-(t - at) / 0.12).exp();
-                    out = [
-                        mix(out[0], [1.; 3], f),
-                        mix(out[1], mix(team, [1.; 3], 0.6), f),
-                    ];
+                    if f < 0.01 {
+                        self.kill_at = None;
+                    } else {
+                        out = [
+                            mix(out[0], [1.; 3], f),
+                            mix(out[1], mix(team, [1.; 3], 0.6), f),
+                        ];
+                    }
                 }
                 let flash = s["flashed"].as_f64().unwrap_or(0.) as f32 / 255.;
                 out = out.map(|c| mix(c, [1.; 3], flash));
@@ -758,6 +873,7 @@ impl GameFx {
             .contains(&gs)
                 || h["health_percent"].is_null()
             {
+                self.kills = None;
                 return None;
             }
             let team = if d["player"]["team_name"] == "radiant" {
@@ -794,14 +910,20 @@ impl GameFx {
                 }
                 if h["stunned"].as_bool().unwrap_or(false) || h["hexed"].as_bool().unwrap_or(false)
                 {
-                    c[1] = mix(c[1], [1.; 3], 0.5);
+                    let v = t * 1.6;
+                    let flicker = 0.55 + 0.45 * (v * 31.).sin() * (v * 17.3 + 1.).sin();
+                    c[1] = mix(c[1], [1.; 3], 0.25 + 0.5 * flicker);
                 }
                 c
             };
             self.kill(d["player"]["kills"].as_u64(), t);
             if let Some(at) = self.kill_at {
                 let f = (-(t - at) / 0.25).exp();
-                out = out.map(|c| mix(c, [1., 0.78, 0.2], f));
+                if f < 0.01 {
+                    self.kill_at = None;
+                } else {
+                    out = out.map(|c| mix(c, [1., 0.78, 0.2], f));
+                }
             }
         }
         Some(out)
@@ -821,16 +943,16 @@ impl GameFx {
 pub fn defaults() -> Value {
     json!({"screen":{"dpi_area":"screen","logo_area":"center","vivid":true,"saturation":1.3,"brightness":1.0,"smoothing":0.6},"audio":{"style":"pulse","color":"#14b4ff","sensitivity":1.0,"brightness":1.0},"wave":{"period":6.0,"saturation":1.0,"brightness":1.0,"reverse":false},"dpi":{"colors":["#ff2a2a","#ffd400","#3ddc84","#14b4ff","#a040ff"]}})
 }
-fn sample(frame: &[u8], area: &str, vivid: bool) -> Rgb {
+pub fn sample(frame: &[u8], area: &str, vivid: bool) -> Rgb {
     let mut colors = vec![];
     for y in 0..36 {
         for x in 0..64 {
             let yes = match area {
-                "center" => (16..48).contains(&x) && (9..27).contains(&y),
-                "left" => x < 16,
-                "right" => x >= 48,
-                "top" => y < 9,
-                "bottom" => y >= 27,
+                "center" => (12..51).contains(&x) && (5..30).contains(&y),
+                "left" => x < 21,
+                "right" => x >= 42,
+                "top" => y < 11,
+                "bottom" => y >= 24,
                 _ => true,
             };
             if yes {
@@ -884,9 +1006,10 @@ pub struct Live {
     pub restore_token: Option<String>,
     capture: Option<Capture>,
     game: Option<GameInputs>,
-    fx: GameFx,
+    fx: GameStates,
     start: Instant,
     current: Colors,
+    have_current: bool,
     hue: f32,
     art: HashMap<String, Colors>,
 }
@@ -899,9 +1022,10 @@ impl Default for Live {
             restore_token: None,
             capture: None,
             game: None,
-            fx: GameFx::default(),
+            fx: GameStates::default(),
             start: Instant::now(),
             current: [[0.; 3]; 2],
+            have_current: false,
             hue: 0.,
             art: HashMap::new(),
         }
@@ -916,41 +1040,11 @@ impl Live {
         }
         let image = image::open(path)
             .ok()?
-            .resize(64, 36, image::imageops::FilterType::Triangle)
+            .resize_exact(96, 54, image::imageops::FilterType::Triangle)
             .to_rgb8();
-        let bytes = image.into_raw();
-        let pixels: Vec<Rgb> = bytes
-            .chunks_exact(3)
-            .map(|p| [p[0] as f32 / 255., p[1] as f32 / 255., p[2] as f32 / 255.])
-            .collect();
-        let vibrant: Vec<_> = pixels
-            .iter()
-            .filter(|c| {
-                let max = c.iter().copied().fold(0., f32::max);
-                let min = c.iter().copied().fold(1., f32::min);
-                max - min > 0.2 && max > 0.2
-            })
-            .copied()
-            .collect();
-        let p = if vibrant.is_empty() { pixels } else { vibrant };
-        let mut bins = HashMap::<[u8; 3], (usize, Rgb)>::new();
-        for c in p {
-            let k = c.map(|n| (n * 5.).round() as u8);
-            let e = bins.entry(k).or_insert((0, [0.; 3]));
-            e.0 += 1;
-            for i in 0..3 {
-                e.1[i] += c[i];
-            }
-        }
-        let mut bins: Vec<_> = bins.into_values().collect();
-        bins.sort_by_key(|(n, _)| std::cmp::Reverse(*n));
-        let a = bins.first()?;
-        let first = a.1.map(|v| v / a.0 as f32);
-        let second = bins
-            .get(1)
-            .map(|(n, c)| c.map(|v| v / (*n as f32)))
-            .unwrap_or(first);
-        let c = [second, first];
+        let pixels: Vec<_> = image.pixels().map(|p| p.0).collect();
+        let [main, second] = palette(&pixels);
+        let c = [second, main];
         self.art.insert(key, c);
         Some(c)
     }
@@ -983,6 +1077,7 @@ impl Live {
             self.capture = None;
             self.error = None;
             self.kind = kind.into();
+            self.have_current = false;
             if ["screen", "audio"].contains(&kind) {
                 self.capture = Some(Capture::start(
                     kind,
@@ -1015,22 +1110,22 @@ impl Live {
             "breathing" => {
                 [scale(
                     rgb_hex(rule.and_then(|r| r["color"].as_str()).unwrap_or("#14b4ff")),
-                    pulse(
-                        t,
-                        rule.and_then(|r| r["period_ms"].as_f64()).unwrap_or(4000.) as f32 / 1000.,
-                    ),
+                    0.06 + 0.94
+                        * pulse(
+                            t,
+                            rule.and_then(|r| r["period_ms"].as_f64()).unwrap_or(4000.) as f32
+                                / 1000.,
+                        ),
                 ); 2]
             }
             "wave" => std::array::from_fn(|z| {
-                hsv(
-                    t / f("period", 6.)
-                        + if options["reverse"].as_bool().unwrap_or(false) {
-                            -(z as f32) * 0.18
-                        } else {
-                            z as f32 * 0.18
-                        },
+                wave(
+                    t,
+                    f("period", 6.),
+                    z,
                     f("saturation", 1.),
                     f("brightness", 1.),
+                    options["reverse"].as_bool().unwrap_or(false),
                 )
             }),
             "dpi" => {
@@ -1054,13 +1149,29 @@ impl Live {
                 .and_then(|g| g.colors(t, &mut self.fx))
                 .or_else(|| self.art(ctx.game.as_ref()))?,
             "screen" | "audio" => {
-                let data = self.capture.as_ref()?.data.lock().unwrap().clone();
+                let data = {
+                    let mut source = self.capture.as_ref()?.data.lock().unwrap();
+                    let mut data = source.clone();
+                    source.beat = false;
+                    if kind == "audio"
+                        && data
+                            .updated
+                            .is_some_and(|at| at.elapsed() > Duration::from_millis(300))
+                    {
+                        data.level = 0.;
+                        data.bass = 0.;
+                        data.mid = 0.;
+                        data.treble = 0.;
+                        data.beat = false;
+                    }
+                    data
+                };
                 if let Some(e) = data.error {
                     self.error = Some(e);
                     return None;
                 }
-                if let Some(token) = data.restore_token {
-                    self.restore_token = Some(token);
+                if let Some(token) = &data.restore_token {
+                    self.restore_token = Some(token.clone());
                 }
                 if kind == "screen" {
                     if data.frame.is_empty() {
@@ -1076,34 +1187,17 @@ impl Live {
                         )
                     });
                     for c in &mut colors {
-                        let gray = (c[0] + c[1] + c[2]) / 3.;
-                        *c = std::array::from_fn(|i| {
-                            ((gray + (c[i] - gray) * f("saturation", 1.3)) * f("brightness", 1.))
-                                .clamp(0., 1.)
-                        });
+                        *c = adjust(*c, f("saturation", 1.3), f("brightness", 1.));
                     }
                     colors
                 } else {
-                    let sensitivity = f("sensitivity", 1.);
-                    let c = match options["style"].as_str().unwrap_or("pulse") {
-                        "spectrum" => [
-                            [data.bass, data.mid, data.treble],
-                            [data.treble, data.bass, data.mid],
-                        ],
-                        "rainbow" => {
-                            if data.beat {
-                                self.hue = (self.hue + 0.13) % 1.;
-                            }
-                            let v = (data.level * sensitivity).clamp(0., 1.);
-                            [hsv(self.hue, 1., v), hsv(self.hue + 0.15, 1., v)]
-                        }
-                        _ => {
-                            [scale(
-                                rgb_hex(options["color"].as_str().unwrap_or("#14b4ff")),
-                                (data.level * sensitivity).clamp(0., 1.),
-                            ); 2]
-                        }
-                    };
+                    let c = audio_colors(
+                        options["style"].as_str().unwrap_or("pulse"),
+                        &data,
+                        rgb_hex(options["color"].as_str().unwrap_or("#14b4ff")),
+                        f("sensitivity", 1.),
+                        &mut self.hue,
+                    );
                     c.map(|c| scale(c, f("brightness", 1.)))
                 }
             }
@@ -1120,9 +1214,12 @@ impl Live {
             1.
         };
         for z in 0..2 {
-            target[z] = mix(self.current[z], target[z], response);
+            if self.have_current {
+                target[z] = mix(self.current[z], target[z], response);
+            }
         }
         self.current = target;
+        self.have_current = true;
         let colors = target.map(|c| c.map(|n| (n.clamp(0., 1.) * 255.).round() as u8));
         self.colors = colors;
         Some(colors)

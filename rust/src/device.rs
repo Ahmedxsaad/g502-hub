@@ -351,8 +351,13 @@ impl Device {
         self.hid.call(ONBOARD, 12, &[index])?;
         Ok(())
     }
+    pub fn dpi_range(&mut self) -> Result<[u16; 3]> {
+        let r = self.hid.call(0x2201, 1, &[0])?;
+        crate::parity::dpi_range(&r[1..])
+    }
     pub fn preview_dpi(&mut self, dpi: u16) -> Result<()> {
-        ensure!((100..=25600).contains(&dpi), "Invalid DPI");
+        let [lo, hi, _] = self.dpi_range()?;
+        ensure!((lo..=hi).contains(&dpi), "Invalid DPI");
         let [a, b] = dpi.to_be_bytes();
         self.hid.call(0x2201, 3, &[0, a, b])?;
         Ok(())
