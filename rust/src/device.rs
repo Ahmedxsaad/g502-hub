@@ -539,7 +539,12 @@ mod write_tests {
                 b.read_exact(&mut packet[1..]).unwrap();
                 let function = packet[3] >> 4;
                 let mut payload = vec![0; 16];
-                if function == 6 {
+                if packet[2] == 2 && function == 1 {
+                    // Notification can arrive while renewing the subscription.
+                    b.write_all(&[0x10, 255, 2, 0, 0, 32, 0]).unwrap();
+                    // UnixStream is a byte stream, unlike hidraw's report reads.
+                    std::thread::sleep(Duration::from_millis(10));
+                } else if function == 6 {
                     count.fetch_add(1, Ordering::SeqCst);
                     if once {
                         once = false;
@@ -613,6 +618,22 @@ mod write_tests {
             writes,
             thread,
         )
+    }
+    #[test]
+    fn spy_can_be_renewed_without_losing_button_notifications_or_writing_flash() {
+        let (mut d, count, t) = fake(false, false);
+        d.hid.features.insert(0x8110, 2);
+        for _ in 0..3 {
+            assert_eq!(d.spy_start().unwrap(), 2);
+        }
+        assert_eq!(count.load(Ordering::SeqCst), 0);
+        assert_eq!(d.hid.events.len(), 3);
+        for (index, event, params) in &d.hid.events {
+            assert_eq!((*index, *event), (2, 0));
+            assert_eq!(&params[..2], &[0, 32]);
+        }
+        drop(d);
+        t.join().unwrap();
     }
     #[test]
     fn writes_are_verified_and_busy_retries_restart_whole_sector() {

@@ -57,6 +57,7 @@ struct Engine {
     player: Player,
     typing: HashMap<char, (u8, u16)>,
     spy: Option<u8>,
+    last_spy_start: Instant,
     mask: u16,
     backup_done: bool,
     slot_before: Option<usize>,
@@ -87,6 +88,7 @@ impl Engine {
             player: Player::default(),
             typing,
             spy: None,
+            last_spy_start: Instant::now(),
             mask: 0,
             backup_done: false,
             slot_before: None,
@@ -161,8 +163,13 @@ impl Engine {
             .as_object()
             .is_some_and(|m| !m.is_empty());
         if let Some(d) = &mut self.device {
-            if need && self.spy.is_none() {
+            // USB resets can silently disable notifications while HID++ polling
+            // still works. Renew the subscription without stopping held macros.
+            if need
+                && (self.spy.is_none() || self.last_spy_start.elapsed() >= Duration::from_secs(5))
+            {
                 self.spy = Some(d.spy_start()?);
+                self.last_spy_start = Instant::now();
             } else if !need && self.spy.is_some() {
                 d.spy_stop()?;
                 self.spy = None;
@@ -175,6 +182,7 @@ impl Engine {
         self.player.stop_all();
         self.device = None;
         self.spy = None;
+        self.mask = 0;
         self.snapshot.connected = false;
         self.snapshot.error = Some(error.to_string());
         self.snapshot.status = "Souris déconnectée — reconnexion automatique".into();
@@ -286,6 +294,7 @@ impl Engine {
                 });
             }
         }
+        self.sync_spy()?;
         Ok(())
     }
     fn rules(&mut self) -> Result<()> {
@@ -982,6 +991,36 @@ fn show_osd(text: &str) -> Result<()> {
     let _: () = p.call("showText", &("input-mouse", text))?;
     Ok(())
 }
+#[derive(Default)]
+struct SleepClock {
+    previous: Option<(Duration, Duration)>,
+}
+impl SleepClock {
+    fn observe(&mut self, boot: Duration, monotonic: Duration) -> bool {
+        let previous = self.previous.replace((boot, monotonic));
+        previous.is_some_and(|(old_boot, old_mono)| {
+            boot.saturating_sub(old_boot)
+                .saturating_sub(monotonic.saturating_sub(old_mono))
+                >= Duration::from_secs(1)
+        })
+    }
+    fn resumed(&mut self) -> bool {
+        fn read(clock: libc::clockid_t) -> Option<Duration> {
+            let mut time = libc::timespec {
+                tv_sec: 0,
+                tv_nsec: 0,
+            };
+            if unsafe { libc::clock_gettime(clock, &mut time) } != 0 {
+                return None;
+            }
+            Some(Duration::new(time.tv_sec as u64, time.tv_nsec as u32))
+        }
+        match (read(libc::CLOCK_BOOTTIME), read(libc::CLOCK_MONOTONIC)) {
+            (Some(boot), Some(monotonic)) => self.observe(boot, monotonic),
+            _ => false,
+        }
+    }
+}
 static STOP: AtomicBool = AtomicBool::new(false);
 extern "C" fn signal_handler(_: libc::c_int) {
     STOP.store(true, Ordering::Relaxed);
@@ -1006,7 +1045,19 @@ pub fn run() -> Result<()> {
     let mut last_rule = Instant::now();
     let mut last_effect = Instant::now();
     let mut reconnect = Instant::now();
+    let mut sleep_clock = SleepClock::default();
     while !STOP.load(Ordering::Relaxed) {
+        // CLOCK_BOOTTIME includes suspend; Instant/CLOCK_MONOTONIC does not.
+        // Reopen both physical and virtual devices after wake, even when the
+        // hidraw descriptor survived and no I/O error signalled the USB reset.
+        if sleep_clock.resumed() {
+            e.lost(anyhow::anyhow!("Reconnexion après la mise en veille"));
+            e.player = Player::default();
+            if let Err(error) = e.connect() {
+                e.lost(error);
+            }
+            reconnect = Instant::now();
+        }
         if e.device.is_none() && reconnect.elapsed() > Duration::from_secs(2) {
             reconnect = Instant::now();
             if let Err(error) = e.connect() {
@@ -1160,5 +1211,21 @@ mod memory_guard_tests {
         for page in [6, 7, 8, 9] {
             assert!(macro_page_allowed(&snapshot, page));
         }
+    }
+}
+
+#[cfg(test)]
+mod resume_tests {
+    use super::*;
+    #[test]
+    fn suspend_is_detected_once_without_confusing_busy_service_or_wall_clock() {
+        let mut clock = SleepClock::default();
+        let d = Duration::from_secs;
+        assert!(!clock.observe(d(100), d(60)));
+        assert!(!clock.observe(d(130), d(90))); // 30 seconds of ordinary work
+        assert!(clock.observe(d(3730), d(90))); // one hour asleep
+        assert!(!clock.observe(d(3731), d(91)));
+        assert!(clock.observe(d(3742), d(92))); // another suspend
+        assert!(!clock.observe(d(3743), d(93)));
     }
 }

@@ -1755,6 +1755,8 @@ impl App {
                     }
                 }
             }
+            // Use the updated DPI position for every part of the marker while dragging.
+            let c = egui::pos2(left + width * fraction(*dpi), y);
             if p.shift_dpi as usize == *slot {
                 ui.painter().circle_stroke(
                     c,
@@ -1779,12 +1781,23 @@ impl App {
             );
             if *slot == active {
                 ui.painter().text(
-                    c - egui::vec2(0., 27.),
+                    c - egui::vec2(0., 32.),
                     egui::Align2::CENTER_CENTER,
-                    format!("{dpi}\n▼"),
+                    dpi.to_string(),
                     egui::FontId::proportional(10.),
                     ACCENT,
                 );
+                // A separate shape keeps the pointer centered regardless of the
+                // label width; multiline text aligns its shorter row to the left.
+                ui.painter().add(egui::Shape::convex_polygon(
+                    vec![
+                        c + egui::vec2(-4., -22.),
+                        c + egui::vec2(4., -22.),
+                        c + egui::vec2(0., -14.),
+                    ],
+                    ACCENT,
+                    egui::Stroke::NONE,
+                ));
             }
         }
         if track.clicked() && values.len() < 5 {
