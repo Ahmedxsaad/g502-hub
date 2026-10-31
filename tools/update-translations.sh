@@ -13,7 +13,7 @@ echo "Using lrelease: $LRELEASE"
 mkdir -p g502hub/gui/translations
 
 echo "Updating translation source files (.ts)..."
-"$LUPDATE" -extensions py g502hub/ -ts g502hub/gui/translations/zh_CN.ts
+"$LUPDATE" -no-obsolete -extensions py g502hub/ -ts g502hub/gui/translations/zh_CN.ts
 
 echo "Compiling binary translation files (.qm)..."
 for ts in g502hub/gui/translations/*.ts; do
