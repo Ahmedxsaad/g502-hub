@@ -146,6 +146,8 @@ class MainWindow(QMainWindow):
         self.placeholder.fix.clicked.connect(self._fix_permissions)
         macros_page = next(i for i, p in enumerate(self.pages) if isinstance(p, MacrosPage))
         self.pages[1].open_macros = lambda: self.rail_group.button(macros_page).click()
+        next(p for p in self.pages if isinstance(p, SettingsPage)).restart_app = self.restart
+        self.restarting = False
         self.rail_group.button(0).setChecked(True)
         self.show_page(0)
         self._connected(False)
@@ -347,6 +349,11 @@ class MainWindow(QMainWindow):
         self.state.shutdown()
         QApplication.quit()
 
+    def restart(self):
+        """Quit, and have main() start a new copy (to show another language)."""
+        self.restarting = True
+        self.quit()
+
     def closeEvent(self, e):
         prefs = settings.load()
         if self.tray is not None and prefs.get("close_to_tray", True):
@@ -410,4 +417,9 @@ def main():
     window._instance_server = _listen(window)
     if not (tray_only and window.tray is not None):
         window.show()
-    sys.exit(app.exec())
+    code = app.exec()
+    if window.restarting:
+        # Everything is shut down and the mouse released; replace this process with a new copy
+        cmd = system.launch_command()
+        os.execvp(cmd[0], cmd)
+    sys.exit(code)

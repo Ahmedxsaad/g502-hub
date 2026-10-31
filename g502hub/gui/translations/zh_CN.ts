@@ -1634,82 +1634,82 @@ Continue?</source>
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../app.py" line="166"/>
+        <location filename="../app.py" line="168"/>
         <source>ONBOARD MEMORY</source>
         <translation>板载内存</translation>
     </message>
     <message>
-        <location filename="../app.py" line="173"/>
+        <location filename="../app.py" line="175"/>
         <source>Active onboard profile</source>
         <translation>当前激活的板载配置文件</translation>
     </message>
     <message>
-        <location filename="../app.py" line="184"/>
+        <location filename="../app.py" line="186"/>
         <source>Current DPI on the mouse</source>
         <translation>鼠标当前 DPI</translation>
     </message>
     <message>
-        <location filename="../app.py" line="252"/>
+        <location filename="../app.py" line="254"/>
         <source>Profile {n}</source>
         <translation>配置文件 {n}</translation>
     </message>
     <message>
-        <location filename="../app.py" line="253"/>
+        <location filename="../app.py" line="255"/>
         <source>PROFILE {n}:  {name}</source>
         <translation>配置 {n}：{name}</translation>
     </message>
     <message>
-        <location filename="../app.py" line="258"/>
+        <location filename="../app.py" line="260"/>
         <source>ONBOARD MEMORY  ·  SLOT {slot}</source>
         <translation>板载内存  ·  槽位 {slot}</translation>
     </message>
     <message>
-        <location filename="../app.py" line="262"/>
+        <location filename="../app.py" line="264"/>
         <source>{dpi} DPI   ·   LEVEL {level}/{total}</source>
         <translation>{dpi} DPI   ·   第 {level}/{total} 档</translation>
     </message>
     <message>
-        <location filename="../app.py" line="273"/>
+        <location filename="../app.py" line="275"/>
         <source>ratbagd (Piper) is running and may overwrite your G-Shift layer. Close Piper / stop ratbagd.</source>
         <translation>检测到 ratbagd (Piper) 正在后台运行，可能会覆盖 G-Shift 按键层。建议关闭 Piper 或停止 ratbagd 服务。</translation>
     </message>
     <message>
-        <location filename="../app.py" line="285"/>
+        <location filename="../app.py" line="287"/>
         <source>Profile {slot}</source>
         <translation>配置文件 {slot}</translation>
     </message>
     <message>
-        <location filename="../app.py" line="286"/>
+        <location filename="../app.py" line="288"/>
         <source>{name}  ·  slot {slot}</source>
         <translation>{name}  ·  槽位 {slot}</translation>
     </message>
     <message>
-        <location filename="../app.py" line="311"/>
+        <location filename="../app.py" line="313"/>
         <source>Open G502 Hub</source>
         <translation>打开主界面</translation>
     </message>
     <message>
-        <location filename="../app.py" line="313"/>
+        <location filename="../app.py" line="315"/>
         <source>Live lighting</source>
         <translation>实时联动灯效</translation>
     </message>
     <message>
-        <location filename="../app.py" line="317"/>
+        <location filename="../app.py" line="319"/>
         <source>Quit</source>
         <translation>退出 G502 Hub</translation>
     </message>
     <message>
-        <location filename="../app.py" line="340"/>
+        <location filename="../app.py" line="342"/>
         <source>Live lighting: {effect}</source>
         <translation>实时联动灯效：{effect}</translation>
     </message>
     <message>
-        <location filename="../app.py" line="341"/>
+        <location filename="../app.py" line="343"/>
         <source>G502 Hub · {effect} on</source>
         <translation>G502 Hub · {effect} 运行中</translation>
     </message>
     <message>
-        <location filename="../app.py" line="358"/>
+        <location filename="../app.py" line="365"/>
         <source>G502 Hub keeps running in the tray. Quit it from the tray menu.</source>
         <translation>G502 Hub 将在系统托盘保持后台运行。可通过托盘右键菜单彻底退出。</translation>
     </message>
@@ -1974,173 +1974,183 @@ Profile format {format}, {sectors} × {size} B onboard memory</source>
         <translation>界面语言 (Language)</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="39"/>
+        <location filename="../pages/settings.py" line="40"/>
         <source>Restart required. Please quit G502 Hub from the tray menu and open it again to apply.</source>
         <translation>需要重启生效。请在系统托盘菜单中选择退出 G502 Hub，然后重新打开软件以应用新语言。</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="43"/>
+        <location filename="../pages/settings.py" line="44"/>
         <source>Startup</source>
         <translation>开机自启与托盘</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="44"/>
+        <location filename="../pages/settings.py" line="45"/>
         <source>Start G502 Hub when I log in (in the tray)</source>
         <translation>登录系统时自动启动 G502 Hub（后台托盘常驻）</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="48"/>
+        <location filename="../pages/settings.py" line="49"/>
         <source>Keep running in the tray when I close the window</source>
         <translation>关闭主窗口时保持在系统托盘运行</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="52"/>
+        <location filename="../pages/settings.py" line="53"/>
         <source>Game rules, macros run by the app, live lighting and the DPI popup only work while G502 Hub runs. Settings saved on the mouse work either way.</source>
         <translation>情景规则、电脑端宏指令、屏幕/音乐实时联动灯效及 DPI 悬浮弹窗仅在 G502 Hub 后台运行时生效；鼠标板载的按键映射和灵敏度设置随时可用。</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="56"/>
+        <location filename="../pages/settings.py" line="57"/>
         <source>On-screen popup</source>
         <translation>屏幕悬浮提示 (OSD)</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="57"/>
+        <location filename="../pages/settings.py" line="58"/>
         <source>Show DPI and profile changes on screen</source>
         <translation>在屏幕上弹出 DPI 和配置切换提示</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="62"/>
+        <location filename="../pages/settings.py" line="63"/>
         <source>Mouse picture</source>
         <translation>鼠标外观展示图</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="73"/>
+        <location filename="../pages/settings.py" line="74"/>
         <source>Device access</source>
         <translation>设备访问权限 (udev 规则)</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="76"/>
-        <location filename="../pages/settings.py" line="131"/>
+        <location filename="../pages/settings.py" line="77"/>
+        <location filename="../pages/settings.py" line="138"/>
         <source>Allow access (asks for your password)</source>
         <translation>授权访问权限（需要管理员密码）</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="82"/>
+        <location filename="../pages/settings.py" line="83"/>
         <source>Game integrations</source>
         <translation>游戏事件原生联动 (GSI)</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="83"/>
+        <location filename="../pages/settings.py" line="84"/>
         <source>Used by rules with “Game-driven” lighting (Games &amp; apps).</source>
         <translation>用于在“游戏与应用”规则中设置了“游戏事件原生联动”的灯效联动。</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="92"/>
+        <location filename="../pages/settings.py" line="93"/>
         <source>Restart the game after setting this up. Dota 2 also needs -gamestateintegration in its Steam launch options.</source>
         <translation>配置后请重启游戏生效。Dota 2 还需要在 Steam 启动项中添加 -gamestateintegration 参数。</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="96"/>
+        <location filename="../pages/settings.py" line="97"/>
         <source>LIGHTSYNC bridge for Proton games</source>
         <translation>Proton 游戏 LIGHTSYNC 驱动桥接</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="97"/>
+        <location filename="../pages/settings.py" line="98"/>
         <source>Windows games with Logitech lighting (like Uncharted, The Last of Us or GTA V) can drive the mouse through Proton, like with G HUB on Windows. Turn it on per game; it adds a small LogitechLed.dll to that game&apos;s Proton prefix, nothing in the game itself.</source>
         <translation>让支持罗技官方灯效的 Windows 游戏（如神海、最后生还者、GTA V 等）在 Linux Proton 环境下也能像在 Windows G HUB 下一样驱动鼠标发光。按游戏开启；它会在对应游戏的 Proton 容器中注入一个轻量的 LogitechLed.dll，不会改动游戏本体。</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="116"/>
+        <location filename="../pages/settings.py" line="117"/>
+        <source>Restart G502 Hub?</source>
+        <translation>重启 G502 Hub？</translation>
+    </message>
+    <message>
+        <location filename="../pages/settings.py" line="118"/>
+        <source>The new language shows after a restart. Restart now?</source>
+        <translation>新的界面语言将在重启后生效。是否立即重启？</translation>
+    </message>
+    <message>
+        <location filename="../pages/settings.py" line="123"/>
         <source>Logitech&apos;s product photo of the G502 HERO. It&apos;s their image, so G502 Hub doesn&apos;t include it: it was downloaded from logitechg.com the first time the app started, and is kept in {path}.</source>
         <translation>罗技 G502 HERO 官方外观图。版权归罗技所有，本程序未直接打包内置：首次启动时已从 logitechg.com 自动下载，并缓存在 {path}。</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="119"/>
+        <location filename="../pages/settings.py" line="126"/>
         <source>Downloading…</source>
         <translation>正在下载中…</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="119"/>
+        <location filename="../pages/settings.py" line="126"/>
         <source>Download it again</source>
         <translation>重新下载外观图</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="125"/>
+        <location filename="../pages/settings.py" line="132"/>
         <source>Your user can configure the mouse without root.</source>
         <translation>当前用户已正确配置 udev 规则，拥有免 Root 访问权限。</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="126"/>
+        <location filename="../pages/settings.py" line="133"/>
         <source>The permission rule is from an older version. Update it so macros run by the app can always type.</source>
         <translation>检测到系统中安装的是旧版权限规则。建议更新，以保证应用端宏指令能正常模拟键盘击键。</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="128"/>
+        <location filename="../pages/settings.py" line="135"/>
         <source>The permission rule isn&apos;t installed, so the app can&apos;t open the mouse.</source>
         <translation>尚未安装 udev 权限规则，应用无法直接打开鼠标设备。</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="130"/>
+        <location filename="../pages/settings.py" line="137"/>
         <source>Update the rule (asks for your password)</source>
         <translation>更新权限规则（需要管理员密码）</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="144"/>
+        <location filename="../pages/settings.py" line="151"/>
         <source>CS2 and Dota 2 live lighting: neither game is installed.</source>
         <translation>CS2 与 Dota 2 联动：未检测到这两款游戏的安装目录。</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="150"/>
+        <location filename="../pages/settings.py" line="157"/>
         <source>✓ set up</source>
         <translation>✓ 已配置</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="150"/>
+        <location filename="../pages/settings.py" line="157"/>
         <source>not set up</source>
         <translation>未配置</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="153"/>
+        <location filename="../pages/settings.py" line="160"/>
         <source>CS2 and Dota 2 live lighting: {state}.</source>
         <translation>CS2 与 Dota 2 实时联动状态：{state}。</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="155"/>
+        <location filename="../pages/settings.py" line="162"/>
         <source>Remove CS2 / Dota 2 setup</source>
         <translation>清除 CS2 / Dota 2 联动配置文件</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="155"/>
+        <location filename="../pages/settings.py" line="162"/>
         <source>Set up CS2 / Dota 2 lighting</source>
         <translation>一键配置 CS2 / Dota 2 联动</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="167"/>
+        <location filename="../pages/settings.py" line="174"/>
         <source>Couldn&apos;t change the game config: {error}</source>
         <translation>无法修改游戏配置文件：{error}</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="180"/>
+        <location filename="../pages/settings.py" line="187"/>
         <source>Not available: {error}</source>
         <translation>当前不可用：{error}</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="183"/>
+        <location filename="../pages/settings.py" line="190"/>
         <source>No Proton games found yet. Run a Windows game through Steam once, then come back here.</source>
         <translation>尚未检测到运行过的 Proton 游戏容器。请先通过 Steam 运行一次 Windows 游戏后再返回此处。</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="188"/>
+        <location filename="../pages/settings.py" line="195"/>
         <source>The bridge DLL isn&apos;t built in this copy yet: install lld (sudo pacman -S lld) and run bridge/logitechled/build.sh.</source>
         <translation>桥接 DLL 尚未在此副本中构建：请安装 lld (sudo pacman -S lld) 并运行 bridge/logitechled/build.sh。</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="195"/>
+        <location filename="../pages/settings.py" line="202"/>
         <source>Turn off</source>
         <translation>停用</translation>
     </message>
     <message>
-        <location filename="../pages/settings.py" line="195"/>
+        <location filename="../pages/settings.py" line="202"/>
         <source>Turn on</source>
         <translation>启用</translation>
     </message>

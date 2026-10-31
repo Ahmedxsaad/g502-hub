@@ -32,6 +32,11 @@ def detect_system_language():
     return "en_US"
 
 
+def effective_language(code):
+    """The language a setting ("auto", "zh_CN", ...) puts on screen."""
+    return detect_system_language() if code == "auto" else code
+
+
 def get_current_language():
     """Get the currently configured language setting ("auto", "zh_CN", "en_US", etc.)."""
     return settings.load().get("language", "auto")
@@ -65,7 +70,7 @@ def setup_translation(app=None, lang_code=None):
     if lang_code is None:
         lang_code = get_current_language()
 
-    effective_code = detect_system_language() if lang_code == "auto" else lang_code
+    effective_code = effective_language(lang_code)
 
     if effective_code != "en_US":
         qm_path = TRANSLATIONS_DIR / f"{effective_code}.qm"

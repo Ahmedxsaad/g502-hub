@@ -2,11 +2,11 @@
 
 import os
 
-from PySide6.QtWidgets import QCheckBox, QComboBox, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
+from PySide6.QtWidgets import QCheckBox, QComboBox, QHBoxLayout, QLabel, QMessageBox, QPushButton, QVBoxLayout, QWidget
 
 from ... import settings
 from .. import photo, system
-from ..i18n import AVAILABLE_LANGUAGES, get_current_language
+from ..i18n import AVAILABLE_LANGUAGES, effective_language, get_current_language
 from ..widgets import heading, muted
 from . import Page
 
@@ -30,6 +30,7 @@ class SettingsPage(Page):
         self.lang_box = QComboBox()
         for code, label in AVAILABLE_LANGUAGES.items():
             self.lang_box.addItem(label, code)
+        self.restart_app = None  # set by the window: quit and start again
         self.start_lang = get_current_language()  # the one this run is showing
         idx = self.lang_box.findData(self.start_lang)
         if idx >= 0:
@@ -109,7 +110,13 @@ class SettingsPage(Page):
         code = self.lang_box.itemData(idx)
         if code != get_current_language():
             settings.update(language=code)
-        self.lang_hint.setVisible(code != self.start_lang)
+        # "System Default" can be the language already on screen
+        changed = effective_language(code) != effective_language(self.start_lang)
+        self.lang_hint.setVisible(changed)
+        if changed and self.restart_app and QMessageBox.question(
+                self.panel, self.tr("Restart G502 Hub?"),
+                self.tr("The new language shows after a restart. Restart now?")) == QMessageBox.StandardButton.Yes:
+            self.restart_app()
 
     def refresh(self):
         ready = self.view.skin.ready

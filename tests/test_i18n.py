@@ -3,8 +3,10 @@
 from unittest.mock import MagicMock
 from PySide6.QtWidgets import QApplication
 
-from g502hub.gui import labels
+from g502hub import settings
+from g502hub.gui import i18n, labels
 from g502hub.gui.i18n import AVAILABLE_LANGUAGES, reset_translation, setup_translation
+from g502hub.gui.pages import settings as settings_page
 from g502hub.gui.pages.about import AboutPage
 from g502hub.gui.pages.settings import SettingsPage
 from g502hub.onboard import MouseButton
@@ -62,3 +64,30 @@ def test_english_fallback():
         assert placeholder.detail.text() == "Looking for the mouse…"
     finally:
         reset_translation(app)
+
+
+def test_picking_another_language_offers_a_restart(monkeypatch, tmp_path):
+    QApplication.instance() or QApplication([])
+    monkeypatch.setattr(settings, "PATH", tmp_path / "settings.json")
+    monkeypatch.setattr(i18n, "detect_system_language", lambda: "en_US")
+    box = MagicMock(StandardButton=settings_page.QMessageBox.StandardButton)
+    monkeypatch.setattr(settings_page, "QMessageBox", box)
+    page = SettingsPage(MagicMock(), MagicMock(), MagicMock())
+    page.restart_app = MagicMock()
+
+    def pick(code, answer=None):
+        box.question.reset_mock()
+        box.question.return_value = answer
+        page.lang_box.setCurrentIndex(page.lang_box.findData(code))
+        return box.question.called
+
+    assert page.lang_hint.isHidden()
+    assert not pick("en_US")  # what "System Default" already shows here
+    assert page.lang_hint.isHidden()
+    assert pick("zh_CN", box.StandardButton.No)
+    assert not page.lang_hint.isHidden() and not page.restart_app.called
+    assert not pick("auto")
+    assert page.lang_hint.isHidden()
+    assert pick("zh_CN", box.StandardButton.Yes)
+    page.restart_app.assert_called_once()
+    assert settings.load()["language"] == "zh_CN"
