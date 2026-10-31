@@ -215,3 +215,9 @@ the mouse photo, third-party components and privacy.
 An unofficial, independent project. Not affiliated with, endorsed or supported
 by Logitech. Logitech, Logitech G, G HUB, LIGHTSYNC, HERO and G502 are
 trademarks of Logitech Europe S.A.
+
+## Experimental native Rust port
+
+An optional native settings interface and headless service are available under
+[`rust/`](rust/README.md). The port is experimental; see its README for build
+instructions, dependencies, hardware-testing limits and coexistence with Python.

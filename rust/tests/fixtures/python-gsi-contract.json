@@ -1,0 +1,840 @@
+[
+  {
+    "game": "cs2",
+    "t": 1.0,
+    "data": {
+      "provider": {
+        "steamid": "me"
+      },
+      "map": {},
+      "round": {
+        "phase": "live"
+      },
+      "player": {
+        "steamid": "me",
+        "team": "CT",
+        "activity": "playing",
+        "state": {
+          "health": 100,
+          "round_kills": 0
+        }
+      }
+    },
+    "expected": [
+      [
+        0.1125,
+        0.24750000000000003,
+        0.45
+      ],
+      [
+        0.020000000000000018,
+        1.0,
+        0.0
+      ]
+    ]
+  },
+  {
+    "game": "cs2",
+    "t": 2.0,
+    "data": {
+      "provider": {
+        "steamid": "me"
+      },
+      "map": {},
+      "round": {
+        "phase": "live"
+      },
+      "player": {
+        "steamid": "me",
+        "team": "CT",
+        "activity": "playing",
+        "state": {
+          "health": 15,
+          "round_kills": 0
+        }
+      }
+    },
+    "expected": [
+      [
+        0.1125,
+        0.24750000000000003,
+        0.45
+      ],
+      [
+        1.0,
+        0.29700000000000004,
+        0.0
+      ]
+    ]
+  },
+  {
+    "game": "cs2",
+    "t": 2.1,
+    "data": {
+      "provider": {
+        "steamid": "me"
+      },
+      "map": {},
+      "round": {
+        "phase": "live"
+      },
+      "player": {
+        "steamid": "me",
+        "team": "CT",
+        "activity": "playing",
+        "state": {
+          "health": 100,
+          "round_kills": 0,
+          "burning": 180
+        }
+      }
+    },
+    "expected": [
+      [
+        0.1125,
+        0.24750000000000003,
+        0.45
+      ],
+      [
+        0.306269139074006,
+        0.390241418621329,
+        0.0
+      ]
+    ]
+  },
+  {
+    "game": "cs2",
+    "t": 2.2,
+    "data": {
+      "provider": {
+        "steamid": "me"
+      },
+      "map": {},
+      "round": {
+        "phase": "live"
+      },
+      "player": {
+        "steamid": "me",
+        "team": "CT",
+        "activity": "playing",
+        "state": {
+          "health": 100,
+          "round_kills": 0,
+          "flashed": 100
+        }
+      }
+    },
+    "expected": [
+      [
+        0.4605392156862745,
+        0.5425980392156863,
+        0.665686274509804
+      ],
+      [
+        0.40431372549019606,
+        1.0,
+        0.39215686274509803
+      ]
+    ]
+  },
+  {
+    "game": "cs2",
+    "t": 3.0,
+    "data": {
+      "provider": {
+        "steamid": "me"
+      },
+      "map": {},
+      "round": {
+        "phase": "live"
+      },
+      "player": {
+        "steamid": "me",
+        "team": "CT",
+        "activity": "playing",
+        "state": {
+          "health": 100,
+          "round_kills": 1
+        }
+      }
+    },
+    "expected": [
+      [
+        1.0,
+        1.0,
+        1.0
+      ],
+      [
+        0.7,
+        0.8200000000000001,
+        1.0
+      ]
+    ]
+  },
+  {
+    "game": "cs2",
+    "t": 3.7,
+    "data": {
+      "provider": {
+        "steamid": "me"
+      },
+      "map": {},
+      "round": {
+        "phase": "live"
+      },
+      "player": {
+        "steamid": "me",
+        "team": "CT",
+        "activity": "playing",
+        "state": {
+          "health": 100,
+          "round_kills": 1
+        }
+      }
+    },
+    "expected": [
+      [
+        0.1125,
+        0.24750000000000003,
+        0.45
+      ],
+      [
+        0.020000000000000018,
+        1.0,
+        0.0
+      ]
+    ]
+  },
+  {
+    "game": "cs2",
+    "t": 4.0,
+    "data": {
+      "provider": {
+        "steamid": "me"
+      },
+      "map": {},
+      "round": {
+        "phase": "live",
+        "bomb": "planted"
+      },
+      "player": {
+        "steamid": "me",
+        "team": "CT",
+        "activity": "playing",
+        "state": {
+          "health": 100,
+          "round_kills": 0
+        }
+      },
+      "phase_countdowns": {
+        "phase": "bomb",
+        "phase_ends_in": 40.0
+      }
+    },
+    "expected": [
+      [
+        0.2955515715030701,
+        0.0,
+        0.0
+      ],
+      [
+        0.1039062000429463,
+        0.9143814285276058,
+        0.0
+      ]
+    ]
+  },
+  {
+    "game": "cs2",
+    "t": 4.5,
+    "data": {
+      "provider": {
+        "steamid": "me"
+      },
+      "map": {},
+      "round": {
+        "phase": "live",
+        "bomb": "planted"
+      },
+      "player": {
+        "steamid": "me",
+        "team": "CT",
+        "activity": "playing",
+        "state": {
+          "health": 100,
+          "round_kills": 0
+        }
+      },
+      "phase_countdowns": {
+        "phase": "bomb",
+        "phase_ends_in": "38.5"
+      }
+    },
+    "expected": [
+      [
+        0.15660136848024694,
+        0.0,
+        0.0
+      ],
+      [
+        0.023805494770965906,
+        0.9961168420704429,
+        0.0
+      ]
+    ]
+  },
+  {
+    "game": "cs2",
+    "t": 5.0,
+    "data": {
+      "provider": {
+        "steamid": "me"
+      },
+      "map": {},
+      "round": {
+        "phase": "live",
+        "bomb": "planted"
+      },
+      "player": {
+        "steamid": "me",
+        "team": "CT",
+        "activity": "playing",
+        "state": {
+          "health": 100,
+          "round_kills": 0
+        }
+      },
+      "phase_countdowns": {
+        "phase": "bomb",
+        "phase_ends_in": 8.0
+      }
+    },
+    "expected": [
+      [
+        0.2876298142422431,
+        0.0,
+        0.0
+      ],
+      [
+        0.09933953997494017,
+        0.919041285739857,
+        0.0
+      ]
+    ]
+  },
+  {
+    "game": "cs2",
+    "t": 6.0,
+    "data": {
+      "provider": {
+        "steamid": "me"
+      },
+      "map": {},
+      "round": {
+        "phase": "live",
+        "bomb": "exploded"
+      },
+      "player": {
+        "steamid": "me",
+        "team": "CT",
+        "activity": "playing",
+        "state": {
+          "health": 100,
+          "round_kills": 0
+        }
+      },
+      "phase_countdowns": {
+        "phase": "bomb",
+        "phase_ends_in": null
+      }
+    },
+    "expected": [
+      [
+        1.0,
+        0.75,
+        0.3
+      ],
+      [
+        1.0,
+        0.75,
+        0.3
+      ]
+    ]
+  },
+  {
+    "game": "cs2",
+    "t": 7.0,
+    "data": {
+      "provider": {
+        "steamid": "me"
+      },
+      "map": {},
+      "round": {
+        "phase": "live",
+        "bomb": "defused"
+      },
+      "player": {
+        "steamid": "me",
+        "team": "CT",
+        "activity": "playing",
+        "state": {
+          "health": 100,
+          "round_kills": 0
+        }
+      },
+      "phase_countdowns": {
+        "phase": "bomb",
+        "phase_ends_in": null
+      }
+    },
+    "expected": [
+      [
+        0.25,
+        0.55,
+        1.0
+      ],
+      [
+        0.020000000000000018,
+        1.0,
+        0.0
+      ]
+    ]
+  },
+  {
+    "game": "cs2",
+    "t": 8.0,
+    "data": {
+      "provider": {
+        "steamid": "me"
+      },
+      "map": {},
+      "round": {
+        "phase": "freezetime"
+      },
+      "player": {
+        "steamid": "me",
+        "team": "CT",
+        "activity": "playing",
+        "state": {
+          "health": 100,
+          "round_kills": 0
+        }
+      }
+    },
+    "expected": [
+      [
+        0.16562500000000013,
+        0.36437500000000034,
+        0.6625000000000005
+      ],
+      [
+        0.16562500000000013,
+        0.36437500000000034,
+        0.6625000000000005
+      ]
+    ]
+  },
+  {
+    "game": "cs2",
+    "t": 9.0,
+    "data": {
+      "provider": {
+        "steamid": "me"
+      },
+      "map": {},
+      "round": {
+        "phase": "live"
+      },
+      "player": {
+        "steamid": "me",
+        "team": "CT",
+        "activity": "playing",
+        "state": {
+          "health": 0,
+          "round_kills": 0
+        }
+      }
+    },
+    "expected": [
+      [
+        0.22,
+        0.0,
+        0.0
+      ],
+      [
+        0.22,
+        0.0,
+        0.0
+      ]
+    ]
+  },
+  {
+    "game": "cs2",
+    "t": 10.0,
+    "data": {
+      "provider": {
+        "steamid": "me"
+      },
+      "map": {},
+      "round": {
+        "phase": "over"
+      },
+      "player": {
+        "steamid": "me",
+        "team": "CT",
+        "activity": "playing",
+        "state": {
+          "health": 0,
+          "round_kills": 0
+        }
+      }
+    },
+    "expected": [
+      [
+        0.1125,
+        0.24750000000000003,
+        0.45
+      ],
+      [
+        1.0,
+        0.0,
+        0.0
+      ]
+    ]
+  },
+  {
+    "game": "dota2",
+    "t": 1.0,
+    "data": {
+      "map": {
+        "game_state": "DOTA_GAMERULES_STATE_GAME_IN_PROGRESS"
+      },
+      "player": {
+        "team_name": "radiant",
+        "kills": 0
+      },
+      "hero": {
+        "health_percent": 100,
+        "mana_percent": 70,
+        "alive": true
+      }
+    },
+    "expected": [
+      [
+        0.1104,
+        0.2944,
+        0.736
+      ],
+      [
+        0.020000000000000018,
+        1.0,
+        0.0
+      ]
+    ]
+  },
+  {
+    "game": "dota2",
+    "t": 2.0,
+    "data": {
+      "map": {
+        "game_state": "DOTA_GAMERULES_STATE_GAME_IN_PROGRESS"
+      },
+      "player": {
+        "team_name": "radiant",
+        "kills": 0
+      },
+      "hero": {
+        "health_percent": 15,
+        "mana_percent": 70,
+        "alive": true
+      }
+    },
+    "expected": [
+      [
+        0.1104,
+        0.2944,
+        0.736
+      ],
+      [
+        0.5535403044888485,
+        0.16440147043318803,
+        0.0
+      ]
+    ]
+  },
+  {
+    "game": "dota2",
+    "t": 3.0,
+    "data": {
+      "map": {
+        "game_state": "DOTA_GAMERULES_STATE_GAME_IN_PROGRESS"
+      },
+      "player": {
+        "team_name": "radiant",
+        "kills": 0
+      },
+      "hero": {
+        "health_percent": 100,
+        "mana_percent": 70,
+        "alive": true,
+        "silenced": true
+      }
+    },
+    "expected": [
+      [
+        0.40415999999999996,
+        0.17776,
+        0.8344
+      ],
+      [
+        0.020000000000000018,
+        1.0,
+        0.0
+      ]
+    ]
+  },
+  {
+    "game": "dota2",
+    "t": 4.0,
+    "data": {
+      "map": {
+        "game_state": "DOTA_GAMERULES_STATE_GAME_IN_PROGRESS"
+      },
+      "player": {
+        "team_name": "radiant",
+        "kills": 0
+      },
+      "hero": {
+        "health_percent": 100,
+        "mana_percent": 70,
+        "alive": true,
+        "stunned": true
+      }
+    },
+    "expected": [
+      [
+        0.1104,
+        0.2944,
+        0.736
+      ],
+      [
+        0.6343580667603474,
+        1.0,
+        0.6268959864901504
+      ]
+    ]
+  },
+  {
+    "game": "dota2",
+    "t": 5.0,
+    "data": {
+      "map": {
+        "game_state": "DOTA_GAMERULES_STATE_GAME_IN_PROGRESS"
+      },
+      "player": {
+        "team_name": "radiant",
+        "kills": 0
+      },
+      "hero": {
+        "health_percent": 100,
+        "mana_percent": 70,
+        "alive": true,
+        "hexed": true
+      }
+    },
+    "expected": [
+      [
+        0.1104,
+        0.2944,
+        0.736
+      ],
+      [
+        0.5720081725409211,
+        1.0,
+        0.5632736454499194
+      ]
+    ]
+  },
+  {
+    "game": "dota2",
+    "t": 6.0,
+    "data": {
+      "map": {
+        "game_state": "DOTA_GAMERULES_STATE_GAME_IN_PROGRESS"
+      },
+      "player": {
+        "team_name": "radiant",
+        "kills": 0
+      },
+      "hero": {
+        "health_percent": 100,
+        "mana_percent": 70,
+        "alive": false,
+        "respawn_seconds": 3
+      }
+    },
+    "expected": [
+      [
+        0.07840000000000001,
+        0.11520000000000002,
+        0.0448
+      ],
+      [
+        0.07840000000000001,
+        0.11520000000000002,
+        0.0448
+      ]
+    ]
+  },
+  {
+    "game": "dota2",
+    "t": 7.0,
+    "data": {
+      "map": {
+        "game_state": "DOTA_GAMERULES_STATE_GAME_IN_PROGRESS"
+      },
+      "player": {
+        "team_name": "radiant",
+        "kills": 1
+      },
+      "hero": {
+        "health_percent": 100,
+        "mana_percent": 70,
+        "alive": true
+      }
+    },
+    "expected": [
+      [
+        1.0,
+        0.78,
+        0.19999999999999996
+      ],
+      [
+        1.0,
+        0.78,
+        0.2
+      ]
+    ]
+  },
+  {
+    "game": "dota2",
+    "t": 7.5,
+    "data": {
+      "map": {
+        "game_state": "DOTA_GAMERULES_STATE_GAME_IN_PROGRESS"
+      },
+      "player": {
+        "team_name": "radiant",
+        "kills": 1
+      },
+      "hero": {
+        "health_percent": 100,
+        "mana_percent": 70,
+        "alive": true
+      }
+    },
+    "expected": [
+      [
+        0.23079426796729063,
+        0.3601188135396991,
+        0.6634602881851756
+      ],
+      [
+        0.15262857757188047,
+        0.9702262376879452,
+        0.027067056647322542
+      ]
+    ]
+  },
+  {
+    "game": "dota2",
+    "t": 8.5,
+    "data": {
+      "map": {
+        "game_state": "DOTA_GAMERULES_STATE_GAME_IN_PROGRESS"
+      },
+      "player": {
+        "team_name": "radiant",
+        "kills": 1
+      },
+      "hero": {
+        "health_percent": 100,
+        "mana_percent": 70,
+        "alive": true
+      }
+    },
+    "expected": [
+      [
+        0.1104,
+        0.2944,
+        0.736
+      ],
+      [
+        0.020000000000000018,
+        1.0,
+        0.0
+      ]
+    ]
+  },
+  {
+    "game": "dota2",
+    "t": 9.0,
+    "data": {
+      "map": {
+        "game_state": "DOTA_GAMERULES_STATE_GAME_IN_PROGRESS",
+        "paused": true
+      },
+      "player": {
+        "team_name": "radiant",
+        "kills": 0
+      },
+      "hero": {
+        "health_percent": 100,
+        "mana_percent": 70,
+        "alive": true
+      }
+    },
+    "expected": [
+      [
+        0.06,
+        0.27,
+        0.105
+      ],
+      [
+        0.06,
+        0.27,
+        0.105
+      ]
+    ]
+  },
+  {
+    "game": "dota2",
+    "t": 10.0,
+    "data": {
+      "map": {
+        "game_state": "DOTA_GAMERULES_STATE_PRE_GAME"
+      },
+      "player": {
+        "team_name": "radiant",
+        "kills": 0
+      },
+      "hero": {
+        "health_percent": 100,
+        "mana_percent": 70,
+        "alive": true
+      }
+    },
+    "expected": [
+      [
+        0.135,
+        0.6075,
+        0.23625
+      ],
+      [
+        0.135,
+        0.6075,
+        0.23625
+      ]
+    ]
+  }
+]
