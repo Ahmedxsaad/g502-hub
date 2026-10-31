@@ -335,7 +335,7 @@ class ColorPicker(QWidget):
         self.hex = QLineEdit()
         self.hex.setMaxLength(7)
         self.hex.setFixedWidth(84)
-        self.hex.setToolTip("Hex color, e.g. #14b4ff")
+        self.hex.setToolTip(self.tr("Hex color, e.g. #14b4ff"))
         self.hex.editingFinished.connect(self._hex_entered)
         row.addWidget(self.hex)
         self.rgb = []
@@ -357,7 +357,7 @@ class ColorPicker(QWidget):
             swatches.addWidget(self._swatch(color))
         swatches.addStretch()
         col.addLayout(swatches)
-        col.addWidget(heading("My colors"))
+        col.addWidget(heading(self.tr("My colors")))
         self.saved_row = QHBoxLayout()
         self.saved_row.setSpacing(6)
         col.addLayout(self.saved_row)
@@ -373,7 +373,8 @@ class ColorPicker(QWidget):
         b.setCursor(Qt.CursorShape.PointingHandCursor)
         b.setStyleSheet(f"QPushButton {{ background:{color}; border:1px solid {theme.BORDER}; border-radius:12px; padding:0; }}"
                         f"QPushButton:hover {{ border:2px solid {theme.TEXT}; }}")
-        b.setToolTip(color + ("  ·  right-click to remove" if removable else ""))
+        tip = color + ("  ·  " + self.tr("right-click to remove") if removable else "")
+        b.setToolTip(tip)
         b.clicked.connect(lambda _=False: self.set_color(QColor(color), emit=True))
         if removable:
             b.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -391,7 +392,7 @@ class ColorPicker(QWidget):
             add = QPushButton("+")
             add.setFixedSize(24, 24)
             add.setCursor(Qt.CursorShape.PointingHandCursor)
-            add.setToolTip("Save the current color")
+            add.setToolTip(self.tr("Save the current color"))
             add.setStyleSheet(f"QPushButton {{ background: transparent; border:1px dashed {theme.FAINT}; "
                               f"border-radius:12px; padding:0; color:{theme.MUTED}; font-size:15px; }}"
                               f"QPushButton:hover {{ border-color:{theme.ACCENT}; color:{theme.TEXT}; }}")
@@ -466,7 +467,8 @@ class KeyCapture(QPushButton):
     captured = Signal(int, int)
 
     def __init__(self, parent=None):
-        super().__init__("Click, then press a key combination", parent)
+        super().__init__(parent)
+        self.setText(self.tr("Click, then press a key combination"))
         self.setCheckable(True)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.setMinimumHeight(44)
@@ -476,7 +478,7 @@ class KeyCapture(QPushButton):
 
     def _toggled(self, on):
         self._mods, self._held = 0, set()
-        self.setText("Press keys now… (Esc to cancel)" if on else "Click, then press a key combination")
+        self.setText(self.tr("Press keys now… (Esc to cancel)") if on else self.tr("Click, then press a key combination"))
         if on:
             self.setFocus()
             self.grabKeyboard()

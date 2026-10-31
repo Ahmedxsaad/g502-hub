@@ -3,7 +3,6 @@
 import copy
 import time
 
-from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QAbstractItemView, QHBoxLayout, QLabel, QLineEdit, QListWidget,
                                QPushButton, QSpinBox, QVBoxLayout, QWidget)
 
@@ -13,10 +12,6 @@ from .. import labels
 from ..widgets import Card, ChoiceList, KeyCapture, Segmented, Switcher, heading, muted
 from . import Page
 
-TARGETS = [("mouse", "Saved on the mouse"), ("app", "Run by G502 Hub")]
-MODES = [("once", "Once per press"), ("while-held", "Repeats while held"), ("toggle", "Press to start, again to stop")]
-MOUSE_BUTTONS = [("left", "Left click"), ("right", "Right click"), ("middle", "Middle click"),
-                 ("back", "Back"), ("forward", "Forward")]
 MEDIA = ["play-pause", "next", "previous", "stop", "volume-up", "volume-down", "mute"]
 BUTTON_NAMES = {0: "G1", 1: "G2", 2: "G3", 3: "G4", 4: "G5", 5: "G6", 6: "G7", 7: "G8", 8: "G9",
                 9: "tilt right", 10: "tilt left"}
@@ -26,7 +21,8 @@ class Recorder(QPushButton):
     """Toggle on, then type: every key press and release is kept with its timing."""
 
     def __init__(self, on_done):
-        super().__init__("●  Record keys")
+        super().__init__()
+        self.setText(self.tr("●  Record keys"))
         self.setCheckable(True)
         self.on_done = on_done
         self.events = []
@@ -34,7 +30,7 @@ class Recorder(QPushButton):
         self.toggled.connect(self._toggled)
 
     def _toggled(self, on):
-        self.setText("■  Stop recording (Esc)" if on else "●  Record keys")
+        self.setText(self.tr("■  Stop recording (Esc)") if on else self.tr("●  Record keys"))
         if on:
             self.events, self._mods = [], 0
             self.setFocus()
@@ -84,16 +80,20 @@ class MacroCard(Card):
         self.body.addLayout(top)
         self.body.addWidget(muted(macro.describe()))
         uses = page.engine.uses(macro.id)
-        where = ", ".join(f"{BUTTON_NAMES.get(b, b)}{' with G-Shift' if layer else ''} on slot {slot}"
-                          for slot, layer, b in uses)
-        self.body.addWidget(muted(f"On {where}" if uses else "Not on any button yet: pick it under Assignments.",
-                                  "Faint"))
+        where_parts = []
+        for slot, layer, b in uses:
+            b_name = BUTTON_NAMES.get(b, b)
+            gshift = " " + self.tr("with G-Shift") if layer else ""
+            where_parts.append(self.tr("{button}{gshift} on slot {slot}").format(button=b_name, gshift=gshift, slot=slot))
+        where = ", ".join(where_parts)
+        uses_text = self.tr("On {where}").format(where=where) if uses else self.tr("Not on any button yet: pick it under Assignments.")
+        self.body.addWidget(muted(uses_text, "Faint"))
         row = QHBoxLayout()
-        edit = QPushButton("Edit")
+        edit = QPushButton(self.tr("Edit"))
         edit.clicked.connect(lambda: page.edit(macro))
         row.addWidget(edit)
         row.addStretch()
-        delete = QPushButton("Delete")
+        delete = QPushButton(self.tr("Delete"))
         delete.setObjectName("Flat")
         delete.clicked.connect(lambda: page.engine.delete(macro.id))
         row.addWidget(delete)
@@ -101,8 +101,11 @@ class MacroCard(Card):
 
 
 class MacrosPage(Page):
-    title = "MACROS"
     icon = "macros"
+
+    @property
+    def title(self):
+        return self.tr("MACROS")
 
     def __init__(self, state, view, keylabels, engine):
         super().__init__(state, view, keylabels)
@@ -122,18 +125,18 @@ class MacrosPage(Page):
         col = QVBoxLayout(w)
         col.setContentsMargins(0, 0, 0, 0)
         col.setSpacing(14)
-        title = QLabel("Macros")
+        title = QLabel(self.tr("Macros"))
         title.setObjectName("Title")
         col.addWidget(title)
-        col.addWidget(muted("Saved on the mouse, a macro plays on any computer: keys, media keys, clicks, "
-                            "scrolling and waits. Run by G502 Hub, it can also type text and repeat while "
-                            "you hold the button, but needs the app running.", "Faint"))
+        col.addWidget(muted(self.tr("Saved on the mouse, a macro plays on any computer: keys, media keys, clicks, "
+                                    "scrolling and waits. Run by G502 Hub, it can also type text and repeat while "
+                                    "you hold the button, but needs the app running."), "Faint"))
         self.list_col = QVBoxLayout()
         self.list_col.setSpacing(10)
         col.addLayout(self.list_col)
-        new = QPushButton("+  New macro")
+        new = QPushButton(self.tr("+  New macro"))
         new.setObjectName("Primary")
-        new.clicked.connect(lambda: self.edit(Macro("New macro", []), new=True))
+        new.clicked.connect(lambda: self.edit(Macro(self.tr("New macro"), []), new=True))
         col.addWidget(new)
         return w
 
@@ -145,7 +148,7 @@ class MacrosPage(Page):
         for macro in self.engine.macros:
             self.list_col.addWidget(MacroCard(self, macro))
         if not self.engine.macros:
-            self.list_col.addWidget(muted("No macros yet.", "Faint"))
+            self.list_col.addWidget(muted(self.tr("No macros yet."), "Faint"))
 
     # ------------------------------------------------------------ editor
 
@@ -154,29 +157,35 @@ class MacrosPage(Page):
         col = QVBoxLayout(w)
         col.setContentsMargins(0, 0, 0, 0)
         col.setSpacing(14)
-        self.editor_title = QLabel("Macro")
+        self.editor_title = QLabel(self.tr("Macro"))
         self.editor_title.setObjectName("Title")
         col.addWidget(self.editor_title)
-        col.addWidget(heading("Name"))
+        col.addWidget(heading(self.tr("Name")))
         self.name = QLineEdit()
         self.name.setMaxLength(40)
         col.addWidget(self.name)
-        col.addWidget(heading("Runs"))
-        self.target = ChoiceList(TARGETS, columns=2)
+        col.addWidget(heading(self.tr("Runs")))
+        targets = [("mouse", self.tr("Saved on the mouse")), ("app", self.tr("Run by G502 Hub"))]
+        self.target = ChoiceList(targets, columns=2)
         self.target.changed.connect(lambda _: self._update())
         col.addWidget(self.target)
-        col.addWidget(heading("Plays"))
-        self.mode = ChoiceList(MODES, columns=1)
+        col.addWidget(heading(self.tr("Plays")))
+        modes = [
+            ("once", self.tr("Once per press")),
+            ("while-held", self.tr("Repeats while held")),
+            ("toggle", self.tr("Press to start, again to stop")),
+        ]
+        self.mode = ChoiceList(modes, columns=1)
         self.mode.changed.connect(lambda _: self._update())
         col.addWidget(self.mode)
 
-        col.addWidget(heading("Steps"))
+        col.addWidget(heading(self.tr("Steps")))
         self.steps = QListWidget()
         self.steps.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.steps.setMinimumHeight(160)
         col.addWidget(self.steps)
         row = QHBoxLayout()
-        for text, fn in (("↑", lambda: self._move(-1)), ("↓", lambda: self._move(1)), ("Remove", self._remove)):
+        for text, fn in (("↑", lambda: self._move(-1)), ("↓", lambda: self._move(1)), (self.tr("Remove"), self._remove)):
             b = QPushButton(text)
             b.clicked.connect(fn)
             row.addWidget(b)
@@ -185,8 +194,8 @@ class MacrosPage(Page):
         self.capacity = muted("", "Faint")
         col.addWidget(self.capacity)
 
-        col.addWidget(heading("Add a step"))
-        self.add_tabs = Segmented(["Key", "Text", "Wait", "Mouse", "Media"])
+        col.addWidget(heading(self.tr("Add a step")))
+        self.add_tabs = Segmented([self.tr("Key"), self.tr("Text"), self.tr("Wait"), self.tr("Mouse"), self.tr("Media")])
         col.addWidget(self.add_tabs)
         adders = Switcher()
         self.add_tabs.changed.connect(adders.setCurrentIndex)
@@ -198,14 +207,14 @@ class MacrosPage(Page):
         kcol.addWidget(capture)
         self.recorder = Recorder(self._recorded)
         kcol.addWidget(self.recorder)
-        kcol.addWidget(muted("Recording keeps the waits between your key presses.", "Faint"))
+        kcol.addWidget(muted(self.tr("Recording keeps the waits between your key presses."), "Faint"))
         adders.addWidget(key_page)
 
         text_page, tcol = self._column()
         self.text = QLineEdit()
-        self.text.setPlaceholderText("Text to type, e.g. gg wp")
+        self.text.setPlaceholderText(self.tr("Text to type, e.g. gg wp"))
         tcol.addWidget(self.text)
-        add_text = QPushButton("Add text")
+        add_text = QPushButton(self.tr("Add text"))
         add_text.clicked.connect(lambda: self.text.text() and self._add(Step("text", {"text": self.text.text()})))
         tcol.addWidget(add_text)
         adders.addWidget(text_page)
@@ -216,17 +225,24 @@ class MacrosPage(Page):
         self.wait.setValue(100)
         self.wait.setSuffix(" ms")
         wcol.addWidget(self.wait)
-        add_wait = QPushButton("Add wait")
+        add_wait = QPushButton(self.tr("Add wait"))
         add_wait.clicked.connect(lambda: self._add(Step("delay", {"ms": self.wait.value()})))
         wcol.addWidget(add_wait)
         adders.addWidget(wait_page)
 
         mouse_page, mcol = self._column()
-        clicks = ChoiceList(MOUSE_BUTTONS, columns=2)
+        mouse_buttons = [
+            ("left", self.tr("Left click")),
+            ("right", self.tr("Right click")),
+            ("middle", self.tr("Middle click")),
+            ("back", self.tr("Back")),
+            ("forward", self.tr("Forward")),
+        ]
+        clicks = ChoiceList(mouse_buttons, columns=2)
         clicks.changed.connect(lambda b: (self._add(Step("click", {"button": b})), clicks.set_value(None)))
         mcol.addWidget(clicks)
         scroll = QHBoxLayout()
-        for text, amount in (("Scroll up", 1), ("Scroll down", -1)):
+        for text, amount in ((self.tr("Scroll up"), 1), (self.tr("Scroll down"), -1)):
             b = QPushButton(text)
             b.clicked.connect(lambda _=False, a=amount: self._add(Step("scroll", {"amount": a})))
             scroll.addWidget(b)
@@ -240,11 +256,11 @@ class MacrosPage(Page):
         adders.addWidget(media_page)
 
         row = QHBoxLayout()
-        save = QPushButton("Save macro")
+        save = QPushButton(self.tr("Save macro"))
         save.setObjectName("Primary")
         save.clicked.connect(self._save)
         row.addWidget(save)
-        cancel = QPushButton("Cancel")
+        cancel = QPushButton(self.tr("Cancel"))
         cancel.clicked.connect(self._close)
         row.addWidget(cancel)
         row.addStretch()
@@ -263,7 +279,7 @@ class MacrosPage(Page):
 
     def edit(self, macro, new=False):
         self.editing, self.editing_new = copy.deepcopy(macro), new
-        self.editor_title.setText("New macro" if new else "Edit macro")
+        self.editor_title.setText(self.tr("New macro") if new else self.tr("Edit macro"))
         self.name.setText(macro.name)
         self.target.set_value(macro.target)
         self.mode.set_value(macro.mode)
@@ -314,29 +330,30 @@ class MacrosPage(Page):
         if on_mouse and self.mode.value() != "once":
             self.mode.set_value("once")
         if not on_mouse:
-            self.capacity.setText("Runs from the app, so there's no size limit. Its button does nothing "
-                                  "while G502 Hub isn't running.")
+            self.capacity.setText(self.tr("Runs from the app, so there's no size limit. Its button does nothing "
+                                          "while G502 Hub isn't running."))
             return
-        trial = Macro(self.name.text() or "Macro", self.editing.steps, mode="once", target="mouse")
+        trial = Macro(self.name.text() or self.tr("Macro"), self.editing.steps, mode="once", target="mouse")
         try:
             size = macros.onboard_size(trial, self.keylabels.typing)
-            self.capacity.setText(f"Uses {size} of {macros.ONBOARD_CAPACITY} bytes of mouse memory.")
+            self.capacity.setText(self.tr("Uses {size} of {capacity} bytes of mouse memory.").format(
+                size=size, capacity=macros.ONBOARD_CAPACITY))
         except macros.MacroError as e:
-            self.capacity.setText(f"Can't be saved on the mouse: {e}. Choose “Run by G502 Hub” instead.")
+            self.capacity.setText(self.tr("Can't be saved on the mouse: {error}. Choose “Run by G502 Hub” instead.").format(error=e))
 
     def _save(self):
         m = self.editing
-        m.name = self.name.text().strip() or "Macro"
+        m.name = self.name.text().strip() or self.tr("Macro")
         m.target = self.target.value() or "app"
         m.mode = self.mode.value() or "once"
         if not m.steps:
-            self.error.setText("Add at least one step.")
+            self.error.setText(self.tr("Add at least one step."))
             return
         if m.target == "mouse":
             try:
                 macros.to_onboard(m, self.keylabels.typing)
             except macros.MacroError as e:
-                self.error.setText(f"Can't be saved on the mouse: {e}")
+                self.error.setText(self.tr("Can't be saved on the mouse: {error}").format(error=e))
                 return
         self.engine.save(m)
         self._close()

@@ -84,15 +84,16 @@ class MouseView(QWidget):
 
     def fetch_photo(self):
         """Download Logitech's photo (first start, or to replace a damaged copy)."""
-        self.skin.message = "Getting the picture of your G502 HERO from logitechg.com…"
+        self.skin.message = self.tr("Getting the picture of your G502 HERO from logitechg.com…")
         self.update()
         self.fetcher.start()
 
     def _fetched(self, error):
         image = None if error else load_image()
         if image is None:
-            self.skin.message = (f"Couldn't download the picture of the mouse ({error or 'damaged file'}). "
-                                 "Click here to try again.")
+            err_msg = error or self.tr("damaged file")
+            self.skin.message = (self.tr("Couldn't download the picture of the mouse ({error}). ").format(error=err_msg) +
+                                 self.tr("Click here to try again."))
         else:
             self.skin.set_image(image)
         self.update()

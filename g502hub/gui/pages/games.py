@@ -24,12 +24,12 @@ class RuleCard(Card):
         name.setStyleSheet("font-weight: 600; font-size: 14px;")
         top.addWidget(name)
         if active:
-            badge = QLabel("ACTIVE")
+            badge = QLabel(self.tr("ACTIVE"))
             badge.setStyleSheet(f"color: {theme.ACCENT}; font-size: 11px; font-weight: 600; letter-spacing: 1px;")
             top.addWidget(badge)
         top.addStretch()
         on = QCheckBox()
-        on.setToolTip("Turn this rule on or off")
+        on.setToolTip(self.tr("Turn this rule on or off"))
         on.setChecked(rule.enabled)
         on.toggled.connect(lambda v: page.engine.update(replace(rule, enabled=v)))
         top.addWidget(on)
@@ -43,17 +43,18 @@ class RuleCard(Card):
         action.addWidget(muted(rule.describe_action(), "Faint"), 1)
         self.body.addLayout(action)
         buttons = QHBoxLayout()
-        edit = QPushButton("Edit")
+        edit = QPushButton(self.tr("Edit"))
         edit.clicked.connect(lambda: page.edit(rule))
         buttons.addWidget(edit)
-        for text, step, tip in (("↑", -1, "Check this rule earlier"), ("↓", 1, "Check this rule later")):
+        for text, step, tip in (("↑", -1, self.tr("Check this rule earlier")),
+                                ("↓", 1, self.tr("Check this rule later"))):
             b = QPushButton(text)
             b.setObjectName("Flat")
             b.setToolTip(tip)
             b.clicked.connect(lambda _=False, s=step: page.engine.move(rule.id, s))
             buttons.addWidget(b)
         buttons.addStretch()
-        delete = QPushButton("Delete")
+        delete = QPushButton(self.tr("Delete"))
         delete.setObjectName("Flat")
         delete.clicked.connect(lambda: page.engine.remove(rule.id))
         buttons.addWidget(delete)
@@ -61,8 +62,11 @@ class RuleCard(Card):
 
 
 class GamesPage(Page):
-    title = "GAMES & APPS"
     icon = "games"
+
+    @property
+    def title(self):
+        return self.tr("GAMES & APPS")
 
     def __init__(self, state, view, keylabels, engine):
         super().__init__(state, view, keylabels)
@@ -82,23 +86,23 @@ class GamesPage(Page):
         col = QVBoxLayout(w)
         col.setContentsMargins(0, 0, 0, 0)
         col.setSpacing(14)
-        title = QLabel("Games & apps")
+        title = QLabel(self.tr("Games & apps"))
         title.setObjectName("Title")
         col.addWidget(title)
-        col.addWidget(muted("Make the mouse react to what you're doing: a game, an app, a YouTube "
-                            "video or an anime. The first rule that matches wins; when none does, "
-                            "your normal lighting and profile come back.", "Faint"))
+        col.addWidget(muted(self.tr("Make the mouse react to what you're doing: a game, an app, a YouTube "
+                                    "video or an anime. The first rule that matches wins; when none does, "
+                                    "your normal lighting and profile come back."), "Faint"))
         now = Card()
-        now.body.addWidget(heading("Right now"))
+        now.body.addWidget(heading(self.tr("Right now")))
         self.now = muted("")
         self.now.setTextFormat(Qt.TextFormat.PlainText)
         now.body.addWidget(self.now)
         col.addWidget(now)
-        col.addWidget(heading("Rules"))
+        col.addWidget(heading(self.tr("Rules")))
         self.rule_list = QVBoxLayout()
         self.rule_list.setSpacing(10)
         col.addLayout(self.rule_list)
-        self.add_btn = QPushButton("+  Add rule")
+        self.add_btn = QPushButton(self.tr("+  Add rule"))
         self.add_btn.setObjectName("Primary")
         self.add_menu = QMenu(self.add_btn)
         self.add_menu.aboutToShow.connect(self._fill_add_menu)
@@ -119,23 +123,25 @@ class GamesPage(Page):
         ctx = self.engine.context
         now = []
         if ctx and ctx.game:
-            now.append((f"While {ctx.game.name} is running",
+            now.append((self.tr("While {game} is running").format(game=ctx.game.name),
                         Rule(ctx.game.name, "game", str(ctx.game.appid), lighting="art")))
         for title in self.engine.seen_media[:5]:
             short = title if len(title) <= 40 else title[:39] + "…"
-            now.append((f"While “{short}” plays", Rule(short, "media", title, lighting="color")))
+            now.append((self.tr("While “{short}” plays").format(short=short),
+                        Rule(short, "media", title, lighting="color")))
         for app in self.engine.seen_apps[:5]:
-            now.append((f"While {app} is in front", Rule(app, "app", app, lighting="color")))
+            now.append((self.tr("While {app} is in front").format(app=app),
+                        Rule(app, "app", app, lighting="color")))
         if now:
-            sub = m.addMenu("For something you did recently")
+            sub = m.addMenu(self.tr("For something you did recently"))
             for text, rule in now:
                 sub.addAction(text, lambda r=rule: self.edit(r, new=True))
-        m.addSection("Ready-made")
+        m.addSection(self.tr("Ready-made"))
         for template in rules.TEMPLATES:
             m.addAction(f"{template.name}  ·  {template.describe_action()}",
                         lambda t=template: self.edit(replace(t, id=rules.new_id()), new=True))
         m.addSeparator()
-        m.addAction("Blank rule", lambda: self.edit(Rule("New rule", "media", ""), new=True))
+        m.addAction(self.tr("Blank rule"), lambda: self.edit(Rule(self.tr("New rule"), "media", ""), new=True))
 
     def _show_rules(self):
         while self.rule_list.count():
@@ -147,26 +153,29 @@ class GamesPage(Page):
         for rule in self.engine.rules:
             self.rule_list.addWidget(RuleCard(self, rule, rule.id == active, names))
         if not self.engine.rules:
-            self.rule_list.addWidget(muted("No rules yet. Try YouTube from the ready-made ones.", "Faint"))
+            self.rule_list.addWidget(muted(self.tr("No rules yet. Try YouTube from the ready-made ones."), "Faint"))
 
     def _show_now(self):
         e = self.engine
         if e.error or e.watcher is None:
-            self.now.setText(e.error or "Not watching yet.")
+            self.now.setText(e.error or self.tr("Not watching yet."))
             return
         ctx = e.context
         lines = []
         if ctx is None:
-            lines.append("Looking…")
+            lines.append(self.tr("Looking…"))
         else:
             if ctx.game:
-                lines.append(f"Game: {ctx.game.name}")
+                lines.append(self.tr("Game: {name}").format(name=ctx.game.name))
             if ctx.app:
                 title = ctx.title if len(ctx.title) <= 60 else ctx.title[:59] + "…"
-                lines.append(f"In front: {ctx.app}" + (f" — {title}" if title else ""))
+                sub_title = f" — {title}" if title else ""
+                lines.append(self.tr("In front: {app}{sub}").format(app=ctx.app, sub=sub_title))
             for m in [m for m in ctx.media if m.status == "Playing"][:2]:
-                lines.append(f"Playing: {m.title or '(untitled)'} · {m.identity or m.player}")
-        lines.append(f"Rule: {e.active.name}" if e.active else "No rule matches")
+                m_title = m.title or self.tr("(untitled)")
+                player = m.identity or m.player
+                lines.append(self.tr("Playing: {title} · {player}").format(title=m_title, player=player))
+        lines.append(self.tr("Rule: {name}").format(name=e.active.name) if e.active else self.tr("No rule matches"))
         for source, problem in (e.watcher.errors or {}).items():
             lines.append(f"({source}: {problem})")
         self.now.setText("\n".join(lines))
@@ -183,16 +192,17 @@ class GamesPage(Page):
         col = QVBoxLayout(w)
         col.setContentsMargins(0, 0, 0, 0)
         col.setSpacing(14)
-        self.editor_title = QLabel("Rule")
+        self.editor_title = QLabel(self.tr("Rule"))
         self.editor_title.setObjectName("Title")
         col.addWidget(self.editor_title)
-        col.addWidget(heading("Name"))
+        col.addWidget(heading(self.tr("Name")))
         self.name = QLineEdit()
         self.name.setMaxLength(40)
         col.addWidget(self.name)
 
-        col.addWidget(heading("When"))
-        self.trigger = ChoiceList(list(TRIGGERS.items()), columns=2)
+        col.addWidget(heading(self.tr("When")))
+        triggers = [(k, self.tr(v)) for k, v in TRIGGERS.items()]
+        self.trigger = ChoiceList(triggers, columns=2)
         self.trigger.changed.connect(lambda _: self._show_value_inputs())
         col.addWidget(self.trigger)
         self.game_box = QComboBox()
@@ -205,29 +215,31 @@ class GamesPage(Page):
         self.value_hint = muted("", "Faint")
         col.addWidget(self.value_hint)
 
-        col.addWidget(heading("Lighting"))
-        self.lighting = ChoiceList([(None, "Don't change")] + list(LIGHTING.items()), columns=2)
+        col.addWidget(heading(self.tr("Lighting")))
+        lighting = [(None, self.tr("Don't change"))] + [(k, self.tr(v)) for k, v in LIGHTING.items()]
+        self.lighting = ChoiceList(lighting, columns=2)
         self.lighting.changed.connect(lambda _: self._show_lighting_inputs())
         col.addWidget(self.lighting)
         self.color = ColorPicker()
         col.addWidget(self.color)
-        self.period = SliderRow("Breathing speed", 1000, 12000, "{:,} ms", step=100)
+        self.period = SliderRow(self.tr("Breathing speed"), 1000, 12000, "{:,} ms", step=100)
         col.addWidget(self.period)
         self.lighting_hint = muted("", "Faint")
         col.addWidget(self.lighting_hint)
 
-        col.addWidget(heading("Profile slot"))
-        col.addWidget(muted("Switch to an onboard profile (its DPI levels, buttons and report rate) "
-                            "while the rule matches.", "Faint"))
-        self.slot = ChoiceList([(None, "Don't change")] + [(n, f"Slot {n}") for n in range(1, 6)], columns=3)
+        col.addWidget(heading(self.tr("Profile slot")))
+        col.addWidget(muted(self.tr("Switch to an onboard profile (its DPI levels, buttons and report rate) "
+                                    "while the rule matches."), "Faint"))
+        slot_choices = [(None, self.tr("Don't change"))] + [(n, self.tr("Slot {n}").format(n=n)) for n in range(1, 6)]
+        self.slot = ChoiceList(slot_choices, columns=3)
         col.addWidget(self.slot)
 
         row = QHBoxLayout()
-        save = QPushButton("Save rule")
+        save = QPushButton(self.tr("Save rule"))
         save.setObjectName("Primary")
         save.clicked.connect(self._save)
         row.addWidget(save)
-        cancel = QPushButton("Cancel")
+        cancel = QPushButton(self.tr("Cancel"))
         cancel.clicked.connect(self._close_editor)
         row.addWidget(cancel)
         row.addStretch()
@@ -237,11 +249,11 @@ class GamesPage(Page):
     def edit(self, rule, new=False):
         self.editing, self.editing_new = copy.deepcopy(rule), new
         r = self.editing
-        self.editor_title.setText("New rule" if new else "Edit rule")
+        self.editor_title.setText(self.tr("New rule") if new else self.tr("Edit rule"))
         self.name.setText(r.name)
         self.trigger.set_value(r.trigger)
         self.game_box.clear()
-        self.game_box.addItem("Any game", rules.ANY_GAME)
+        self.game_box.addItem(self.tr("Any game"), rules.ANY_GAME)
         for appid, name in context.installed_games():
             self.game_box.addItem(name, str(appid))
         if r.trigger == "game" and self.game_box.findData(r.value) < 0:
@@ -263,24 +275,24 @@ class GamesPage(Page):
         self.value.setVisible(trigger != "game")
         self.recent.clear()
         if trigger == "app":
-            self.value.setPlaceholderText("Window class, e.g. firefox, mpv, org.kde.dolphin")
+            self.value.setPlaceholderText(self.tr("Window class, e.g. firefox, mpv, org.kde.dolphin"))
             seen = self.engine.seen_apps
-            self.value_hint.setText("Matches the app exactly.")
+            self.value_hint.setText(self.tr("Matches the app exactly."))
         elif trigger == "title":
-            self.value.setPlaceholderText("Text in the window title, e.g. YouTube")
+            self.value.setPlaceholderText(self.tr("Text in the window title, e.g. YouTube"))
             seen = []
-            self.value_hint.setText("Matches any window title containing this text, upper or lower case.")
+            self.value_hint.setText(self.tr("Matches any window title containing this text, upper or lower case."))
         elif trigger == "media":
-            self.value.setPlaceholderText("Text in the title, artist or page, e.g. youtube or One Piece")
+            self.value.setPlaceholderText(self.tr("Text in the title, artist or page, e.g. youtube or One Piece"))
             seen = self.engine.seen_media
-            self.value_hint.setText("Matches while something is playing (browsers, mpv, VLC, Spotify, "
-                                    "anime apps…) and its title, artist or web address contains this text.")
+            self.value_hint.setText(self.tr("Matches while something is playing (browsers, mpv, VLC, Spotify, "
+                                            "anime apps…) and its title, artist or web address contains this text."))
         else:
             seen = []
-            self.value_hint.setText("Steam and Proton games are found automatically, "
-                                    "including non-Steam games added to Steam.")
+            self.value_hint.setText(self.tr("Steam and Proton games are found automatically, "
+                                            "including non-Steam games added to Steam."))
         if seen:
-            self.recent.addItem("Recently seen…", None)
+            self.recent.addItem(self.tr("Recently seen…"), None)
             for v in seen:
                 self.recent.addItem(v if len(v) <= 50 else v[:49] + "…", v)
         self.recent.setVisible(bool(seen))
@@ -290,21 +302,21 @@ class GamesPage(Page):
         self.color.setVisible(kind in ("color", "breathing"))
         self.period.setVisible(kind == "breathing")
         hints = {
-            "art": "Takes two colors from the game's cover art in your Steam library.",
-            "game": "Lets the game drive the lights: live events in CS2 and Dota 2, and Proton games "
-                    "with Logitech lighting once the LIGHTSYNC bridge is on (Settings). Other games "
-                    "get their cover art colors.",
-            "screen": "Uses your Screen sampler settings from Lightsync.",
-            "audio": "Uses your Audio visualizer settings from Lightsync.",
-            "wave": "Uses your Color wave settings from Lightsync.",
-            "dpi": "Uses your DPI colors from Lightsync.",
+            "art": self.tr("Takes two colors from the game's cover art in your Steam library."),
+            "game": self.tr("Lets the game drive the lights: live events in CS2 and Dota 2, and Proton games "
+                            "with Logitech lighting once the LIGHTSYNC bridge is on (Settings). Other games "
+                            "get their cover art colors."),
+            "screen": self.tr("Uses your Screen sampler settings from Lightsync."),
+            "audio": self.tr("Uses your Audio visualizer settings from Lightsync."),
+            "wave": self.tr("Uses your Color wave settings from Lightsync."),
+            "dpi": self.tr("Uses your DPI colors from Lightsync."),
         }
         self.lighting_hint.setText(hints.get(kind, ""))
         self.lighting_hint.setVisible(kind in hints)
 
     def _save(self):
         r = self.editing
-        r.name = self.name.text().strip() or "Rule"
+        r.name = self.name.text().strip() or self.tr("Rule")
         r.trigger = self.trigger.value() or "media"
         r.value = self.game_box.currentData() if r.trigger == "game" else self.value.text().strip()
         r.lighting = self.lighting.value()
@@ -312,7 +324,7 @@ class GamesPage(Page):
         r.period_ms = self.period.slider.value()
         r.slot = self.slot.value()
         if not r.value:
-            self.value_hint.setText("Type what to look for first.")
+            self.value_hint.setText(self.tr("Type what to look for first."))
             return
         if self.editing_new:
             self.engine.add(r)
@@ -338,4 +350,5 @@ class GamesPage(Page):
             value = self.slot.values[n]
             if value:
                 profile = self.state.profile(value) if self.state.profiles else None
-                button.setText(f"Slot {value}" + (f" · {profile.name}" if profile and profile.name else ""))
+                name_suffix = f" · {profile.name}" if profile and profile.name else ""
+                button.setText(self.tr("Slot {value}").format(value=value) + name_suffix)

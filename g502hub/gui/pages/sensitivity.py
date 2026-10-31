@@ -29,7 +29,7 @@ class DpiTrack(QWidget):
         self.levels = []  # [(slot, dpi)]
         self.default = self.shift = self.active = None
         self._drag = None
-        self.setToolTip("Drag a level to change it. Click the track to add a level there.")
+        self.setToolTip(self.tr("Drag a level to change it. Click the track to add a level there."))
 
     def _x(self, dpi):
         r = self._track()
@@ -122,23 +122,23 @@ class LevelRow(QWidget):
         self.spin.setMinimumWidth(110)
         self.spin.valueChanged.connect(lambda v: self.changed.emit(self.slot, v))
         row.addWidget(self.spin)
-        self.default_btn = QPushButton("Default")
+        self.default_btn = QPushButton(self.tr("Default"))
         self.default_btn.setCheckable(True)
         self.default_btn.clicked.connect(lambda: self.make_default.emit(self.slot))
         row.addWidget(self.default_btn)
-        self.shift_btn = QPushButton("Sniper")
+        self.shift_btn = QPushButton(self.tr("Sniper"))
         self.shift_btn.setCheckable(True)
         self.shift_btn.clicked.connect(lambda: self.make_shift.emit(self.slot))
         row.addWidget(self.shift_btn)
         self.remove_btn = QPushButton("✕")
         self.remove_btn.setObjectName("Flat")
-        self.remove_btn.setToolTip("Remove this level")
+        self.remove_btn.setToolTip(self.tr("Remove this level"))
         self.remove_btn.clicked.connect(lambda: self.remove.emit(self.slot))
         row.addWidget(self.remove_btn)
 
     def show_level(self, n, slot, dpi, rng, is_default, is_shift, active, removable):
         self.slot = slot
-        self.name.setText(f"Level {n}")
+        self.name.setText(self.tr("Level {n}").format(n=n))
         self.name.setStyleSheet(f"color: {theme.ACCENT if active else theme.TEXT}; font-weight: {600 if active else 400};")
         self.spin.blockSignals(True)
         self.spin.setRange(rng[0], rng[1])
@@ -153,24 +153,27 @@ class LevelRow(QWidget):
 
 
 class SensitivityPage(Page):
-    title = "SENSITIVITY"
     icon = "sensitivity"
     mouse_mode = "plain"
 
+    @property
+    def title(self):
+        return self.tr("SENSITIVITY")
+
     def __init__(self, *args):
         super().__init__(*args)
-        title = QLabel("Sensitivity")
+        title = QLabel(self.tr("Sensitivity"))
         title.setObjectName("Title")
         self.layout.addWidget(title)
-        self.layout.addWidget(muted("Up to 5 DPI levels. G7/G8 step through them by default; "
-                                    "the sniper level applies while DPI shift is held.", "Faint"))
+        self.layout.addWidget(muted(self.tr("Up to 5 DPI levels. G7/G8 step through them by default; "
+                                            "the sniper level applies while DPI shift is held."), "Faint"))
         self.track = DpiTrack()
         self.track.dragging.connect(self._dragging)
         self.track.committed.connect(self._set_dpi)
         self.track.add.connect(self._add_at)
         self.layout.addWidget(self.track)
 
-        self.layout.addWidget(heading("DPI levels"))
+        self.layout.addWidget(heading(self.tr("DPI levels")))
         self.rows = []
         for _ in range(5):
             row = LevelRow()
@@ -180,17 +183,17 @@ class SensitivityPage(Page):
             row.remove.connect(self._remove)
             self.rows.append(row)
             self.layout.addWidget(row)
-        self.add_btn = QPushButton("+  Add level")
+        self.add_btn = QPushButton(self.tr("+  Add level"))
         self.add_btn.clicked.connect(self._add)
         self.layout.addWidget(self.add_btn)
         self.shift_hint = muted("", "Faint")
         self.layout.addWidget(self.shift_hint)
 
-        self.layout.addWidget(heading("Report rate"))
+        self.layout.addWidget(heading(self.tr("Report rate")))
         self.rate = ChoiceList([(ms, f"{1000 // ms} Hz") for ms in (8, 4, 2, 1)], columns=4)
         self.rate.changed.connect(lambda ms: self.state.edit(lambda p: setattr(p, "report_interval_ms", ms)))
         self.layout.addWidget(self.rate)
-        self.layout.addWidget(muted("1000 Hz is the most responsive. Lower rates use slightly less CPU.", "Faint"))
+        self.layout.addWidget(muted(self.tr("1000 Hz is the most responsive. Lower rates use slightly less CPU."), "Faint"))
         self.layout.addStretch()
 
     def _dragging(self, slot, dpi):
@@ -250,6 +253,6 @@ class SensitivityPage(Page):
         has_shift = any(isinstance(b, Special) and b.function == SPECIAL_CODES["dpi-shift"]
                         for b in profile.buttons)
         self.shift_hint.setText("" if has_shift else
-                                "No button is set to DPI shift in this profile, so the sniper "
-                                "level isn't used. Assign DPI shift to G6 under Assignments.")
+                                self.tr("No button is set to DPI shift in this profile, so the sniper "
+                                        "level isn't used. Assign DPI shift to G6 under Assignments."))
         self.shift_hint.setVisible(not has_shift)

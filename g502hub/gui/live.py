@@ -10,7 +10,7 @@ the user turned on, the lighting saved on the mouse.
 import time
 
 import numpy as np
-from PySide6.QtCore import QObject, Qt, QTimer, Signal
+from PySide6.QtCore import QCoreApplication, QObject, Qt, QTimer, Signal, QT_TRANSLATE_NOOP
 from PySide6.QtGui import QColor, QImage
 
 from .. import lightfx, settings
@@ -21,9 +21,18 @@ FPS = 30
 KEEPALIVE_S = 1.0  # resend even unchanged colors, e.g. after G9 loads another profile
 FAST_POLL_MS = 120
 
-EFFECTS = [("screen", "Screen sampler"), ("audio", "Audio visualizer"),
-           ("wave", "Color wave"), ("dpi", "DPI colors")]
+EFFECTS = [
+    ("screen", QT_TRANSLATE_NOOP("LiveLighting", "Screen sampler")),
+    ("audio", QT_TRANSLATE_NOOP("LiveLighting", "Audio visualizer")),
+    ("wave", QT_TRANSLATE_NOOP("LiveLighting", "Color wave")),
+    ("dpi", QT_TRANSLATE_NOOP("LiveLighting", "DPI colors")),
+]
 EFFECT_NAMES = dict(EFFECTS)
+
+
+def effect_name(effect):
+    name = EFFECT_NAMES.get(effect, effect)
+    return QCoreApplication.translate("LiveLighting", name)
 GSI_GAMES = {730: "cs2", 570: "dota2"}
 
 DEFAULTS = {
@@ -94,7 +103,8 @@ class LiveLighting(QObject):
         self._refresh()
         self.runningChanged.emit(True)
         if effect != "screen":
-            self.status.emit("ok", f"{EFFECT_NAMES[effect]} is on")
+            name = self.tr(EFFECT_NAMES[effect])
+            self.status.emit("ok", self.tr("{effect} is on").format(effect=name))
 
     def stop(self, remember=True):
         was_running = self.running
@@ -103,7 +113,7 @@ class LiveLighting(QObject):
         if was_running:
             self.runningChanged.emit(False)
             if not self.override:
-                self.status.emit("info", "Live lighting off: back to the lighting saved on the mouse")
+                self.status.emit("info", self.tr("Live lighting off: back to the lighting saved on the mouse"))
         if remember:
             self._save(on=False)
 
@@ -195,7 +205,7 @@ class LiveLighting(QObject):
             self.screen = ScreenCapture(restore_token=settings.load().get("screen_token"), fps=FPS)
             self._screen_state = None
             self.screen.start()
-            self.status.emit("busy", "Starting screen capture… pick a screen if asked")
+            self.status.emit("busy", self.tr("Starting screen capture… pick a screen if asked"))
         if want["audio"] and self.audio is None:
             from ..effects.audio import AudioMonitor
             self.audio = AudioMonitor()
@@ -223,11 +233,11 @@ class LiveLighting(QObject):
             if self.screen.restore_token:
                 settings.update(screen_token=self.screen.restore_token)
             size = self.screen.source_size
-            self.status.emit("ok", "Screen sampler is on" + (f" ({size[0]}×{size[1]})" if size else ""))
+            self.status.emit("ok", self.tr("Screen sampler is on") + (f" ({size[0]}×{size[1]})" if size else ""))
         elif state == "cancelled":
-            self._source_failed("Screen sharing was cancelled, so the screen sampler is off")
+            self._source_failed(self.tr("Screen sharing was cancelled, so the screen sampler is off"))
         elif state == "error":
-            self._source_failed(f"Screen capture failed: {self.screen.error}")
+            self._source_failed(self.tr("Screen capture failed: {error}").format(error=self.screen.error))
         return state == "running"
 
     # ------------------------------------------------------------ frames

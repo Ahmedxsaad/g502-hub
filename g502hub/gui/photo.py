@@ -10,7 +10,7 @@ import threading
 from pathlib import Path
 
 import numpy as np
-from PySide6.QtCore import QObject, QPointF, QRect, QRectF, Qt, Signal
+from PySide6.QtCore import QCoreApplication, QObject, QPointF, QRect, QRectF, Qt, Signal
 from PySide6.QtGui import QColor, QFont, QImage, QPainter, QPen, QRadialGradient
 
 from . import theme
@@ -112,8 +112,13 @@ class PhotoSkin:
     badge_radius = 17
     badge_font = (13, 19)  # label pixel size for 2-char and 1-char badges
     pen_scale = 2.4
-    callouts = [("DPI LIGHTS", QPointF(110, 586), QPointF(-170, 586), "zone0"),
-                ("LOGO", QPointF(308, 754), QPointF(780, 754), "zone1")]
+
+    @property
+    def callouts(self):
+        return [
+            (QCoreApplication.translate("PhotoSkin", "DPI LIGHTS"), QPointF(110, 586), QPointF(-170, 586), "zone0"),
+            (QCoreApplication.translate("PhotoSkin", "LOGO"), QPointF(308, 754), QPointF(780, 754), "zone1"),
+        ]
 
     def __init__(self, image=None):
         self.elements = elements()

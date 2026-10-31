@@ -1,17 +1,23 @@
 """LIGHTSYNC page: onboard lighting per zone, plus live effects streamed by the app."""
 
+from PySide6.QtCore import QT_TRANSLATE_NOOP
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QCheckBox, QLabel, QPushButton, QVBoxLayout, QWidget
 
-from ... import lightfx
 from ...onboard import LedEffect
 from .. import labels
 from ..live import EFFECTS as LIVE_EFFECTS
 from ..widgets import ChoiceList, ColorPicker, Segmented, SliderRow, Switcher, heading, muted
 from . import Page
 
-EFFECTS = [(0x01, "Fixed"), (0x0A, "Breathing"), (0x03, "Color cycle"), (0x00, "Off")]
-AREAS = list(lightfx.AREA_LABELS.items())
+SCREEN_AREAS = [
+    ("screen", QT_TRANSLATE_NOOP("LightingPage", "Whole screen")),
+    ("center", QT_TRANSLATE_NOOP("LightingPage", "Center (video)")),
+    ("left", QT_TRANSLATE_NOOP("LightingPage", "Left edge")),
+    ("right", QT_TRANSLATE_NOOP("LightingPage", "Right edge")),
+    ("top", QT_TRANSLATE_NOOP("LightingPage", "Top edge")),
+    ("bottom", QT_TRANSLATE_NOOP("LightingPage", "Bottom edge")),
+]
 
 
 def _column():
@@ -23,18 +29,21 @@ def _column():
 
 
 class LightingPage(Page):
-    title = "LIGHTSYNC"
     icon = "lighting"
     mouse_mode = "light"
+
+    @property
+    def title(self):
+        return self.tr("LIGHTSYNC")
 
     def __init__(self, state, view, keylabels, live):
         super().__init__(state, view, keylabels)
         self.live = live
         self.zone = 0
-        title = QLabel("Lighting")
+        title = QLabel(self.tr("Lighting"))
         title.setObjectName("Title")
         self.layout.addWidget(title)
-        self.mode = Segmented(["On the mouse", "Live effects"])
+        self.mode = Segmented([self.tr("On the mouse"), self.tr("Live effects")])
         self.mode.changed.connect(self._mode_changed)
         self.layout.addWidget(self.mode)
         self.stack = Switcher()
@@ -49,32 +58,38 @@ class LightingPage(Page):
 
     def _onboard_panel(self):
         w, col = _column()
-        col.addWidget(muted("Saved on the mouse, so it works without this app and on any computer.", "Faint"))
-        self.zones = Segmented(["DPI lights", "Logo"])
+        col.addWidget(muted(self.tr("Saved on the mouse, so it works without this app and on any computer."), "Faint"))
+        self.zones = Segmented([self.tr("DPI lights"), self.tr("Logo")])
         self.zones.changed.connect(self._zone_clicked)
         col.addWidget(self.zones)
-        self.sync = QCheckBox("Same effect on both zones")
+        self.sync = QCheckBox(self.tr("Same effect on both zones"))
         self.sync.toggled.connect(self._sync_toggled)
         col.addWidget(self.sync)
         self.live_banner = muted("", "Faint")
         col.addWidget(self.live_banner)
 
-        col.addWidget(heading("Effect"))
-        self.effects = ChoiceList(EFFECTS, columns=2)
+        col.addWidget(heading(self.tr("Effect")))
+        effects = [
+            (0x01, self.tr("Fixed")),
+            (0x0A, self.tr("Breathing")),
+            (0x03, self.tr("Color cycle")),
+            (0x00, self.tr("Off")),
+        ]
+        self.effects = ChoiceList(effects, columns=2)
         self.effects.changed.connect(lambda _: self._apply(final=True))
         col.addWidget(self.effects)
 
-        self.color_heading = heading("Color")
+        self.color_heading = heading(self.tr("Color"))
         col.addWidget(self.color_heading)
         self.picker = ColorPicker()
         self.picker.changed.connect(lambda _, final: self._apply(final))
         col.addWidget(self.picker)
 
-        self.rate = SliderRow("Rate", 1000, 20000, "{:,} ms", step=100)
+        self.rate = SliderRow(self.tr("Rate"), 1000, 20000, "{:,} ms", step=100)
         self.rate.moved.connect(lambda _: self._apply(final=False))
         self.rate.committed.connect(lambda _: self._apply(final=True))
         col.addWidget(self.rate)
-        self.brightness = SliderRow("Brightness", 1, 100, "{} %")
+        self.brightness = SliderRow(self.tr("Brightness"), 1, 100, "{} %")
         self.brightness.moved.connect(lambda _: self._apply(final=False))
         self.brightness.committed.connect(lambda _: self._apply(final=True))
         col.addWidget(self.brightness)
@@ -145,11 +160,17 @@ class LightingPage(Page):
 
     def _live_panel(self):
         w, col = _column()
-        col.addWidget(muted("Made by G502 Hub while it runs. It keeps running in the tray when you "
-                            "close the window. Turn it off and the mouse goes back to its saved lighting.",
+        col.addWidget(muted(self.tr("Made by G502 Hub while it runs. It keeps running in the tray when you "
+                                    "close the window. Turn it off and the mouse goes back to its saved lighting."),
                             "Faint"))
-        col.addWidget(heading("Effect"))
-        self.live_effects = ChoiceList(LIVE_EFFECTS, columns=2)
+        col.addWidget(heading(self.tr("Effect")))
+        live_effects = [
+            ("screen", self.tr("Screen sampler")),
+            ("audio", self.tr("Audio visualizer")),
+            ("wave", self.tr("Color wave")),
+            ("dpi", self.tr("DPI colors")),
+        ]
+        self.live_effects = ChoiceList(live_effects, columns=2)
         self.live_effects.changed.connect(self._live_selected)
         col.addWidget(self.live_effects)
         self.live_toggle = QPushButton()
@@ -183,27 +204,32 @@ class LightingPage(Page):
 
     def _screen_options(self):
         w, col = _column()
-        col.addWidget(muted("Follows what's on your screen: the film or video you're watching, "
-                            "or the game you're playing.", "Faint"))
-        self._choices(col, "screen", "dpi_area", "DPI lights follow", AREAS)
-        self._choices(col, "screen", "logo_area", "Logo follows", AREAS)
-        self._choices(col, "screen", "vivid", "Style", [(True, "Vivid"), (False, "Average")])
-        self._slider(col, "screen", "saturation", "Saturation", 50, 200, "{} %")
-        self._slider(col, "screen", "brightness", "Brightness", 10, 150, "{} %")
-        self._slider(col, "screen", "smoothing", "Smoothing", 0, 100, "{} %")
-        other = QPushButton("Choose another screen…")
+        col.addWidget(muted(self.tr("Follows what's on your screen: the film or video you're watching, "
+                                    "or the game you're playing."), "Faint"))
+        areas = [(k, self.tr(v)) for k, v in SCREEN_AREAS]
+        self._choices(col, "screen", "dpi_area", self.tr("DPI lights follow"), areas)
+        self._choices(col, "screen", "logo_area", self.tr("Logo follows"), areas)
+        self._choices(col, "screen", "vivid", self.tr("Style"), [(True, self.tr("Vivid")), (False, self.tr("Average"))])
+        self._slider(col, "screen", "saturation", self.tr("Saturation"), 50, 200, "{} %")
+        self._slider(col, "screen", "brightness", self.tr("Brightness"), 10, 150, "{} %")
+        self._slider(col, "screen", "smoothing", self.tr("Smoothing"), 0, 100, "{} %")
+        other = QPushButton(self.tr("Choose another screen…"))
         other.clicked.connect(self.live.choose_another_screen)
         col.addWidget(other)
         return w
 
     def _audio_options(self):
         w, col = _column()
-        col.addWidget(muted("Reacts to the sound your computer is playing.", "Faint"))
-        self._choices(col, "audio", "style", "Style",
-                      [("pulse", "Pulse"), ("spectrum", "Spectrum"), ("rainbow", "Rainbow beats")])
-        self._slider(col, "audio", "sensitivity", "Sensitivity", 50, 300, "{} %")
-        self._slider(col, "audio", "brightness", "Brightness", 10, 100, "{} %")
-        col.addWidget(heading("Pulse color"))
+        col.addWidget(muted(self.tr("Reacts to the sound your computer is playing."), "Faint"))
+        styles = [
+            ("pulse", self.tr("Pulse")),
+            ("spectrum", self.tr("Spectrum")),
+            ("rainbow", self.tr("Rainbow beats")),
+        ]
+        self._choices(col, "audio", "style", self.tr("Style"), styles)
+        self._slider(col, "audio", "sensitivity", self.tr("Sensitivity"), 50, 300, "{} %")
+        self._slider(col, "audio", "brightness", self.tr("Brightness"), 10, 100, "{} %")
+        col.addWidget(heading(self.tr("Pulse color")))
         picker = ColorPicker()
         picker.set_color(QColor(self.live.options["audio"]["color"]))
         picker.changed.connect(lambda c, final: self.live.set_option("audio", "color", c.name(), save=final))
@@ -212,11 +238,11 @@ class LightingPage(Page):
 
     def _wave_options(self):
         w, col = _column()
-        col.addWidget(muted("A rainbow that flows from the DPI lights to the logo.", "Faint"))
-        self._slider(col, "wave", "period", "Cycle time", 10, 200, lambda v: f"{v / 10:.1f} s", factor=10)
-        self._slider(col, "wave", "saturation", "Saturation", 0, 100, "{} %")
-        self._slider(col, "wave", "brightness", "Brightness", 10, 100, "{} %")
-        reverse = QCheckBox("Flow from the logo to the DPI lights")
+        col.addWidget(muted(self.tr("A rainbow that flows from the DPI lights to the logo."), "Faint"))
+        self._slider(col, "wave", "period", self.tr("Cycle time"), 10, 200, lambda v: f"{v / 10:.1f} s", factor=10)
+        self._slider(col, "wave", "saturation", self.tr("Saturation"), 0, 100, "{} %")
+        self._slider(col, "wave", "brightness", self.tr("Brightness"), 10, 100, "{} %")
+        reverse = QCheckBox(self.tr("Flow from the logo to the DPI lights"))
         reverse.setChecked(self.live.options["wave"]["reverse"])
         reverse.toggled.connect(lambda on: self.live.set_option("wave", "reverse", on))
         col.addWidget(reverse)
@@ -224,9 +250,9 @@ class LightingPage(Page):
 
     def _dpi_options(self):
         w, col = _column()
-        col.addWidget(muted("Both zones light up in the color of the DPI level you're on, so you "
-                            "can see it at a glance.", "Faint"))
-        col.addWidget(heading("Color for DPI level"))
+        col.addWidget(muted(self.tr("Both zones light up in the color of the DPI level you're on, so you "
+                                    "can see it at a glance."), "Faint"))
+        col.addWidget(heading(self.tr("Color for DPI level")))
         self.dpi_level_tabs = Segmented([str(n) for n in range(1, 6)])
         col.addWidget(self.dpi_level_tabs)
         self.dpi_picker = ColorPicker()
@@ -262,15 +288,15 @@ class LightingPage(Page):
 
     def _show_live_state(self):
         running = self.live.running
-        self.live_toggle.setText("Turn off" if running else "Turn on")
+        self.live_toggle.setText(self.tr("Turn off") if running else self.tr("Turn on"))
         self.live_toggle.setObjectName("" if running else "Primary")
         self.live_toggle.style().unpolish(self.live_toggle)
         self.live_toggle.style().polish(self.live_toggle)
         self.live_effects.set_value(self.live.selected)
         self.live_options.setCurrentIndex([k for k, _ in LIVE_EFFECTS].index(self.live.selected))
         name = dict(LIVE_EFFECTS)[self.live.effect] if running else None
-        self.live_banner.setText(f"{name} (a live effect) is showing on the mouse right now. "
-                                 "Changing anything here turns it off." if running else "")
+        banner = self.tr("{name} (a live effect) is showing on the mouse right now. Changing anything here turns it off.")
+        self.live_banner.setText(banner.format(name=name) if running else "")
         self.live_banner.setVisible(running)
 
     def _mode_changed(self, i):
