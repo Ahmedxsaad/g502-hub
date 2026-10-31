@@ -30,13 +30,14 @@ class SettingsPage(Page):
         self.lang_box = QComboBox()
         for code, label in AVAILABLE_LANGUAGES.items():
             self.lang_box.addItem(label, code)
-        cur_lang = get_current_language()
-        idx = self.lang_box.findData(cur_lang)
+        self.start_lang = get_current_language()  # the one this run is showing
+        idx = self.lang_box.findData(self.start_lang)
         if idx >= 0:
             self.lang_box.setCurrentIndex(idx)
         self.lang_box.currentIndexChanged.connect(self._lang_changed)
         self.layout.addWidget(self.lang_box)
         self.lang_hint = muted(self.tr("Restart required. Please quit G502 Hub from the tray menu and open it again to apply."), "Faint")
+        self.lang_hint.hide()  # until a different language is picked
         self.layout.addWidget(self.lang_hint)
 
         self.layout.addWidget(heading(self.tr("Startup")))
@@ -108,6 +109,7 @@ class SettingsPage(Page):
         code = self.lang_box.itemData(idx)
         if code != get_current_language():
             settings.update(language=code)
+        self.lang_hint.setVisible(code != self.start_lang)
 
     def refresh(self):
         ready = self.view.skin.ready
