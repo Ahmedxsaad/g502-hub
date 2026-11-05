@@ -6,13 +6,12 @@ Spy reports the press and the app plays the macro through a virtual input
 device, so it can do anything the keyboard and mouse can.
 """
 
-from PySide6.QtCore import QObject, QTimer, Signal
+from PySide6.QtCore import QObject, Qt, Signal, Slot
 
 from .. import macros, onboard, settings
 from ..onboard import SPECIAL_CODES, Special
 
 SPY_FEATURE = 0x8110
-TICK_MS = 8
 
 
 def _key(slot, layer, button):
@@ -21,6 +20,7 @@ def _key(slot, layer, button):
 
 class MacroEngine(QObject):
     changed = Signal()
+    _buttons_changed = Signal()
 
     def __init__(self, state, keylabels):
         super().__init__()
@@ -33,8 +33,7 @@ class MacroEngine(QObject):
         self.error = None
         self._mask = 0
         self._starting = False
-        self._timer = QTimer(self, interval=TICK_MS)
-        self._timer.timeout.connect(self._tick)
+        self._buttons_changed.connect(self._tick, Qt.ConnectionType.QueuedConnection)
         state.connectedChanged.connect(lambda _: self.sync(restart=True))
 
     # ------------------------------------------------------------ the list
@@ -183,14 +182,12 @@ class MacroEngine(QObject):
                 self.state.status.emit("error", self.error)
                 return
             self.error = None
-            self.spy = ButtonSpy(*result)
+            self.spy = ButtonSpy(*result, on_change=self._buttons_changed.emit)
             self.spy.start()
             self._mask = 0
-            self._timer.start()
         self.state.bridge.call(job, started)
 
     def _stop(self):
-        self._timer.stop()
         if self.spy is not None:
             self.spy.stop()
             self.spy = None
@@ -212,6 +209,7 @@ class MacroEngine(QObject):
         return any(mask & (1 << i) for i, b in enumerate(profile.buttons[:16])
                    if isinstance(b, Special) and b.function == SPECIAL_CODES["gshift"])
 
+    @Slot()
     def _tick(self):
         if self.spy is None:
             return
