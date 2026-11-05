@@ -118,11 +118,60 @@ def read_firmware(dev, idx):
     return entities
 
 
+def find_device(dev, indexes):
+    """Point dev at the first index that answers as HID++ 2.0 and return its protocol version.
+
+    A device on its own cable is 0xFF. Behind a receiver, 0xFF is the receiver itself (HID++ 1.0)
+    and the paired devices are 1 to 6.
+    """
+    for index in indexes:
+        dev.index = index
+        try:
+            proto = dev.request(0, 1, [0, 0, 0x5A])
+        except (HidppError, TimeoutError):
+            continue
+        if proto[0] >= 2:
+            return proto
+    return None
+
+
+def read_sector(dev, idx, sector, size):
+    data = bytearray(size)
+    for off in range(0, size, 16):
+        start = min(off, size - 16)  # the firmware refuses offsets past size - 16
+        data[start:start + 16] = dev.request(idx, 5, sector.to_bytes(2, "big") + start.to_bytes(2, "big"))[:16]
+    return bytes(data)
+
+
+def read_onboard(dev, idx, dump):
+    """0x8100 Onboard Profiles: how the memory is laid out, the mode and the active profile.
+
+    Only its read functions are used: 0 getDescription, 2 getMode, 4 getCurrentProfile and,
+    with dump, 5 memoryRead for the profile directory and the active profile.
+    """
+    r = dev.request(idx, 0)
+    mode = dev.request(idx, 2)[0]
+    info = {"description": r[:16].hex(" "), "memory_model": r[0], "profile_format": r[1],
+            "macro_format": r[2], "profiles": r[3], "rom_profiles": r[4], "buttons": r[5],
+            "sectors": r[6], "sector_size": int.from_bytes(r[7:9], "big"),
+            "mechanical_layout": r[9], "various_info": r[10],
+            "mode": {1: "onboard", 2: "host"}.get(mode, mode),
+            "active_sector": int.from_bytes(dev.request(idx, 4)[:2], "big")}
+    if dump and info["sector_size"] >= 16:
+        for name, sector in (("directory", 0x0000), ("active_profile", info["active_sector"])):
+            info[name] = read_sector(dev, idx, sector, info["sector_size"]).hex()
+    return info
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--vid", type=lambda s: int(s, 16), default=0x046D)
     ap.add_argument("--pid", type=lambda s: int(s, 16), default=0xC08B)
     ap.add_argument("--hidraw", help="hidraw node (default: autodetect)")
+    ap.add_argument("--index", type=lambda s: int(s, 0),
+                    help="HID++ device index: 0xFF on a cable, 1-6 behind a receiver (default: try them)")
+    ap.add_argument("--onboard", action="store_true",
+                    help="also dump the profile directory and the active profile (reads only)")
     ap.add_argument("--json", help="also write the result to this JSON file")
     args = ap.parse_args()
 
@@ -134,8 +183,11 @@ def main():
     except PermissionError:
         sys.exit(f"Permission denied on {path}: install udev/70-g502-hub.rules first.")
 
-    proto = dev.request(0, 1, [0, 0, 0x5A])
-    print(f"{path}: HID++ {proto[0]}.{proto[1]}")
+    proto = find_device(dev, [args.index] if args.index is not None else [0xFF, 1, 2, 3, 4, 5, 6])
+    if proto is None:
+        sys.exit(f"{path}: no HID++ 2.0 device answered. Behind a receiver, is the mouse switched on?")
+    behind = "" if dev.index == 0xFF else f", device {dev.index} behind a receiver"
+    print(f"{path}: HID++ {proto[0]}.{proto[1]}{behind}")
 
     fs = dev.feature_index(0x0001)
     count = dev.request(fs, 0)[0]
@@ -148,7 +200,8 @@ def main():
                          "name": FEATURE_NAMES.get(fid, "unknown"),
                          "version": r[3], "flags": flags})
 
-    result = {"hidraw": path, "protocol": f"{proto[0]}.{proto[1]}", "features": features}
+    result = {"hidraw": path, "device_index": dev.index, "protocol": f"{proto[0]}.{proto[1]}",
+              "features": features}
     ids = {int(f["id"], 16): f["index"] for f in features}
     if 0x0005 in ids:
         result["name"] = read_name(dev, ids[0x0005])
@@ -162,6 +215,24 @@ def main():
     for f in features:
         flags = f" [{', '.join(f['flags'])}]" if f["flags"] else ""
         print(f"{f['index']:>3}  {f['id']:<6}  {f['version']:>3}  {f['name']}{flags}")
+
+    if 0x8100 in ids:
+        try:
+            o = result["onboard"] = read_onboard(dev, ids[0x8100], args.onboard)
+        except (HidppError, TimeoutError) as e:
+            print(f"\nOnboard memory: couldn't read it ({e})")
+        else:
+            print(f"\nOnboard memory: profile format {o['profile_format']}, {o['sectors']} sectors of "
+                  f"{o['sector_size']} B, {o['profiles']} profiles (+{o['rom_profiles']} in ROM), "
+                  f"{o['buttons']} buttons, layout 0x{o['mechanical_layout']:02X}, info 0x{o['various_info']:02X}")
+            print(f"  description: {o['description']}")
+            print(f"  mode {o['mode']}, active profile in sector 0x{o['active_sector']:04X}")
+            for name in ("directory", "active_profile"):
+                if name in o:
+                    data = bytes.fromhex(o[name])
+                    print(f"  {name.replace('_', ' ')}:")
+                    for off in range(0, len(data), 16):
+                        print(f"    {off:04x}  {data[off:off + 16].hex(' ')}")
 
     if args.json:
         with open(args.json, "w") as out:
