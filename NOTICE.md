@@ -62,5 +62,7 @@ files are in `website/fonts/`).
 ## Privacy
 
 Everything runs on your computer. Screen and audio are analysed locally for
-the live effects and are never stored or sent anywhere. The only network
-access is the one-time download of the mouse photo from Logitech's website.
+the live effects and are never stored or sent anywhere. The app goes online
+for two things only: the one-time download of the mouse photo from Logitech's
+website, and a check for a newer release on GitHub once a day, which Settings
+can turn off. That check sends nothing but the request itself.

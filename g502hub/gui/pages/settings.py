@@ -1,12 +1,15 @@
-"""SETTINGS page: startup, on-screen popups, mouse picture, device access, game integrations."""
+"""SETTINGS page: language, startup, updates, on-screen popups, mouse picture, device access, game integrations."""
 
 import os
 
+from PySide6.QtCore import QUrl
+from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import QCheckBox, QComboBox, QHBoxLayout, QLabel, QMessageBox, QPushButton, QVBoxLayout, QWidget
 
-from ... import settings
+from ... import about, settings
 from .. import photo, system
 from ..i18n import AVAILABLE_LANGUAGES, effective_language, get_current_language
+from ..updates import Updates
 from ..widgets import heading, muted
 from . import Page
 
@@ -19,8 +22,9 @@ class SettingsPage(Page):
     def title(self):
         return self.tr("SETTINGS")
 
-    def __init__(self, *args):
-        super().__init__(*args)
+    def __init__(self, state, view, keylabels, updates=None):
+        super().__init__(state, view, keylabels)
+        self.updates = updates or Updates(self.panel)
         title = QLabel(self.tr("Settings"))
         title.setObjectName("Title")
         self.layout.addWidget(title)
@@ -53,6 +57,27 @@ class SettingsPage(Page):
         self.layout.addWidget(muted(self.tr("Game rules, macros run by the app, live lighting and the DPI popup only "
                                             "work while G502 Hub runs. Settings saved on the mouse work either way."),
                                     "Faint"))
+
+        self.layout.addWidget(heading(self.tr("Updates")))
+        self.update_status = muted("")
+        self.layout.addWidget(self.update_status)
+        row = QHBoxLayout()
+        self.update_btn = QPushButton()  # check, update or restart, whichever comes next
+        self.update_btn.clicked.connect(self._update_clicked)
+        row.addWidget(self.update_btn)
+        self.notes_btn = QPushButton(self.tr("What's new"))
+        self.notes_btn.clicked.connect(lambda: QDesktopServices.openUrl(QUrl(self.updates.latest.url)))
+        row.addWidget(self.notes_btn)
+        row.addStretch()
+        self.layout.addLayout(row)
+        self.update_check = QCheckBox(self.tr("Check for updates once a day"))
+        self.update_check.setChecked(settings.load().get("update_check", True))
+        self.update_check.toggled.connect(self._toggle_update_check)
+        self.layout.addWidget(self.update_check)
+        self.layout.addWidget(muted(self.tr("Asks GitHub for the latest release. Nothing else is sent."), "Faint"))
+        self.updates.changed.connect(self._show_updates)
+        self.updates.updated.connect(self._updated)
+        self._show_updates()
 
         self.layout.addWidget(heading(self.tr("On-screen popup")))
         self.osd = QCheckBox(self.tr("Show DPI and profile changes on screen"))
@@ -116,6 +141,61 @@ class SettingsPage(Page):
         if changed and self.restart_app and QMessageBox.question(
                 self.panel, self.tr("Restart G502 Hub?"),
                 self.tr("The new language shows after a restart. Restart now?")) == QMessageBox.StandardButton.Yes:
+            self.restart_app()
+
+    def _show_updates(self):
+        u = self.updates
+        latest = u.latest.version if u.latest else None
+        if u.checking:
+            text = self.tr("Checking for updates…")
+        elif u.updating:
+            text = self.tr("Updating…")
+        elif u.installed:
+            text = self.tr("G502 Hub {version} is installed. Restart G502 Hub to use it.").format(version=latest)
+        elif u.update_error:
+            text = self.tr("Couldn't update: {error}").format(error=u.update_error)
+        elif u.available:
+            text = self.tr("G502 Hub {version} is out (you have {current}).").format(version=latest, current=about.VERSION)
+            if u.kind == "package":
+                text += " " + self.tr("Update it with your package manager or AUR helper, e.g. yay -Syu.")
+            elif u.kind == "source":
+                text += " " + self.tr("Run git pull in {path} to update.").format(path=u.root)
+        elif u.error:
+            text = self.tr("Couldn't check for updates: {error}").format(error=u.error)
+        elif u.latest:
+            text = self.tr("G502 Hub {version} is the latest version.").format(version=about.VERSION)
+        else:
+            text = self.tr("You have G502 Hub {version}.").format(version=about.VERSION)
+        self.update_status.setText(text)
+        if u.installed:
+            self.update_btn.setText(self.tr("Restart now"))
+        elif u.available and u.kind == "script":
+            self.update_btn.setText(self.tr("Update now"))
+        else:
+            self.update_btn.setText(self.tr("Check now"))
+        self.update_btn.setEnabled(not (u.checking or u.updating))
+        self.notes_btn.setVisible(u.available)
+
+    def _update_clicked(self):
+        u = self.updates
+        if u.installed:
+            if self.restart_app:
+                self.restart_app()
+        elif u.available and u.kind == "script":
+            u.install()
+        else:
+            u.check()
+
+    def _toggle_update_check(self, on):
+        settings.update(update_check=on)
+        if on:
+            self.updates.check_if_due()
+
+    def _updated(self, error):
+        if error is None and self.restart_app and QMessageBox.question(
+                self.panel, self.tr("Restart G502 Hub?"),
+                self.tr("G502 Hub {version} is installed. Restart now to use it?").format(
+                    version=self.updates.latest.version)) == QMessageBox.StandardButton.Yes:
             self.restart_app()
 
     def refresh(self):

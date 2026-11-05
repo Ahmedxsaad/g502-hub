@@ -4,7 +4,7 @@ import os
 import subprocess
 import sys
 
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QSize, Qt, QTimer
 from PySide6.QtGui import QAction, QFont, QIcon
 from PySide6.QtNetwork import QLocalServer, QLocalSocket
 from PySide6.QtWidgets import (QApplication, QButtonGroup, QComboBox, QHBoxLayout, QLabel,
@@ -28,6 +28,7 @@ from .pages.sensitivity import SensitivityPage
 from .pages.settings import SettingsPage
 from .rules_engine import RulesEngine
 from .state import MouseState
+from .updates import Updates
 
 
 class Placeholder(QWidget):
@@ -64,6 +65,7 @@ class MainWindow(QMainWindow):
         self.keylabels = KeyLabels()
         self.macros = MacroEngine(self.state, self.keylabels)
         self.view = MouseView()
+        self.updates = Updates(self)
         self._shown_slot = None
         self._resumed = False
 
@@ -82,7 +84,7 @@ class MainWindow(QMainWindow):
         args = (self.state, self.view, self.keylabels)
         self.pages = [LightingPage(*args, self.live), AssignmentsPage(*args, self.macros), SensitivityPage(*args),
                       ProfilesPage(*args), MacrosPage(*args, self.macros), GamesPage(*args, self.rules),
-                      SettingsPage(*args), AboutPage(*args)]
+                      SettingsPage(*args, self.updates), AboutPage(*args)]
         bottom = {SettingsPage, AboutPage}  # pinned to the bottom of the rail, like G HUB's gear
 
         rail = QWidget()
@@ -148,6 +150,10 @@ class MainWindow(QMainWindow):
         self.pages[1].open_macros = lambda: self.rail_group.button(macros_page).click()
         next(p for p in self.pages if isinstance(p, SettingsPage)).restart_app = self.restart
         self.restarting = False
+        self.updates.changed.connect(self._update_found)
+        QTimer.singleShot(15_000, self.updates.check_if_due)  # once startup has settled
+        self._update_timer = QTimer(self, interval=3_600_000, timeout=self.updates.check_if_due)
+        self._update_timer.start()  # the app can run in the tray for days
         self.rail_group.button(0).setChecked(True)
         self.show_page(0)
         self._connected(False)
@@ -348,6 +354,17 @@ class MainWindow(QMainWindow):
         self.live.shutdown()  # the saved lighting comes back; a live effect resumes next start
         self.state.shutdown()
         QApplication.quit()
+
+    def _update_found(self):
+        """Say once per version that a newer one is out; Settings shows how to get it."""
+        u = self.updates
+        if not u.available or u.installed or settings.load().get("update_notified") == u.latest.version:
+            return
+        settings.update(update_notified=u.latest.version)
+        text = self.tr("G502 Hub {version} is out. Update it from Settings.").format(version=u.latest.version)
+        self._status("info", text)
+        if self.tray is not None:
+            self.tray.showMessage("G502 Hub", text, QSystemTrayIcon.MessageIcon.Information, 6000)
 
     def restart(self):
         """Quit, and have main() start a new copy (to show another language)."""
