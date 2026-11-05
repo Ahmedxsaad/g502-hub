@@ -510,7 +510,7 @@ footer .fine { grid-column: 1 / -1; font-size: 13px; color: var(--dust); max-wid
       </div>
       <div class="tabpanel" role="tabpanel" id="panel-line" aria-labelledby="tab-line">
         <div class="term"><pre id="cmd-line"><span class="p">$ </span>curl -fsSL https://g502hub.ahmedxsaad.me/install.sh | sh</pre><button class="copy" type="button" data-copy="cmd-line">Copy</button></div>
-        <p class="muted">Installs what it needs with your package manager (it asks for your password), adds the permission rule that lets your user talk to the mouse, and puts G502 Hub in your applications menu. Remove it with the same line plus <code>-s -- --uninstall</code>.</p>
+        <p class="muted">Installs what it needs with your package manager (it asks for your password), adds the permission rule that lets your user talk to the mouse, and puts G502 Hub in your applications menu. After that, Settings tells you when there's a new version and updates it with one click. Remove it with the same line plus <code>-s -- --uninstall</code>.</p>
       </div>
       <div class="tabpanel" role="tabpanel" id="panel-aur" aria-labelledby="tab-aur" hidden>
         <div class="term"><pre id="cmd-aur"><span class="p">$ </span>git clone https://github.com/Ahmedxsaad/g502-hub && cd g502-hub/packaging/aur
@@ -538,9 +538,10 @@ footer .fine { grid-column: 1 / -1; font-size: 13px; color: var(--dust); max-wid
     <div class="eyebrow">FAQ</div>
     <h2 style="margin-bottom:20px">Questions</h2>
     <details><summary>Does it need Windows, Wine or G HUB?</summary><p>No. G502 Hub is a native Linux app that talks to the mouse directly. Wine only comes in if you want Proton games to drive the lights.</p></details>
-    <details><summary>Does anything leave my computer?</summary><p>No. Screen and sound are analysed on your machine and never sent anywhere. The only download is the optional product photo of the mouse.</p></details>
+    <details><summary>Does anything leave my computer?</summary><p>No. Screen and sound are analysed on your machine and never sent anywhere. The app only goes online to download the product photo of the mouse once, and to ask GitHub once a day whether there's a new version, which you can turn off in Settings.</p></details>
     <details><summary>Will my settings work without the app?</summary><p>Yes. DPI, buttons, report rate and the saved lighting live in the mouse's own memory, on Linux, Windows or a console. Live effects and rules need the app running, which it does quietly in the tray.</p></details>
-    <details><summary>What about other G502 models?</summary><p>Only the wired G502 HERO for now. If you have another G502 and want to help, open an issue with the info from the About page's "Copy for a bug report" button.</p></details>
+    <details><summary>What about other G502 models?</summary><p>Only the wired G502 HERO for now. Owners of a G502 X LIGHTSPEED and a G502 Proteus Spectrum are helping test those. If you have another G502 and want to help, open an issue with the info from the About page's "Copy for a bug report" button.</p></details>
+    <details><summary>Is it in my language?</summary><p>G502 Hub is in English and Simplified Chinese (简体中文), and follows your system language. You can pick one in Settings. Translations for other languages are welcome on GitHub.</p></details>
     <details><summary>Macros?</summary><p>Yes, two kinds. Saved on the mouse, a macro plays on any computer: keys, media keys, clicks, scrolling and waits. Run by G502 Hub, it can also type text in your keyboard layout, repeat while you hold the button, or toggle on and off. Record one by typing, or build it step by step.</p></details>
   </div>
 </section>
